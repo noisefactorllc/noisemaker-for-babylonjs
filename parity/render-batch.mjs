@@ -37,6 +37,7 @@ function parse (argv) {
     if (k === '--size') o.size = +argv[++i]
     else if (k === '--time') o.time = +argv[++i]
     else if (k === '--frames') o.frames = +argv[++i]
+    else if (k === '--timestep') o.timestep = +argv[++i]
     else if (k === '--all') o.all = true
     else o.names.push(k)
   }
@@ -68,7 +69,7 @@ async function main () {
       try {
         const fat = await exportFatGraph(readFileSync(dslPath, 'utf8'))
         const ev = EVOLVE[name]
-        const opts = { size: o.size, time: o.time, frames: ev ? ev.frames : o.frames, timestep: ev ? ev.timestep : 0 }
+        const opts = { size: o.size, time: o.time, frames: ev ? ev.frames : o.frames, timestep: ev ? ev.timestep : (o.timestep || 0) }
         const res = await page.evaluate(async ({ fat, opts }) => {
           try { return { ok: true, ...(await window.nmRunFatGraph(fat, opts)) } } catch (e) { return { ok: false, error: String((e && e.stack) || e) } }
         }, { fat, opts })

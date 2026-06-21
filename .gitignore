@@ -15,3 +15,9 @@ parity/out/*
 
 # transient parity manifests
 parity/_*.manifest
+
+# third-party NoiseBLASTER corpus — local-only test fixtures (commit the harness, not the art)
+parity/corpus/raw/
+parity/corpus/programs/
+parity/programs/corpus_*.dsl
+parity/out/corpus_*
