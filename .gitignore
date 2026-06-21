@@ -1,0 +1,14 @@
+node_modules/
+parity/.venv/
+*.log
+.DS_Store
+dist/
+
+# generated bundles / demo artifacts
+parity/harness/bundle.js
+examples/bundle.js
+examples/demo.fatgraph.json
+
+# parity transient outputs — keep the reused reference goldens only
+parity/out/*
+!parity/out/*.golden.png

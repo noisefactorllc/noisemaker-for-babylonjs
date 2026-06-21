@@ -1,0 +1,493 @@
+// babylonBackend.js — a Noisemaker render `Backend` implemented on @babylonjs/core.
+//
+// This is the ONLY new runtime component in the Babylon port: it satisfies the same
+// abstract interface (`shaders/src/runtime/backend.js`) that the reference WebGL2 /
+// WebGPU backends satisfy, so the *unchanged* reference `Pipeline` drives it. Every
+// GPU operation mirrors `backends/webgl2.js` exactly, translated to Babylon's
+// engine abstractions (so it runs on both WebGL2 and — via Babylon's GLSL→WGSL — WebGPU).
+//
+// Parity-load-bearing rules reproduced from webgl2.js:
+//   - ALL 2D textures: NEAREST min/mag, CLAMP_TO_EDGE wrap (surfaces are sampled NEAREST;
+//     critical for coord-resampling/warp effects).
+//   - Render targets are linear half-float RGBA (rgba16f) by default; no hardware sRGB.
+//   - Shader source is used VERBATIM (reference GLSL ES 3.00); the leading `#version` is
+//     stripped (Babylon injects its own) and `defines` are forwarded as `#define`s.
+//   - Uniform upload order: pass.uniforms first, then state.globalUniforms (skip dupes).
+//   - Missing/`none` sampler inputs bind a 1x1 transparent-black texture.
+//   - Blend: array [src,dst] → blendFunc; truthy non-array → additive ONE,ONE; else off.
+
+import { Constants } from '@babylonjs/core/Engines/constants.js'
+import { EffectWrapper, EffectRenderer } from '@babylonjs/core/Materials/effectRenderer.js'
+import { ThinTexture } from '@babylonjs/core/Materials/Textures/thinTexture.js'
+import { ShaderLanguage } from '@babylonjs/core/Materials/shaderLanguage.js'
+import { Color4 } from '@babylonjs/core/Maths/math.color.js'
+
+// Minimal fullscreen vertex. We supply our OWN (instead of Babylon's default "postprocess"
+// vertex) because that one declares `uniform vec2 scale;`, which collides with effects that
+// have their own `scale` uniform ("Types of uniform 'scale' differ between VERTEX and FRAGMENT
+// shaders"). Effects address pixels via gl_FragCoord, so no varying is needed. EffectRenderer
+// binds its fullscreen quad to the `position` attribute; we map it straight to clip space —
+// gl_FragCoord then spans the bound target identically to the reference fullscreen triangle.
+const FULLSCREEN_VS = '#version 300 es\nprecision highp float;\nin vec2 position;\nvoid main(){ gl_Position = vec4(position, 0.0, 1.0); }\n'
+
+// rgba8/rgba16f/rgba32f/r8/r16f/r32f → Babylon { type, format } (mirrors webgl2 resolveFormat)
+function resolveFormat (format) {
+  const RGBA = Constants.TEXTUREFORMAT_RGBA
+  const RED = Constants.TEXTUREFORMAT_R
+  const U8 = Constants.TEXTURETYPE_UNSIGNED_BYTE
+  const HF = Constants.TEXTURETYPE_HALF_FLOAT
+  const F = Constants.TEXTURETYPE_FLOAT
+  const table = {
+    rgba8: { type: U8, format: RGBA },
+    rgba16f: { type: HF, format: RGBA },
+    rgba32f: { type: F, format: RGBA },
+    r8: { type: U8, format: RED },
+    r16f: { type: HF, format: RED },
+    r32f: { type: F, format: RED }
+  }
+  return table[format] || table.rgba8
+}
+
+// Parse `uniform <type> <name>[N];` declarations out of GLSL source so we can declare
+// them to Babylon's Effect and dispatch the correct setter by type. (webgl2.js gets this
+// from gl.getActiveUniform; we read it from source — same result for our shaders.)
+const UNIFORM_RE = /\buniform\s+(?:highp\s+|mediump\s+|lowp\s+)?(\w+)\s+(\w+)\s*(?:\[\s*\d+\s*\])?\s*;/g
+function parseUniforms (source) {
+  const uniformTypes = {} // name -> 'float'|'int'|'bool'|'vec2'|...
+  const samplerNames = []
+  let m
+  UNIFORM_RE.lastIndex = 0
+  while ((m = UNIFORM_RE.exec(source)) !== null) {
+    const type = m[1]
+    const name = m[2]
+    if (type.startsWith('sampler')) {
+      if (!samplerNames.includes(name)) samplerNames.push(name)
+    } else {
+      uniformTypes[name] = type
+    }
+  }
+  return { uniformTypes, samplerNames, uniformNames: Object.keys(uniformTypes) }
+}
+
+// parseGlobalName — verbatim from webgl2.js (global_<name> and camelCase global<Name>).
+function parseGlobalName (texId) {
+  if (typeof texId !== 'string') return null
+  if (texId.startsWith('global_')) return texId.replace('global_', '')
+  if (texId.startsWith('global') && texId.length > 6) {
+    const suffix = texId.slice(6)
+    if (/^[A-Z0-9]/.test(suffix)) return suffix.charAt(0).toLowerCase() + suffix.slice(1)
+  }
+  return null
+}
+
+export class BabylonBackend {
+  constructor (engine) {
+    this.engine = engine
+    this.textures = new Map() // id -> { internal, thin, rtw, width, height, format }
+    this.programs = new Map() // id -> { wrapper, uniformTypes, samplerSet }
+    this.uniformBuffers = new Map()
+    this.capabilities = {
+      isMobile: false, floatBlend: true, floatLinear: false, colorBufferFloat: true,
+      maxDrawBuffers: 8, maxTextureSize: 4096, maxStateSize: 2048
+    }
+    this.effectRenderer = new EffectRenderer(engine)
+    this._defaultTexture = null // 1x1 transparent black
+    // per-pass binding scratch (read by each program's onApply observable, set right
+    // before EffectRenderer.render — synchronous, so no race)
+    this._bindPass = null
+    this._bindState = null
+    this._copyWrapper = null
+  }
+
+  getName () { return 'Babylon' }
+  static isAvailable () { return true }
+
+  async init () {
+    // 1x1 transparent-black default (matches webgl2 defaultTexture for unbound/none inputs).
+    const internal = this.engine.createRawTexture(
+      new Uint8Array([0, 0, 0, 0]), 1, 1, Constants.TEXTUREFORMAT_RGBA,
+      false, false, Constants.TEXTURE_NEAREST_SAMPLINGMODE, null, Constants.TEXTURETYPE_UNSIGNED_BYTE
+    )
+    internal.wrapU = Constants.TEXTURE_CLAMP_ADDRESSMODE
+    internal.wrapV = Constants.TEXTURE_CLAMP_ADDRESSMODE
+    this._defaultTexture = new ThinTexture(internal)
+    // Pre-compile the blit/copy program so synchronous blit passes never no-op on a
+    // not-yet-ready effect (EffectRenderer.render silently skips an unready effect).
+    this._copyWrapper = this._buildCopyWrapper()
+    await this._whenReady(this._copyWrapper)
+  }
+
+  // ---- textures --------------------------------------------------------------
+
+  createTexture (id, spec) {
+    const fmt = resolveFormat(spec.format)
+    const width = spec.width
+    const height = spec.height
+    // Every graph texture is a renderable, NEAREST/CLAMP, linear half-float-by-default RGBA
+    // target (surfaces, node intermediates, temps). We always make it a render target so it
+    // can be both written and sampled.
+    const rtw = this.engine.createRenderTargetTexture({ width, height }, {
+      generateMipMaps: false,
+      generateDepthBuffer: false,
+      generateStencilBuffer: false,
+      type: fmt.type,
+      format: fmt.format,
+      samplingMode: Constants.TEXTURE_NEAREST_SAMPLINGMODE,
+      noColorAttachment: false
+    })
+    const internal = rtw.texture
+    internal.wrapU = Constants.TEXTURE_CLAMP_ADDRESSMODE
+    internal.wrapV = Constants.TEXTURE_CLAMP_ADDRESSMODE
+    const thin = new ThinTexture(internal)
+    const rec = { internal, thin, rtw, width, height, format: spec.format, handle: thin }
+    this.textures.set(id, rec)
+    // Initialize to transparent black (webgl2 clears new render FBOs).
+    this._clearRtw(rtw, width, height)
+    return rec
+  }
+
+  createTexture3D (id, spec) {
+    // 3D volumes (synth3d/filter3d) — staged; not used by the Tier-1 2D corpus.
+    throw new Error('BabylonBackend.createTexture3D not yet implemented (3D staged)')
+  }
+
+  destroyTexture (id) {
+    const rec = this.textures.get(id)
+    if (!rec) return
+    try { rec.thin?.dispose?.() } catch { /* noop */ }
+    try { rec.rtw?.dispose?.() } catch { /* noop */ }
+    this.textures.delete(id)
+  }
+
+  clearTexture (id) {
+    const rec = this.textures.get(id)
+    if (rec) this._clearRtw(rec.rtw, rec.width, rec.height)
+  }
+
+  _clearRtw (rtw, width, height) {
+    const engine = this.engine
+    engine.bindFramebuffer(rtw, 0, undefined, undefined, true)
+    engine.clear(new Color4(0, 0, 0, 0), true, false, false)
+    engine.unBindFramebuffer(rtw, true)
+  }
+
+  copyTexture (srcId, dstId) {
+    const src = this.textures.get(srcId)
+    const dst = this.textures.get(dstId)
+    if (!src || !dst) return
+    this._bindPass = { __copySrc: src.thin }
+    this.engine.setAlphaMode(Constants.ALPHA_DISABLE)
+    this.effectRenderer.render(this._copyWrapper, dst.rtw)
+    this._bindPass = null
+  }
+
+  _buildCopyWrapper () {
+    // gl_FragCoord/texelFetch same-size copy (parity-equivalent to the reference blit, but
+    // independent of any vertex varying). MUST carry `#version 300 es` or Babylon runs its
+    // ES1->ES3 migration and the effect never compiles.
+    const w = new EffectWrapper({
+      engine: this.engine,
+      name: 'nm_copy',
+      useShaderStore: false,
+      useAsPostProcess: false,
+      allowEmptySourceTexture: true,
+      shaderLanguage: ShaderLanguage.GLSL,
+      vertexShader: FULLSCREEN_VS,
+      samplerNames: ['src'],
+      uniformNames: [],
+      fragmentShader: '#version 300 es\nprecision highp float;\nuniform sampler2D src;\nout vec4 fragColor;\nvoid main(){ fragColor = texelFetch(src, ivec2(gl_FragCoord.xy), 0); }\n'
+    })
+    w.onApplyObservable.add(() => {
+      if (this._bindPass && this._bindPass.__copySrc) w.effect.setTexture('src', this._bindPass.__copySrc)
+    })
+    return w
+  }
+
+  // ---- programs --------------------------------------------------------------
+
+  async compileProgram (id, spec) {
+    // The reference `blit` program samples a `v_texCoord` varying emitted by the reference
+    // fullscreen vertex; Babylon's EffectRenderer uses its own vertex (vUV), so that varying
+    // would be unbound. We render blit passes via _executeBlit (a gl_FragCoord/texelFetch
+    // copy — parity-equivalent for a same-size NEAREST blit), so skip compiling it here.
+    if (id === 'blit') return null
+
+    const rawSource = spec.source || spec.glsl || spec.fragment
+    if (!rawSource) throw new Error(`Shader source missing for program '${id}'.`)
+    // Guarantee `#version 300 es` is the FIRST directive. Babylon uses it to take the GLSL ES3
+    // path and SKIP its ES1->ES3 migration; without it (90/247 reference shaders omit the line —
+    // the reference backend prepends it in injectDefines) Babylon mangles our ES3 source and
+    // injects a conflicting `layout(location=0) out vec4 glFragColor;` alongside `out vec4
+    // fragColor;`. So strip any existing version and prepend version + highp precision (PCG
+    // needs highp int), exactly like webgl2.injectDefines. Defines go via the `defines` option.
+    const body = rawSource.replace(/^[ \t]*#version[^\n]*$/m, '')
+    const cleaned = '#version 300 es\nprecision highp float;\nprecision highp int;\n' + body
+    const { uniformTypes, samplerNames, uniformNames } = parseUniforms(cleaned)
+    const defines = spec.defines && Object.keys(spec.defines).length
+      ? Object.entries(spec.defines).map(([k, v]) => `#define ${k} ${v}`)
+      : null
+
+    const wrapper = new EffectWrapper({
+      engine: this.engine,
+      name: id,
+      useShaderStore: false,
+      useAsPostProcess: false,
+      allowEmptySourceTexture: true,
+      shaderLanguage: ShaderLanguage.GLSL,
+      vertexShader: FULLSCREEN_VS,
+      fragmentShader: cleaned,
+      uniformNames,
+      samplerNames,
+      defines
+    })
+
+    const rec = { wrapper, uniformTypes, samplerSet: new Set(samplerNames) }
+    // Bind inputs + uniforms at draw time (onApply fires after enableEffect, before draw).
+    wrapper.onApplyObservable.add(() => {
+      if (!this._bindPass || this._bindPass.__copySrc) return
+      this._bindInputs(this._bindPass, rec, wrapper.effect, this._bindState)
+      this._bindUniforms(this._bindPass, rec, wrapper.effect, this._bindState)
+    })
+
+    await this._whenReady(wrapper)
+    this.programs.set(id, rec)
+    return rec
+  }
+
+  _whenReady (wrapper) {
+    // Runs in the browser (Date/setTimeout available). Babylon may compile via
+    // KHR_parallel_shader_compile (async), so poll isReady() yielding to the event loop.
+    return new Promise((resolve, reject) => {
+      const deadline = Date.now() + 30000
+      const tick = () => {
+        const eff = wrapper.effect
+        if (eff && eff.isReady && eff.isReady()) return resolve()
+        const err = eff && typeof eff.getCompilationError === 'function' ? eff.getCompilationError() : null
+        if (err) return reject(new Error(`Shader compile failed (${wrapper.name}): ${err}`))
+        if (Date.now() > deadline) return reject(new Error(`Shader compile timeout (${wrapper.name})`))
+        setTimeout(tick, 2)
+      }
+      tick()
+    })
+  }
+
+  // ---- pass execution --------------------------------------------------------
+
+  executePass (pass, state) {
+    const effectivePass = (pass.storageTextures || (pass.outputs && pass.outputs.outputBuffer))
+      ? this._convertComputeToRender(pass)
+      : pass
+
+    if (effectivePass.program === 'blit') {
+      return this._executeBlit(effectivePass, state)
+    }
+
+    const prog = this.programs.get(effectivePass.program)
+    if (!prog) {
+      throw { code: 'ERR_PROGRAM_NOT_FOUND', pass: effectivePass.id, program: effectivePass.program }
+    }
+
+    const outputKeys = Object.keys(effectivePass.outputs || {})
+    const isMRT = effectivePass.drawBuffers > 1 || outputKeys.length > 1
+    if (isMRT) {
+      // MRT (agent/3D state passes) — staged; not used by the single-pass Tier-1 corpus.
+      console.warn(`[BabylonBackend] MRT pass ${effectivePass.id} skipped (staged)`)
+      return
+    }
+
+    let outputId = effectivePass.outputs?.color || Object.values(effectivePass.outputs || {})[0]
+    const gname = parseGlobalName(outputId)
+    if (gname && state.writeSurfaces && state.writeSurfaces[gname]) outputId = state.writeSurfaces[gname]
+    const outRec = this.textures.get(outputId)
+    if (!outRec) {
+      console.warn(`[BabylonBackend] output texture not found: ${outputId} (pass ${effectivePass.id})`)
+      return
+    }
+
+    // Blend (mirrors webgl2 executePass).
+    this.engine.setAlphaMode(this._resolveAlphaMode(effectivePass.blend))
+
+    // drawMode points/billboards/triangles are 3D/agent paths — staged. Default = fullscreen.
+    if (effectivePass.drawMode && effectivePass.drawMode !== 'triangles') {
+      console.warn(`[BabylonBackend] drawMode '${effectivePass.drawMode}' staged (pass ${effectivePass.id})`)
+      this.engine.setAlphaMode(Constants.ALPHA_DISABLE)
+      return
+    }
+
+    this._bindPass = effectivePass
+    this._bindState = state
+    this.effectRenderer.render(prog.wrapper, outRec.rtw)
+    this._bindPass = null
+    this._bindState = null
+    this.engine.setAlphaMode(Constants.ALPHA_DISABLE)
+  }
+
+  _executeBlit (pass, state) {
+    // Internal copy pass (program:'blit'): inputs.src -> outputs.color (a surface).
+    let outputId = pass.outputs?.color || Object.values(pass.outputs || {})[0]
+    const gname = parseGlobalName(outputId)
+    if (gname && state.writeSurfaces && state.writeSurfaces[gname]) outputId = state.writeSurfaces[gname]
+    const dst = this.textures.get(outputId)
+    if (!dst) return
+    const srcThin = this._resolveInput(pass.inputs?.src, state)
+    this._bindPass = { __copySrc: srcThin }
+    this.engine.setAlphaMode(Constants.ALPHA_DISABLE)
+    this.effectRenderer.render(this._copyWrapper, dst.rtw)
+    this._bindPass = null
+  }
+
+  _convertComputeToRender (pass) {
+    const renderPass = { ...pass, type: 'render' }
+    if (pass.storageTextures) {
+      renderPass.outputs = {}
+      for (const [k, texId] of Object.entries(pass.storageTextures)) renderPass.outputs[k] = texId
+    }
+    if (pass.outputs) {
+      renderPass.outputs = {}
+      for (const [k, texId] of Object.entries(pass.outputs)) {
+        renderPass.outputs[k === 'outputBuffer' ? 'color' : k] = texId
+      }
+    }
+    if (!renderPass.outputs || Object.keys(renderPass.outputs).length === 0) {
+      renderPass.outputs = { color: 'outputTex' }
+    }
+    return renderPass
+  }
+
+  _resolveInput (texId, state) {
+    if (texId == null || texId === 'none') return this._defaultTexture
+    const gname = parseGlobalName(texId)
+    if (gname) {
+      const rec = this.textures.get(texId)
+      if (rec) return rec.thin
+      const surf = state.surfaces?.[gname]
+      if (surf && surf.thin) return surf.thin
+      if (surf && surf.handle) return surf.handle
+      return this._defaultTexture
+    }
+    const rec = this.textures.get(texId)
+    return rec ? rec.thin : this._defaultTexture
+  }
+
+  _bindInputs (pass, prog, effect, state) {
+    if (!pass.inputs) return
+    for (const [samplerName, texId] of Object.entries(pass.inputs)) {
+      if (!prog.samplerSet.has(samplerName)) continue
+      effect.setTexture(samplerName, this._resolveInput(texId, state))
+    }
+  }
+
+  _bindUniforms (pass, prog, effect, state) {
+    const types = prog.uniformTypes
+    if (pass.uniforms) {
+      for (const name in pass.uniforms) {
+        if (!(name in types)) continue
+        const v = pass.uniforms[name]
+        if (v === undefined || v === null) continue
+        this._setUniform(effect, name, types[name], v)
+      }
+    }
+    if (state && state.globalUniforms) {
+      for (const name in state.globalUniforms) {
+        if (pass.uniforms && name in pass.uniforms) continue
+        if (!(name in types)) continue
+        const v = state.globalUniforms[name]
+        if (v === undefined || v === null) continue
+        this._setUniform(effect, name, types[name], v)
+      }
+    }
+  }
+
+  _setUniform (effect, name, type, value) {
+    switch (type) {
+      case 'float':
+        effect.setFloat(name, Array.isArray(value) ? value[0] : value)
+        break
+      case 'int':
+        effect.setInt(name, typeof value === 'boolean' ? (value ? 1 : 0) : (value | 0))
+        break
+      case 'bool':
+        effect.setBool(name, typeof value === 'boolean' ? value : !!value)
+        break
+      case 'vec2': {
+        const a = Array.isArray(value) ? value : [value, value]
+        effect.setFloat2(name, a[0] ?? 0, a[1] ?? 0)
+        break
+      }
+      case 'vec3': {
+        const a = Array.isArray(value) ? value : [value, value, value]
+        effect.setFloat3(name, a[0] ?? 0, a[1] ?? 0, a[2] ?? 0)
+        break
+      }
+      case 'vec4': {
+        const a = Array.isArray(value) ? value : [value, value, value, value]
+        effect.setFloat4(name, a[0] ?? 0, a[1] ?? 0, a[2] ?? 0, a[3] ?? 1)
+        break
+      }
+      case 'mat3':
+        effect.setMatrix3x3(name, value)
+        break
+      case 'mat4':
+        effect.setMatrix(name, value)
+        break
+      default:
+        // ivecN / uintN / etc. — fall back to float-ish; extend as needed.
+        if (Array.isArray(value)) effect.setArray(name, value)
+        else effect.setFloat(name, value)
+    }
+  }
+
+  _resolveAlphaMode (blend) {
+    if (!blend) return Constants.ALPHA_DISABLE
+    if (Array.isArray(blend)) {
+      const [s, d] = blend
+      const add = (x) => String(x).toLowerCase()
+      if (add(s) === 'one' && add(d) === 'one') return Constants.ALPHA_ADD
+      if (add(s) === 'src-alpha' && add(d) === 'one-minus-src-alpha') return Constants.ALPHA_COMBINE
+      // Best-effort: most reference blends are additive deposits.
+      return Constants.ALPHA_ADD
+    }
+    return Constants.ALPHA_ADD
+  }
+
+  // ---- frame lifecycle / present / readback ----------------------------------
+
+  beginFrame () { /* no-op: surfaces persist; EffectRenderer does not auto-clear */ }
+  endFrame () { /* no-op: engine flushes on readback */ }
+
+  present (textureId) {
+    // Offscreen parity reads surfaces directly; on-screen presentation is a P4 concern.
+    // A no-op here keeps the reference Pipeline's present step harmless.
+  }
+
+  // Mirrors webgl2.readPixels: returns top-down RGBA8 (0..255). Half-float values are
+  // quantized with round(v*255), exactly like the reference golden readback.
+  async readPixels (textureId) {
+    const rec = this.textures.get(textureId)
+    if (!rec) throw new Error(`Texture ${textureId} not found`)
+    const { internal, width, height } = rec
+    const raw = await this.engine._readTexturePixels(internal, width, height, -1, 0, null, true, false, 0, 0)
+    const out = new Uint8Array(width * height * 4)
+    if (raw instanceof Float32Array) {
+      for (let i = 0; i < out.length; i++) {
+        out[i] = Math.max(0, Math.min(255, Math.round(raw[i] * 255)))
+      }
+    } else {
+      out.set(raw.subarray(0, out.length))
+    }
+    // WebGL2 readback is bottom-up; flip rows to top-down to match the golden orientation.
+    const flipped = new Uint8Array(width * height * 4)
+    const rowBytes = width * 4
+    for (let y = 0; y < height; y++) {
+      flipped.set(out.subarray((height - 1 - y) * rowBytes, (height - y) * rowBytes), y * rowBytes)
+    }
+    return { width, height, data: flipped }
+  }
+
+  destroy () {
+    for (const id of [...this.textures.keys()]) this.destroyTexture(id)
+    try { this.effectRenderer?.dispose?.() } catch { /* noop */ }
+  }
+}
+
+export default BabylonBackend

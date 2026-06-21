@@ -1,0 +1,32 @@
+{
+  "name": "noisemaker-babylon",
+  "version": "0.1.0",
+  "description": "Babylon.js port of the Noisemaker procedural shader engine — DSL compiler, render-graph executor, and effects collection, running pixel-identically to the reference WebGL2 engine.",
+  "author": "Noise Factor LLC <team@noisefactor.io>",
+  "license": "MIT",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./compiler": "./src/compiler/index.js",
+    "./runtime": "./src/runtime/index.js"
+  },
+  "files": [
+    "src/",
+    "README.md",
+    "ARCHITECTURE.md",
+    "PORTING-GUIDE.md"
+  ],
+  "scripts": {
+    "export-graph": "node tools/export-graph.mjs",
+    "parity": "bash parity/sweep.sh",
+    "parity:one": "bash parity/run.sh"
+  },
+  "peerDependencies": {
+    "@babylonjs/core": "^9.13.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.1",
+    "playwright": "^1.61.0"
+  }
+}
