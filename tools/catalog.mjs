@@ -1,17 +1,19 @@
 #!/usr/bin/env node
-// catalog.mjs — enumerate every reference effect, classify it (renderable-2D vs staged
-// MRT/points/3D), extract its canonical defaultProgram, and report the gap vs parity/programs.
+// catalog.mjs — enumerate every effect, classify it (renderable-2D vs staged MRT/points/3D),
+// extract its canonical defaultProgram, and report the gap vs parity/programs.
 // Output: a JSON catalog on stdout (or to argv[0]) + a human summary on stderr.
-// Env: NM_REFERENCE_ROOT (default ../../noisemaker)
+// Source: the VENDORED published engine (vendor/noisemaker — fetched by vendor/fetch.sh, gitignored).
 
-import { readdirSync, statSync, existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { readdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, dirname, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const REFERENCE_ROOT = process.env.NM_REFERENCE_ROOT ? resolve(process.env.NM_REFERENCE_ROOT) : resolve(__dirname, '..', '..', 'noisemaker')
-const EFFECTS_DIR = join(REFERENCE_ROOT, 'shaders', 'effects')
+const EFFECTS_DIR = resolve(__dirname, '..', 'vendor', 'noisemaker', 'effects')
 const PROGRAMS_DIR = resolve(__dirname, '..', 'parity', 'programs')
+if (!existsSync(join(EFFECTS_DIR, 'manifest.json'))) {
+  process.stderr.write('Vendored engine missing. Run: bash vendor/fetch.sh\n'); process.exit(2)
+}
 
 const have = new Set(existsSync(PROGRAMS_DIR) ? readdirSync(PROGRAMS_DIR).filter(f => f.endsWith('.dsl')).map(f => f.slice(0, -4)) : [])
 
@@ -30,16 +32,14 @@ function classify (inst) {
 
 const cats = {}
 const rows = []
-const namespaces = readdirSync(EFFECTS_DIR, { withFileTypes: true }).filter(d => d.isDirectory()).map(d => d.name)
-for (const ns of namespaces) {
-  const nsDir = join(EFFECTS_DIR, ns)
-  let names
-  try { names = readdirSync(nsDir, { withFileTypes: true }).filter(d => d.isDirectory()).map(d => d.name) } catch { continue }
-  for (const dir of names) {
-    const defPath = join(nsDir, dir, 'definition.js')
-    try { statSync(defPath) } catch { continue }
+// Each effect is a per-effect mini-bundle (vendor/noisemaker/effects/<ns>/<eff>.js) whose default
+// export is the effect instance (definition + GLSL inline) — the same artifact production loads.
+const manifest = JSON.parse(readFileSync(join(EFFECTS_DIR, 'manifest.json'), 'utf8'))
+for (const id of Object.keys(manifest)) {
+  const [ns, dir] = id.split('/')
+  {
     let inst
-    try { const mod = await import(pathToFileURL(defPath).href); const def = mod.default; inst = (typeof def === 'function') ? new def() : def } catch (e) { rows.push({ ns, dir, error: String(e).split('\n')[0] }); continue }
+    try { const mod = await import(pathToFileURL(join(EFFECTS_DIR, ns, `${dir}.js`)).href); const def = mod.default; inst = (typeof def === 'function') ? new def() : def } catch (e) { rows.push({ ns, dir, error: String(e).split('\n')[0] }); continue }
     if (!inst) continue
     const func = inst.func || dir
     const inputs = (inst.passes || []).flatMap(p => Object.keys(p.inputs || {}))

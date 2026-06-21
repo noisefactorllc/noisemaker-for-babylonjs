@@ -13,7 +13,7 @@ import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js'
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js'
 import { Texture } from '@babylonjs/core/Materials/Textures/texture.js'
 import '@babylonjs/core/Shaders/postprocess.vertex.js' // EffectRenderer's default vertex
-import { Pipeline } from '../../noisemaker/shaders/src/runtime/pipeline.js'
+import { Pipeline } from '../vendor/noisemaker/noisemaker-shaders-core.esm.js'
 import { NoisemakerRenderer } from '../src/runtime/renderer.js'
 import fatGraph from './demo.fatgraph.json'
 

@@ -18,7 +18,9 @@
     "PORTING-GUIDE.md"
   ],
   "scripts": {
-    "export-graph": "node tools/export-graph.mjs",
+    "vendor": "bash vendor/fetch.sh",
+    "fat-graph": "node tools/export-fat-graph.mjs",
+    "examples": "node examples/build.mjs",
     "parity": "bash parity/sweep.sh",
     "parity:one": "bash parity/run.sh"
   },

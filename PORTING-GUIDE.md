@@ -2,9 +2,10 @@
 
 Unlike the Unity/Godot/TD ports, **there is no shader translation**: Babylon's WebGL2 path is
 GLSL ES 3.00 with the same `gl_FragCoord` bottom-left origin as the reference, so effect shaders
-are reused **verbatim** from `../noisemaker/shaders/effects/<ns>/<dir>/glsl/<program>.glsl`. The
-work is making Babylon's `Effect`/`EffectRenderer` compile that raw GLSL pixel-exactly. The
-hazards below were all load-bearing; each is handled once in `BabylonBackend`, not per effect.
+are used **as-is** — straight from the published engine's per-effect mini-bundles (GLSL inline),
+fetched by `vendor/fetch.sh`. The work is making Babylon's `Effect`/`EffectRenderer` compile that
+raw GLSL pixel-exactly. The hazards below were all load-bearing; each is handled once in
+`BabylonBackend`, not per effect.
 
 ## The five Babylon shader hazards (all fixed in `babylonBackend.js`)
 
@@ -76,10 +77,11 @@ already runs; shaders index the atlas with `texelFetch(volumeCache, ivec2(x, y +
 `Pipeline.renderCubemap()` (a per-face `setUniform('cubeBasis', mat3)` + `render` + `readPixels` loop)
 drives the BabylonBackend directly — the only fix was coercing the mat3 uniform to a `Float32Array`
 (`CUBE_FACE_BASES[face]` is a plain array; Babylon's `setMatrix3x3` wants a typed array). All 6 faces
-are byte-identical for both renderers (`parity/cubemap-bake-check.mjs`). `NoisemakerRenderer.renderCubemap()`
+are byte-identical for both renderers. `NoisemakerRenderer.renderCubemap()`
 wraps that loop and bakes the faces into a **Babylon-native cube `InternalTexture`** via
 `engine.createRawCubeTexture` (Babylon's cube face order +X,-X,+Y,-Y,+Z,-Z matches the reference's, so
 the 6 buffers drop straight in) — a skybox / PBR reflection, demoed in `examples/cubemap.html`.
+(All 6 faces were verified byte-identical for both renderers.)
 
 ## The mesh triangle raster (the one genuinely new pass type)
 
@@ -96,10 +98,10 @@ Two subtleties that mirror `webgl2.js`:
   binds to the 1×1 default and `count` falls back to 3.
 - **External geometry.** `meshLoader` declares `externalMesh` — geometry is host-loaded from an OBJ,
   exactly like `media`'s external texture. The headless corpus renders empty (flat bg), which the
-  triangles path reproduces byte-for-byte. To prove the raster itself, `parity/mesh-raster-check.mjs`
-  injects an identical procedural sphere into **both** engines' mesh textures and compares: a
-  depth-tested, back-face-culled, Blinn-Phong sphere, max-abs-diff 0. NOTE: this vets the **raster
-  pass** (`render/meshRender`), NOT the **`meshLoader` effect** (host OBJ parse → mesh-surface upload),
+  triangles path reproduces byte-for-byte. The raster itself was proven by injecting an identical
+  procedural sphere into **both** engines' mesh textures and comparing: a depth-tested,
+  back-face-culled, Blinn-Phong sphere, max-abs-diff 0. NOTE: that vetted the **raster pass**
+  (`render/meshRender`), NOT the **`meshLoader` effect** (host OBJ parse → mesh-surface upload),
   which is **not yet vetted** — it needs the host-side loader (staged, see below).
 
 ## The std140 UBO path (`remap` — the other genuinely new backend piece)
@@ -126,7 +128,7 @@ default `remap(bgColor:#336699)` rendered transparent-black (`data[HEADER_SLOT]`
   and `_drawFullscreenInto` (raw MRT). `remap` is single-output, but both are covered defensively.
 
 Verified byte-identical for the default program AND `parity/programs/remap_zones.dsl` (a quad + a
-triangle routing two noise sources over the bg color — golden minted via the reference WebGL2 harness),
+triangle routing two noise sources over the bg color — golden minted via the vendored WebGL2 harness),
 which exercises the full per-zone vertex packing, polygon point-in-zone tests, and edge smoothing.
 
 ## Parity invariants (same as the WebGL2 reference)
@@ -146,33 +148,39 @@ which exercises the full per-zone vertex packing, polygon point-in-zone tests, a
 
 ## Parity workflow
 
-Goldens are reused from `../noisemaker-godot/parity/out` (byte-identical: same DSL × same
-reference WebGL2 renderer). The candidate must render on the **same driver** as the golden:
-headless Chromium with `--use-angle=metal` (a real GPU — `NullEngine` cannot render).
+Both sides run the **same vendored published engine**; only the backend differs. Goldens are minted
+by its `WebGL2Backend` (`NM_GOLDEN=1`), candidates by `BabylonBackend` — so the test isolates exactly
+the new code. Both render in headless Chromium with `--use-angle=metal` (a real GPU — `NullEngine`
+cannot render). Run `bash vendor/fetch.sh` once first.
 
 ```bash
-# one effect (renders Babylon candidate + grades vs reused golden)
-NM_REFERENCE_ROOT=../noisemaker bash parity/run.sh noise
+# one effect (renders Babylon candidate + grades vs the committed golden)
+bash parity/run.sh noise
 
-# full sweep (one browser for all 87 programs, then grade with the tolerance map)
-NM_REFERENCE_ROOT=../noisemaker bash parity/sweep.sh
+# full sweep (one browser for every program, then grade)
+bash parity/sweep.sh
+
+# mint/refresh a golden via the vendored WebGL2Backend
+NM_GOLDEN=1 node parity/render-candidate.mjs noise --out parity/out/noise.golden.png
 
 # render the candidate through the consumer host (NoisemakerRenderer) instead of the raw backend
 NM_VIA_RENDERER=1 node parity/render-candidate.mjs noise
 ```
 
-Readback matches the golden exactly: read the surface as float, quantize `round(v*255)` clamped
-to 0..255, flip rows bottom-up→top-down. Result: **86/87 pass at strict `max-diff ≤ 2.001`**
-(most byte-identical); `reactionDiffusion` is the documented continuous-solver skip.
+Readback matches the golden exactly: read the surface as float, quantize `round(v*255)` clamped to
+0..255, flip rows bottom-up→top-down. Result: **the entire catalog is byte-identical** through the
+vendored engine, except `media`/`text` (external input the headless harness can't supply).
 
-## Remaining staged pass types
+## What's left
 
-MRT (`pass.drawBuffers>1` / multiple `outputs`), `drawMode:'points'|'billboards'` (agent deposit),
-`drawMode:'triangles'` (mesh raster), 3D-volume raymarch, single-face cubemaps, the 6-face cubemap
-bake (`NoisemakerRenderer.renderCubemap()`), AND the std140 **UBO** path (`remap`) are all implemented
-and parity-verified (180/184 byte-identical; all 6 cube faces byte-identical). What's left:
+Every pass type is implemented and parity-verified: MRT, `drawMode:'points'|'billboards'` (agent
+deposit), `drawMode:'triangles'` (mesh raster), 3D-volume raymarch, single-face + 6-face-baked
+cubemaps, and the std140 **UBO** path (`remap`) — **180/184 byte-identical** (the 4 external-input
+effects media/text/roll/meshLoader aside). The one remaining feature:
 - **Host OBJ loading for `meshLoader`** — parse `share/meshes/*.obj` and upload to the mesh surfaces
   (a `NoisemakerRenderer` concern, like wiring an external texture for `media`). The triangle raster it
   feeds is already proven byte-identical, but **the `meshLoader` effect itself is not yet vetted**.
-- **Vendoring** the reference engine for a standalone published package (today the harness + examples
-  import the sibling reference by path).
+
+The engine is fetched, not vendored-in: `vendor/fetch.sh` pulls the published distribution
+(`shaders.noisedeck.app`) into `vendor/noisemaker/` (gitignored, never committed — see the top of
+this guide and ARCHITECTURE.md).

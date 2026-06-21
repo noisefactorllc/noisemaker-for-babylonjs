@@ -1,129 +1,22 @@
 #!/usr/bin/env node
 // export-fat-graph.mjs — produce a RUNNABLE render graph for the Babylon harness.
 //
-// The normalized golden graph.json (export-graph.mjs) is structure-only: it DROPS
-// per-program shader source and even the effect program entries (only `blit` survives),
-// because the foreign-language ports load their own ported shaders by progName. The
-// Babylon port instead runs the *reference* engine itself, so it needs the RUNTIME graph
-// WITH GLSL source attached to every program.
+// Runs the VENDORED published Noisemaker engine (vendor/noisemaker — the same artifact
+// noisedeck.app ships) and serializes the runtime graph as a "fat graph": passes +
+// programs-with-GLSL-source + textures + renderSurface. The harness reconstructs it and feeds a
+// stock `new Pipeline(graph, BabylonBackend)`. GLSL is embedded here, so the browser side never
+// needs the engine's effect bundles — only `Pipeline` from the core ESM.
 //
-// This tool mirrors export-graph.mjs's effect registration, but additionally loads each
-// effect's `glsl/<program>.glsl` into the instance BEFORE compileGraph (exactly what
-// canvas.js loadEffectShaders does in the browser, so the expander attaches it to each
-// program). It then serializes the runtime graph (passes + programs-with-source +
-// textures + renderSurface) as a "fat graph" the harness reconstructs and feeds to a
-// stock `new Pipeline(graph, BabylonBackend)`.
+// The engine + per-effect mini-bundles are vendored from https://shaders.noisedeck.app/<version>
+// (see vendor/fetch.sh); nothing here references a sibling checkout.
 //
 // Usage:
 //   node export-fat-graph.mjs "<dsl>" [out.json]
 //   node export-fat-graph.mjs --file program.dsl [out.json]
-// Env: NM_REFERENCE_ROOT (default ../../noisemaker)
 
-import { readFileSync, writeFileSync, readdirSync, statSync, existsSync } from 'node:fs'
-import { join, dirname, resolve, basename } from 'node:path'
-import { fileURLToPath, pathToFileURL } from 'node:url'
-
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const REFERENCE_ROOT = process.env.NM_REFERENCE_ROOT
-  ? resolve(process.env.NM_REFERENCE_ROOT)
-  : resolve(__dirname, '..', '..', 'noisemaker')
-const SRC_INDEX = join(REFERENCE_ROOT, 'shaders', 'src', 'index.js')
-const EFFECTS_DIR = join(REFERENCE_ROOT, 'shaders', 'effects')
-
-let _booted = null
-async function bootstrap () {
-  if (_booted) return _booted
-  const mod = await import(pathToFileURL(SRC_INDEX).href)
-  const {
-    compileGraph, registerEffect, registerOp, registerStarterOps,
-    mergeIntoEnums, stdEnums, sanitizeEnumName
-  } = mod
-
-  if (mergeIntoEnums && stdEnums) await mergeIntoEnums(stdEnums)
-  if (registerStarterOps) registerStarterOps()
-
-  const allChoices = {}
-  const namespaces = readdirSync(EFFECTS_DIR, { withFileTypes: true })
-    .filter(d => d.isDirectory()).map(d => d.name)
-
-  for (const namespace of namespaces) {
-    const nsDir = join(EFFECTS_DIR, namespace)
-    let effectNames
-    try {
-      effectNames = readdirSync(nsDir, { withFileTypes: true })
-        .filter(d => d.isDirectory()).map(d => d.name)
-    } catch { continue }
-
-    for (const name of effectNames) {
-      const defPath = join(nsDir, name, 'definition.js')
-      try { statSync(defPath) } catch { continue }
-      let effectMod
-      try {
-        effectMod = await import(pathToFileURL(defPath).href)
-      } catch (err) {
-        process.stderr.write(`[fat-graph] skip ${namespace}/${name}: ${err?.message || err}\n`)
-        continue
-      }
-      const def = effectMod.default
-      const instance = (typeof def === 'function') ? new def() : def
-      if (!instance) continue
-      if (!instance.namespace) instance.namespace = namespace
-
-      // Attach GLSL source to the instance (canvas.js loadEffectShaders, filesystem edition).
-      // The expander spreads effectDef.shaders into each program, so compileGraph's runtime
-      // graph carries the source.
-      if (!instance.shaders) instance.shaders = {}
-      const glslDir = join(nsDir, name, 'glsl')
-      for (const pass of (instance.passes || [])) {
-        const prog = pass.program
-        if (!prog) continue
-        const bucket = (instance.shaders[prog] ??= {})
-        // Combined `.glsl` fragment, plus optional separate `.vert` (points/agent draws need a
-        // custom vertex shader) and `.frag` (the {v,f} split form). Mirrors loadEffectShaders.
-        const g = join(glslDir, `${prog}.glsl`); if (existsSync(g)) bucket.glsl = readFileSync(g, 'utf8')
-        const v = join(glslDir, `${prog}.vert`); if (existsSync(v)) bucket.vertex = readFileSync(v, 'utf8')
-        const fr = join(glslDir, `${prog}.frag`); if (existsSync(fr)) bucket.fragment = readFileSync(fr, 'utf8')
-      }
-
-      const func = instance.func || name
-      registerEffect(func, instance)
-      registerEffect(`${namespace}.${func}`, instance)
-      registerEffect(`${namespace}/${name}`, instance)
-      registerEffect(`${namespace}.${name}`, instance)
-
-      const args = Object.entries(instance.globals || {}).map(([key, spec]) => {
-        let enumPath = spec.enum || spec.enumPath
-        if (spec.choices && !enumPath) {
-          enumPath = `${namespace}.${func}.${key}`
-          allChoices[namespace] = allChoices[namespace] || {}
-          allChoices[namespace][func] = allChoices[namespace][func] || {}
-          allChoices[namespace][func][key] = allChoices[namespace][func][key] || {}
-          for (const [nm, val] of Object.entries(spec.choices)) {
-            if (typeof nm === 'string' && nm.endsWith(':')) continue
-            allChoices[namespace][func][key][nm] = { type: 'Number', value: val }
-            const san = sanitizeEnumName ? sanitizeEnumName(nm) : nm
-            if (san && san !== nm) allChoices[namespace][func][key][san] = { type: 'Number', value: val }
-          }
-        }
-        return {
-          name: key, type: spec.type === 'vec4' ? 'color' : spec.type, default: spec.default,
-          enum: enumPath, enumPath, min: spec.min, max: spec.max, uniform: spec.uniform, choices: spec.choices
-        }
-      })
-      if (registerOp) registerOp(`${namespace}.${func}`, { name: func, args })
-
-      const isStarter = !((instance.passes || []).some(p =>
-        p.inputs && Object.values(p.inputs).some(v =>
-          ['inputTex', 'inputTex3d', 'src', 'o0', 'o1'].includes(v))))
-      if (isStarter && registerStarterOps) registerStarterOps([`${namespace}.${func}`])
-      if (instance.enums && mergeIntoEnums) await mergeIntoEnums(instance.enums)
-    }
-  }
-
-  if (mergeIntoEnums && Object.keys(allChoices).length) await mergeIntoEnums(allChoices)
-  _booted = { compileGraph }
-  return _booted
-}
+import { readFileSync, writeFileSync } from 'node:fs'
+import { basename } from 'node:path'
+import { bootEngine } from '../vendor/engine.mjs'
 
 // Runtime graph -> JSON-serializable "fat graph": Map->object, keep program source, drop
 // volatile fields (compiledAt) and the allocations Map (the runtime executor ignores it).
@@ -156,7 +49,7 @@ function fatten (graph) {
 }
 
 export async function exportFatGraph (dsl) {
-  const { compileGraph } = await bootstrap()
+  const { compileGraph } = await bootEngine()
   const graph = compileGraph(dsl)
   return fatten(graph)
 }

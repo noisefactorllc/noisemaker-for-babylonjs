@@ -2,19 +2,29 @@
 
 A [Babylon.js](https://www.babylonjs.com/) port of the Noisemaker procedural shader engine —
 the Polymorphic-DSL **compiler**, the render-graph **executor**, and the **effects collection** —
-rendering **pixel-identically to the reference WebGL2 engine** (`../noisemaker`).
+rendering **pixel-identically to the reference WebGL2 engine**.
 
 Sibling to `noisemaker-hlsl` (Unity), `noisemaker-godot`, and `noisemaker-td` (TouchDesigner).
 
 ## How it works
 
-Babylon.js is JavaScript driving WebGL2/WebGPU — the exact environment the reference engine
-already targets. So instead of re-implementing the engine, this port **reuses the reference DSL
-compiler + render Pipeline verbatim** and supplies a single new piece: a **`BabylonBackend`** that
-satisfies the reference `Backend` interface, so the unchanged `Pipeline` runs on `@babylonjs/core`.
-Effect shaders are reused **verbatim** (reference GLSL ES 3.00). The engine-agnostic seam is the
-render graph; here it goes one level deeper — the backend interface. See
-[ARCHITECTURE.md](ARCHITECTURE.md).
+Babylon.js is JavaScript driving WebGL2/WebGPU — the exact environment the Noisemaker engine
+already targets. So nothing about the shaders or the engine is *translated*. The port runs the
+engine **as published** and supplies a single new piece: a **`BabylonBackend`** that satisfies the
+engine's `Backend` interface, so the unchanged `Pipeline` runs on `@babylonjs/core`. Effect shaders
+are GLSL ES 3.00, used as-is. The engine-agnostic seam is the render graph; here it goes one level
+deeper — the backend interface. See [ARCHITECTURE.md](ARCHITECTURE.md).
+
+The engine is **not** vendored into this repo. `vendor/fetch.sh` fetches the published distribution
+from `shaders.noisedeck.app` — the engine core ESM (`Pipeline`/`compileGraph`/`WebGL2Backend`) plus
+the per-effect "mini-bundles" production pre-fetches — into `vendor/noisemaker/` (gitignored, the
+same posture as `node_modules`: the fetch script + loader are committed, never the downloaded bytes).
+Run it once before building or testing:
+
+```bash
+npm install            # @babylonjs/core (peer) + dev tooling
+bash vendor/fetch.sh   # fetch the published engine into vendor/noisemaker/ (gitignored)
+```
 
 ## Parity
 
@@ -41,11 +51,10 @@ the layout is WGSL/fallback metadata — so the UBO bind is a no-op for them.)
 
 The 4 remaining non-byte-identical effects all require an external source the headless harness can't
 supply: **media** (texture), **text** (glyphs), **roll** (MIDI), and **meshLoader** (OBJ geometry).
-The mesh *raster* `meshLoader` would feed (`render/meshRender`, `drawMode:'triangles'`) is itself
-**proven byte-identical** by injecting identical geometry into both engines
-(`parity/mesh-raster-check.mjs` — a depth-tested, back-face-culled, Blinn-Phong-lit sphere,
-max-abs-diff 0), but the **`meshLoader` effect itself (host OBJ load → mesh surfaces) is not yet
-vetted**.
+The mesh *raster* `meshLoader` would feed (`render/meshRender`, `drawMode:'triangles'`) was proven
+byte-identical (max-abs-diff 0) by injecting identical geometry into both engines — a depth-tested,
+back-face-culled, Blinn-Phong-lit sphere — but the **`meshLoader` effect itself (host OBJ load → mesh
+surfaces) is not yet vetted**.
 
 **End-to-end:** the complex emergent test program (3D perlin → 1M-agent flow-field particles
 [MRT+points+billboards] → blur → navierStokes ×40 → palette/lighting/adjust/bloom/lens/vignette) is
@@ -61,24 +70,24 @@ with a `layout(std140)` block in WebGL2).
 **Cubemap bake.** `NoisemakerRenderer.renderCubemap()` drives the reused `Pipeline.renderCubemap()`
 6-face loop and bakes the faces into a **Babylon-native cube texture** (the parallel of the HLSL
 port's Unity-native cubemap) — usable directly as a skybox / PBR reflection. **All 6 faces are
-byte-identical to the reference** for both `renderCubemapSurface` and `renderCubemap3d`
-(`parity/cubemap-bake-check.mjs`), and `examples/cubemap.html` renders a live skybox + reflective
-sphere from a baked noise volume.
+byte-identical to the reference** for both `renderCubemapSurface` and `renderCubemap3d`, and
+`examples/cubemap.html` renders a live skybox + reflective sphere from a baked noise volume.
 
 > The one load-bearing engine quirk (the kind every cross-engine port hits): the additive particle
 > deposit must use raw `blendFunc(ONE, ONE)`; Babylon's `setAlphaMode(ALPHA_ADD)` is `(SRC_ALPHA,
 > ONE)`, which crushes the HDR trail accumulation. See PORTING-GUIDE.md.
 
 ```bash
-npm install                                   # @babylonjs/core + dev tooling
-NM_REFERENCE_ROOT=../noisemaker bash parity/sweep.sh
+npm install && bash vendor/fetch.sh           # deps + fetch the published engine (gitignored)
+bash parity/sweep.sh                           # goldens + candidates, both via the vendored engine
 ```
 
 ## Usage
 
 ```js
 import { Engine } from '@babylonjs/core/Engines/engine.js'
-import { Pipeline } from '../noisemaker/shaders/src/runtime/pipeline.js' // the reference engine
+// The engine, fetched by vendor/fetch.sh (gitignored). In a browser the core ESM evaluates directly.
+import { Pipeline } from './vendor/noisemaker/noisemaker-shaders-core.esm.js'
 import { NoisemakerRenderer } from 'noisemaker-babylon'
 
 const engine = new Engine(canvas, true)
@@ -93,7 +102,7 @@ material.diffuseTexture = tex
 engine.runRenderLoop(() => { nm.renderFrame(t); scene.render() }) // t normalized 0..1
 ```
 
-Produce a `fatGraph` from a DSL program (runs the reference compiler with shader source attached):
+Produce a `fatGraph` from a DSL program (runs the vendored compiler with shader source attached):
 
 ```bash
 node tools/export-fat-graph.mjs "search synth
@@ -104,7 +113,7 @@ render(o0)" demo.fatgraph.json
 ### Example
 
 ```bash
-NM_REFERENCE_ROOT=../noisemaker node examples/build.mjs   # bundle both demos + generate fat graphs
+node examples/build.mjs                                   # bundle both demos + generate fat graphs
 # open examples/index.html    (a Noisemaker effect as a live texture on a spinning box)
 # open examples/cubemap.html  (a baked Noisemaker cubemap as a skybox + reflective sphere)
 node examples/verify.mjs                                  # headless render check (procedural texture)

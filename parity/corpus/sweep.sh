@@ -3,7 +3,7 @@
 # blaster.noisedeck.app) through the Babylon backend, evolved to a 30s steady state.
 #
 #   bash parity/corpus/fetch.sh        # (optional) refresh raw/<code>.json from the live feed
-#   NM_REFERENCE_ROOT=../noisemaker bash parity/corpus/sweep.sh
+#   bash parity/corpus/sweep.sh        # goldens + candidates both via the vendored engine
 #
 # Real third-party compositions are LOCAL-ONLY test fixtures (raw/ is gitignored); we commit the
 # harness, not the art. Stateful programs (particles/navierStokes/feedback) so evolved 30s.
@@ -36,9 +36,9 @@ import("./tools/export-fat-graph.mjs").then(async ({exportFatGraph})=>{
 [[ -s "$MAN" ]] || { echo "no gradeable corpus programs"; exit 1; }
 NAMES=$(cut -f1 "$MAN" | tr "\n" " ")
 
-# 2. Golden (reference demo viewer) + 3. candidate (Babylon), both evolved.
-echo "=== goldens (reference WebGL2, ${EVO_FRAMES}f) ==="
-node parity/batch-golden.mjs "$MAN" parity/out --size 256 --time 0.25 --frames "$EVO_FRAMES" --timestep "$EVO_TS" 2>&1 | grep -iE "ok,|fail" | tail -1
+# 2. Golden (vendored WebGL2Backend) + 3. candidate (Babylon), both evolved — same vendored engine.
+echo "=== goldens (vendored WebGL2Backend, ${EVO_FRAMES}f) ==="
+NM_GOLDEN=1 node parity/render-batch.mjs $NAMES --size 256 --time 0.25 --frames "$EVO_FRAMES" --timestep "$EVO_TS" 2>&1 | grep -E "ERR|rendered" | tail -2
 echo "=== candidates (Babylon, ${EVO_FRAMES}f) ==="
 node parity/render-batch.mjs $NAMES --frames "$EVO_FRAMES" --timestep "$EVO_TS" 2>&1 | grep -E "ERR|rendered" | tail -2
 

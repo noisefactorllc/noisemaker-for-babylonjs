@@ -90,13 +90,13 @@ sRGB math explicitly.
 - **P5 WebGPU** — same shaders via Babylon's WebGPU engine (GLSL→WGSL transpile or authored WGSL).
 - **P6 Docs + examples + memory.**
 
-## Parity harness (mirrors godot/td)
-- Goldens reused from `../noisemaker-godot` (same DSL × same reference WebGL2 renderer ⇒
-  byte-identical). Capture params: 256×256, normalized time 0.25, 8 frames, linear 8-bit.
+## Parity harness
+- Goldens AND candidates both run the vendored published engine; only the backend differs (golden =
+  `WebGL2Backend` via `NM_GOLDEN=1`, candidate = `BabylonBackend`). Capture params: 256×256,
+  normalized time 0.25, 8 frames (stateful effects evolve ~30s), linear 8-bit.
 - `parity/run.sh <name> [tol] [ssim]` renders the Babylon candidate, grades with `compare.py`
-  (default `tol=2.001`, `ssim=0.98`). `parity/sweep.sh` runs all with the per-effect tolerance map.
-- Golden regen (sanity): `NM_REFERENCE_ROOT=../noisemaker node tools/export-graph.mjs` + the
-  reference `export-and-render.mjs`.
+  (default `tol=2.001`, `ssim=0.98`). `parity/sweep.sh` runs all (corpus excluded — own harness).
+- Golden mint/refresh: `NM_GOLDEN=1 node parity/render-candidate.mjs <name> --out parity/out/<name>.golden.png`.
 
 ## Constraints
 - Local-only; **do not push** without instruction. Omit `Co-Authored-By` on commits.

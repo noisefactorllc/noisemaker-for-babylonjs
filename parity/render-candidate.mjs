@@ -100,11 +100,14 @@ async function main () {
     page.on('pageerror', e => errs.push(String(e)))
     await page.goto(pathToFileURL(INDEX_HTML).href)
     await page.waitForFunction(() => window.nmReady === true, { timeout: 30000 })
-    const viaRenderer = !!process.env.NM_VIA_RENDERER
-    const result = await page.evaluate(async ({ fat, opts, viaRenderer }) => {
-      const fn = viaRenderer ? window.nmRunViaRenderer : window.nmRunFatGraph
+    // NM_GOLDEN: render the reference golden via the vendored WebGL2Backend (same engine + fat
+    // graph as the candidate — only the backend differs). NM_VIA_RENDERER: drive through the
+    // consumer-facing NoisemakerRenderer host. Default: the BabylonBackend candidate.
+    const mode = process.env.NM_GOLDEN ? 'golden' : (process.env.NM_VIA_RENDERER ? 'viaRenderer' : 'candidate')
+    const result = await page.evaluate(async ({ fat, opts, mode }) => {
+      const fn = mode === 'golden' ? window.nmRunFatGraphWebGL2 : (mode === 'viaRenderer' ? window.nmRunViaRenderer : window.nmRunFatGraph)
       try { return { ok: true, ...(await fn(fat, opts)) } } catch (e) { return { ok: false, error: String((e && e.stack) || e) } }
-    }, { fat, opts: { size: args.size, time: args.time, frames: args.frames, timestep: args.timestep, debug: !!process.env.NM_DEBUG }, viaRenderer })
+    }, { fat, opts: { size: args.size, time: args.time, frames: args.frames, timestep: args.timestep, debug: !!process.env.NM_DEBUG }, mode })
     if (!result.ok) throw new Error('harness error: ' + result.error + (errs.length ? '\nconsole:\n' + errs.join('\n') : ''))
     if (process.env.NM_DEBUG && result.debug) process.stderr.write('[debug] ' + JSON.stringify(result.debug, null, 2) + '\n')
     writeFileSync(out, encodePNG(result.width, result.height, Uint8Array.from(result.data)))

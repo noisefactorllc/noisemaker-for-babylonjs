@@ -16,7 +16,7 @@ import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js'
 import { Texture } from '@babylonjs/core/Materials/Textures/texture.js'
 import { CubeTexture } from '@babylonjs/core/Materials/Textures/cubeTexture.js'
 import '@babylonjs/core/Shaders/postprocess.vertex.js' // EffectRenderer's default vertex
-import { Pipeline } from '../../noisemaker/shaders/src/runtime/pipeline.js'
+import { Pipeline } from '../vendor/noisemaker/noisemaker-shaders-core.esm.js'
 import { NoisemakerRenderer } from '../src/runtime/renderer.js'
 import cubeFat from './demo.cubemap.fatgraph.json'
 

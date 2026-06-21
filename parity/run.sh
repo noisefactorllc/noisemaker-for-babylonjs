@@ -5,7 +5,8 @@
 #   bash parity/run.sh noise
 #   bash parity/run.sh blur 2.001 0.98 256
 #
-# Goldens are byte-identical reference WebGL2 renders (reused from ../noisemaker-godot).
+# Goldens are byte-identical reference WebGL2 renders, minted by the vendored engine's
+# WebGL2Backend (NM_GOLDEN=1) — the same engine the candidate runs, only the backend differs.
 # The candidate is rendered by render-candidate.mjs (Babylon, headless via Playwright),
 # read back as linear 8-bit top-down to match the golden exactly.
 set -euo pipefail
@@ -25,8 +26,7 @@ REPORT="parity/out/${NAME}.report.json"
 
 if [[ ! -f "$GOLD" ]]; then
   echo "[SKIP] $NAME — no golden at $GOLD"
-  echo "       regen: NM_REFERENCE_ROOT=../noisemaker node tools/export-graph.mjs --file $DSL parity/out/${NAME}.graph.json"
-  echo "       then the reference export-and-render.mjs (see parity/README.md)"
+  echo "       mint it: NM_GOLDEN=1 node parity/render-candidate.mjs $NAME --out $GOLD"
   exit 2
 fi
 if [[ ! -f "$DSL" ]]; then

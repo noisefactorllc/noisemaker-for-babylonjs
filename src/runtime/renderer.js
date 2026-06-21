@@ -106,7 +106,7 @@ export class NoisemakerRenderer {
    * `InternalTexture`** — the parallel of the HLSL port's Unity-native cubemap. Where the reference
    * hands back 6 CPU buffers, here you also get a GPU cube texture ready for a skybox / PBR
    * reflection. Each backend renders its own faces, so this is byte-identical to the reference
-   * (verified in parity/cubemap-bake-check.mjs).
+   * (all 6 faces verified max-abs-diff 0).
    *
    * @returns {Promise<{ faces: Array<{width:number,height:number,data:Uint8Array}>, cubeTexture: import('@babylonjs/core').InternalTexture }>}
    *   faces in GL order (+X,-X,+Y,-Y,+Z,-Z), RGBA8 top-down; cubeTexture wraps them on the GPU.

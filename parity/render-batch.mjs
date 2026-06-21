@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 // render-batch.mjs [names...] [--all] [--size 256] [--time 0.25] [--frames 8]
 //
-// Renders many Babylon candidates in ONE headless-Chromium session (fast full sweep). Each
-// program gets a fresh canvas/engine inside the page (disposed between runs). Writes
-// parity/out/<name>.candidate.png for each. With --all (or no names), renders every program
-// in parity/programs that has a golden.
+// Renders many programs in ONE headless-Chromium session (fast full sweep). Each program gets a
+// fresh canvas inside the page (disposed between runs). Default: the Babylon candidate
+// (BabylonBackend) -> parity/out/<name>.candidate.png. With NM_GOLDEN=1: the reference golden via
+// the vendored WebGL2Backend (same engine + fat graph, only the backend differs) ->
+// parity/out/<name>.golden.png. With --all (or no names), renders every program in parity/programs
+// that has a golden (candidate mode only). Both sides use the vendored engine (no sibling checkout).
 
 import { readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
@@ -17,7 +19,7 @@ import { ROOT, INDEX_HTML, encodePNG, ensureBundle } from './render-candidate.mj
 // solvers (Gray-Scott / Navier-Stokes). Run ~30s at the demo's natural rate (1/600 normalized
 // per 60fps frame over a 10s loop); the chaotic transient washes out to a deterministic
 // attractor that is bit-identical to the golden (same ANGLE/Metal driver). Goldens for these
-// MUST be generated with the matching batch-golden --frames/--timestep.
+// MUST be minted with the matching NM_GOLDEN=1 render-batch --frames/--timestep.
 const _EVO = { frames: 1800, timestep: 0.0016667 } // 30s at the demo's 1/600 rate
 const EVOLVE = {
   reactionDiffusion: _EVO,
@@ -52,6 +54,12 @@ function parse (argv) {
 
 async function main () {
   const o = parse(process.argv.slice(2))
+  // NM_GOLDEN: mint reference goldens via the vendored WebGL2Backend instead of rendering the
+  // Babylon candidate. Goldens being minted don't exist yet, so this mode never auto-discovers
+  // by existing-golden — pass explicit names.
+  const GOLDEN = !!process.env.NM_GOLDEN
+  const harnessFn = GOLDEN ? 'nmRunFatGraphWebGL2' : 'nmRunFatGraph'
+  const suffix = GOLDEN ? 'golden' : 'candidate'
   let names = o.names
   if (o.all || names.length === 0) {
     names = readdirSync(join(ROOT, 'parity', 'programs'))
@@ -76,11 +84,11 @@ async function main () {
         const fat = await exportFatGraph(readFileSync(dslPath, 'utf8'))
         const ev = EVOLVE[name]
         const opts = { size: o.size, time: o.time, frames: ev ? ev.frames : o.frames, timestep: ev ? ev.timestep : (o.timestep || 0) }
-        const res = await page.evaluate(async ({ fat, opts }) => {
-          try { return { ok: true, ...(await window.nmRunFatGraph(fat, opts)) } } catch (e) { return { ok: false, error: String((e && e.stack) || e) } }
-        }, { fat, opts })
+        const res = await page.evaluate(async ({ fat, opts, harnessFn }) => {
+          try { return { ok: true, ...(await window[harnessFn](fat, opts)) } } catch (e) { return { ok: false, error: String((e && e.stack) || e) } }
+        }, { fat, opts, harnessFn })
         if (!res.ok) { failed.push(name); err++; process.stderr.write(`[batch] ERR  ${name}: ${res.error.split('\n')[0]}\n`); continue }
-        writeFileSync(join(ROOT, 'parity', 'out', `${name}.candidate.png`), encodePNG(res.width, res.height, Uint8Array.from(res.data)))
+        writeFileSync(join(ROOT, 'parity', 'out', `${name}.${suffix}.png`), encodePNG(res.width, res.height, Uint8Array.from(res.data)))
         ok++; process.stderr.write(`[batch] ok   ${name}\n`)
       } catch (e) { failed.push(name); err++; process.stderr.write(`[batch] ERR  ${name}: ${String(e).split('\n')[0]}\n`) }
     }

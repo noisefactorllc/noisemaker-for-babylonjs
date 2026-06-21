@@ -4,6 +4,10 @@ parity/.venv/
 .DS_Store
 dist/
 
+# Vendored published engine — fetched from shaders.noisedeck.app (vendor/fetch.sh), NEVER committed
+# (same posture as node_modules: commit the fetch script + loader, not the downloaded bytes).
+vendor/noisemaker/
+
 # generated bundles / demo artifacts
 parity/harness/bundle.js
 examples/bundle.js

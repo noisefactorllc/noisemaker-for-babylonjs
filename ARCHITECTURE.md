@@ -1,8 +1,10 @@
 # noisemaker-babylon — Architecture
 
-A Babylon.js port of the Noisemaker procedural shader engine (`../noisemaker/shaders`): DSL
-compiler, render-graph executor, and effects collection, **pixel-identical to the reference
-WebGL2 engine**. Sibling to `noisemaker-hlsl` (Unity), `noisemaker-godot`, `noisemaker-td`.
+A Babylon.js port of the Noisemaker procedural shader engine: DSL compiler, render-graph executor,
+and effects collection, **pixel-identical to the reference WebGL2 engine**. The engine is the
+**published distribution** (`shaders.noisedeck.app`), fetched by `vendor/fetch.sh` into
+`vendor/noisemaker/` (gitignored — never committed). Sibling to `noisemaker-hlsl` (Unity),
+`noisemaker-godot`, `noisemaker-td`.
 
 ## The seam: deeper than the foreign-language ports
 
@@ -17,7 +19,7 @@ concrete `WebGL2Backend`/`WebGPUBackend` are injected by the host). So the seam 
 level deeper than the render-graph JSON — to the **backend interface**:
 
 ```
-            reference JS (reused verbatim)                       new code
+         published engine (fetched, run as-is)                  new code
    ┌────────────────────────────────────────────────┐   ┌────────────────────────┐
    DSL ─► lex/parse/validate/expand ─► compileGraph ─► Pipeline ──drives──► BabylonBackend
           (lang/, runtime/expander)    (runtime/         (runtime/            (@babylonjs/core)
@@ -65,20 +67,23 @@ GPU operations and (b) Babylon not mangling the reused GLSL (see PORTING-GUIDE.m
   the reused `Pipeline.renderCubemap()`) AND a **Babylon-native cube `InternalTexture`**
   (`cubeInternalTexture`) for skyboxes / PBR reflections.
 
-- **`tools/export-fat-graph.mjs`** — Node producer. Runs the unchanged reference `compileGraph`
-  with each program's GLSL attached (filesystem edition of `canvas.js loadEffectShaders`), and
-  serializes the runnable runtime graph (passes + programs-with-source + textures + renderSurface)
-  as a "fat graph". (The normalized golden `graph.json` from `tools/export-graph.mjs` is
-  structure-only — it drops shader source and effect program entries — so it is NOT runnable.)
+- **`vendor/fetch.sh` + `vendor/engine.mjs`** — fetch the published engine
+  (`shaders.noisedeck.app`) into `vendor/noisemaker/` (gitignored) and load it in Node. The fetch
+  pulls the engine core ESM + the per-effect "mini-bundles" production pre-fetches (each carries its
+  GLSL inline). `engine.mjs` evaluates the bundle behind a tiny DOM shim and registers every effect.
 
-- **`reference/01–10`** — the engine-agnostic re-implementer specs, reused verbatim from the
-  sibling ports.
+- **`tools/export-fat-graph.mjs`** — Node producer. Boots the vendored engine and runs its
+  `compileGraph` (each mini-bundle's GLSL is already inline), serializing the runnable runtime graph
+  (passes + programs-with-source + textures + renderSurface) as a "fat graph" the harness reconstructs.
+
+- **`reference/01–10`** — the engine-agnostic re-implementer specs, shared across the port family.
 
 ## Validation (`parity/`)
 
-Goldens are reused from `../noisemaker-godot` (same DSL × same reference WebGL2 renderer ⇒
-byte-identical). The Babylon candidate renders the reused reference `Pipeline` + `BabylonBackend`
-in **headless Chromium on ANGLE/Metal — the same WebGL2 driver the golden was rendered on** (a
+Goldens are minted by the **vendored engine's `WebGL2Backend`** (`NM_GOLDEN=1`) — the *same* published
+engine the Babylon candidate runs, only the backend differs (the purest possible parity test: it
+isolates `BabylonBackend` vs `WebGL2Backend`). Both render in **headless Chromium on ANGLE/Metal — one
+WebGL2 driver** (a
 real GPU; `NullEngine` does no GPU work). `parity/compare.py` grades max-abs-diff + SSIM.
 
 **Result: 180 of 184 effects BYTE-IDENTICAL to the reference** (max-diff 0) — the entire catalog
@@ -121,9 +126,9 @@ mesh refs find the unscoped surface — mirrors `webgl2.bindTextures`), and the 
 particles [MRT+points+billboards] → blur → navierStokes ×40 → palette/lighting/adjust/bloom/lens/
 vignette) is byte-identical at every 5s sample over 30s. The **live NoiseBLASTER! corpus** —
 19 real shared compositions fetched from `blaster.noisedeck.app` (`parity/corpus/`) — is
-**19/19 byte-identical**. The **mesh triangle raster** is proven byte-identical by injecting an
-identical procedural sphere into both engines' mesh textures (`parity/mesh-raster-check.mjs`):
-a depth-tested, back-face-culled, Blinn-Phong-lit sphere, max-abs-diff 0. The one load-bearing fix
+**19/19 byte-identical**. The **mesh triangle raster** was proven byte-identical by injecting an
+identical procedural sphere into both engines' mesh textures — a depth-tested, back-face-culled,
+Blinn-Phong-lit sphere, max-abs-diff 0. The one load-bearing fix
 that unlocked the agent sims + corpus was the additive deposit blend: raw `blendFunc(ONE,ONE)`, not
 Babylon's `ALPHA_ADD` (= `SRC_ALPHA, ONE`, which crushes HDR trail accumulation) — see PORTING-GUIDE.md.
 
