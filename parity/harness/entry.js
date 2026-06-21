@@ -48,6 +48,25 @@ window.nmRunFatGraph = async function (fat, opts = {}) {
   const pipeline = new Pipeline(graph, backend)
 
   await pipeline.init(size, size)
+  // Test hook (mesh raster parity): upload identical synthetic geometry to the mesh surfaces that
+  // meshRender reads (global_mesh0_positions/normals). meshLoader normally fills these host-side
+  // from an OBJ (externalMesh); injecting the SAME float geometry the reference gets lets us prove
+  // the triangle raster (projection/depth/cull/lighting) is byte-identical. No-op unless requested.
+  if (opts.injectMesh) {
+    const gl = backend.gl
+    const writeTex = (texId, data) => {
+      const rec = backend.textures.get(texId)
+      if (!rec) return false
+      const glTex = rec.internal?._hardwareTexture?.underlyingResource
+      gl.bindTexture(gl.TEXTURE_2D, glTex)
+      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, rec.width, rec.height, gl.RGBA, gl.FLOAT, new Float32Array(data))
+      gl.bindTexture(gl.TEXTURE_2D, null)
+      return true
+    }
+    writeTex('global_mesh0_positions', opts.injectMesh.positions)
+    writeTex('global_mesh0_normals', opts.injectMesh.normals)
+    engine.wipeCaches(true)
+  }
   // Pinned time (ts=0): feedback/state surfaces settle (8-frame default). ts>0 ADVANCES time
   // per frame (tt=(t+i*ts)%1) — matches the golden harness's --timestep, used to evolve
   // continuous solvers (navierStokes/reactionDiffusion) over ~30s for a steady-state compare.

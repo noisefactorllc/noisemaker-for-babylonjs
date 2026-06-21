@@ -51,8 +51,10 @@ GPU operations and (b) Babylon not mangling the reused GLSL (see PORTING-GUIDE.m
   - All 2D textures NEAREST/CLAMP (surfaces are sampled NEAREST — load-bearing for warp effects).
   - Engine/system uniforms fed by name every pass: `resolution`, `time` (normalized 0..1, 10s
     loop), `tileOffset=[0,0]`, `fullResolution`, `aspectRatio`, `renderScale=1`, etc.
-  - MRT / `drawMode:points|billboards` / 3D volumes / mesh-triangle passes are **staged** (warn +
-    skip) — none appear in the Tier-1 2D corpus.
+  - MRT, `drawMode:points|billboards` (agent deposit), 3D-volume raymarch (2D-atlas MRT passes),
+    single-face cubemaps, and the `drawMode:triangles` mesh raster are all **implemented + parity-
+    verified**. Only the 6-face cubemap *bake* (`renderCubemap()` host loop) and host OBJ loading
+    remain.
 
 - **`src/runtime/renderer.js`** — `NoisemakerRenderer`, the consumer host. Takes a Babylon engine
   + the reference `Pipeline` class (injected), `loadGraph(fatGraph)`, `renderFrame(t)`, and
@@ -75,31 +77,49 @@ byte-identical). The Babylon candidate renders the reused reference `Pipeline` +
 in **headless Chromium on ANGLE/Metal — the same WebGL2 driver the golden was rendered on** (a
 real GPU; `NullEngine` does no GPU work). `parity/compare.py` grades max-abs-diff + SSIM.
 
-**Result: 159 effects BYTE-IDENTICAL to the reference** (max-diff 0) — 149 renderable-2D effects +
-all 10 agent/points sims (physarum, life, flock, dla, lenia, …) + the continuous solvers
-`reactionDiffusion`/`navierStokes`. Because candidate and golden share the WebGL2/ANGLE/Metal
-driver, parity is exact — **zero effects need the relaxed tolerances the Metal-backed godot/td
-ports required**, and the stateful/continuous effects converge to a bit-identical steady state when
-evolved ~30s (the `EVOLVE` map in `render-batch.mjs`). Only 3 effects are skipped (media/text/remap
-— external MIDI/glyph/projection inputs).
+**Result: 179 of 184 effects BYTE-IDENTICAL to the reference** (max-diff 0) — the entire catalog
+except 5 external-input effects. That's 149 renderable-2D effects + all 10 agent/points sims +
+`reactionDiffusion`/`navierStokes` + the **full 3D-volume raymarch** (7 synth3d generators ×
+`render3d`/`renderLit3d` × isosurface/voxel + `flow3d`/`palette3d`) + **single-face cubemaps**
+(`renderCubemapSurface`/`renderCubemap3d`) + the **SMRTicles wrappers** (`pointsEmit`/`pointsRender`/
+`pointsBillboardRender`) + **`loopBegin`/`loopEnd`** + points-based `wormhole`. Because candidate and
+golden share the WebGL2/ANGLE/Metal driver, parity is exact — **zero effects need the relaxed
+tolerances the Metal-backed godot/td ports required**, and the stateful/continuous/agent effects
+converge to a bit-identical steady state when evolved ~30s (the `EVOLVE` map in `render-batch.mjs`).
+The 5 non-byte-identical effects all require an external source the headless harness can't supply:
+**media** (texture), **text** (glyphs), **remap** (projection), **roll** (MIDI), **meshLoader** (OBJ).
+
+**The 3D-volume + cubemap chain needed ZERO new backend code.** The "3D volume" is a 2D *atlas*
+(64×4096 = 64 slices of 64²) the Pipeline sizes and allocates via the normal `createTexture` path;
+shaders read it with `texelFetch(volumeCache, ivec2(x, y + z·volSize))`. The synth3d precompute and
+the `render3d`/`renderLit3d`/cubemap raymarch are all fullscreen `drawBuffers:2` MRT passes the
+existing `_executeMRT` already runs. No real GPU 3D texture is used anywhere (`createTexture3D`
+stays a guard). The only new backend code was the mesh `drawMode:'triangles'` raster (`_executeTriangles`:
+a `DEPTH_COMPONENT24` renderbuffer + depth test + back-face cull + `gl_VertexID` geometry fetch from
+an empty VAO), plus a `_chain_\d+$` strip in input/count resolution so chain-scoped mesh refs find
+the unscoped surface (mirrors `webgl2.bindTextures`).
 
 **End-to-end validation.** The complex emergent test program (3D perlin → 1M-agent flow-field
 particles [MRT+points+billboards] → blur → navierStokes ×40 → palette/lighting/adjust/bloom/lens/
 vignette) is byte-identical at every 5s sample over 30s. The **live NoiseBLASTER! corpus** —
 19 real shared compositions fetched from `blaster.noisedeck.app` (`parity/corpus/`) — is
-**19/19 byte-identical**. The one load-bearing fix that unlocked the agent sims + corpus was the
-additive deposit blend: raw `blendFunc(ONE,ONE)`, not Babylon's `ALPHA_ADD` (= `SRC_ALPHA, ONE`,
-which crushes HDR trail accumulation) — see PORTING-GUIDE.md.
+**19/19 byte-identical**. The **mesh triangle raster** is proven byte-identical by injecting an
+identical procedural sphere into both engines' mesh textures (`parity/mesh-raster-check.mjs`):
+a depth-tested, back-face-culled, Blinn-Phong-lit sphere, max-abs-diff 0. The one load-bearing fix
+that unlocked the agent sims + corpus was the additive deposit blend: raw `blendFunc(ONE,ONE)`, not
+Babylon's `ALPHA_ADD` (= `SRC_ALPHA, ONE`, which crushes HDR trail accumulation) — see PORTING-GUIDE.md.
 
 ## Status & staged work
 
 - DONE: compiler + pipeline reuse; `BabylonBackend` (fullscreen render, multi-pass, filters,
   2-/3-input mixers, blit, blend, uniforms, half-float, readback, **MRT, points/billboards-deposit
-  agent sims**); `NoisemakerRenderer`; the 159-effect parity sweep + the live-corpus harness; a
-  Babylon example scene. 159 effects + the test target + 19/19 corpus all byte-identical.
-- STAGED: synth3d 3D-volume raymarch (`render3d`/`renderLit3d`), `meshRender` raster, cubemap
-  orchestration (Tier-4, highest-effort/lowest-parity, as in all sibling ports); the WebGPU path
-  (same shaders via Babylon's GLSL→WGSL); vendoring the reference engine for a standalone published
-  package (today the parity harness + example import the sibling reference by path).
+  agent sims, 3D-volume raymarch + single-face cubemaps, `meshRender` triangle raster, `loopBegin`/
+  `loopEnd`, SMRTicles wrappers**); `NoisemakerRenderer`; the parity sweep (179/184 byte-identical) +
+  the live-corpus + mesh-raster harnesses; a Babylon example scene. The test target + 19/19 corpus all
+  byte-identical.
+- STAGED: the 6-face cubemap **bake** (`renderCubemap()` host loop — flagged WIP in the reference
+  itself); host-side OBJ loading for `meshLoader` (external geometry, like `media`'s external texture);
+  the WebGPU path (same shaders via Babylon's GLSL→WGSL); vendoring the reference engine for a
+  standalone published package (today the parity harness + example import the sibling reference by path).
 
 Local-only; **not pushed**. Commits omit the `Co-Authored-By` trailer.

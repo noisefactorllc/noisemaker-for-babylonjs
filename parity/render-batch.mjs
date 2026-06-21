@@ -27,7 +27,13 @@ const EVOLVE = {
   attractor: _EVO, buddhabrot: _EVO, dla: _EVO, flock: _EVO, flow: _EVO,
   hydraulic: _EVO, lenia: _EVO, life: _EVO, physarum: _EVO, physical: _EVO,
   // the complex emergent end-to-end test target (particles + navierStokes + lens stack).
-  target: _EVO, target_particles: _EVO
+  target: _EVO, target_particles: _EVO,
+  // SMRTicles render-namespace wrappers (pointsEmit/behavior/pointsRender) + the loopBegin/loopEnd
+  // accumulator + the points-based wormhole/billboard renderers — all stateful, evolve to steady
+  // state (their goldens are minted at the same 30s evolution). The pinned 3D-volume raymarch +
+  // single-face cubemap + empty-mesh programs are deterministic at frame 8 and need no EVOLVE entry.
+  smrticle_physical: _EVO, smrticle_physarum: _EVO, loop_accum: _EVO,
+  wormhole: _EVO, billboard_flow: _EVO
 }
 
 function parse (argv) {

@@ -59,8 +59,41 @@ resource creation + shader compile; the draws mirror `webgl2.js` on the same con
   from both stages) and draw with an empty VAO, `gl.drawArrays(POINTS, count)` (billboards =
   `TRIANGLES, count*6`), count from the `xyzTex` state texture, raw additive blend.
 - Surface formats are load-bearing: agent state is `rgba32f` (xyz/vel) + `rgba8` (rgba), trails are
-  `rgba16f`. A 16f→32f substitution breaks continuous accumulators. No staged effect uses a real 3D
+  `rgba16f`. A 16f→32f substitution breaks continuous accumulators. No effect uses a real 3D
   texture — "3D" is a 2D atlas sampled via `texelFetch`.
+
+## 3D-volume raymarch + single-face cubemaps: ZERO new code
+
+The synth3d generators, `render3d`/`renderLit3d`, `filter3d`, and the single-face cubemap renderers
+are all byte-identical through the **existing fullscreen + MRT path** — no 3D-specific backend code.
+Why: the "3D volume" is a **2D atlas** (`volumeSize` x64 → a 64×4096 `rgba16f` target = 64 slices of
+64²). The reference `Pipeline.recreateTextures` resolves the symbolic `{param:'volumeSize_chain_0',
+power:2}` / `'screen'` / `'resolution'` dims to **numbers before** calling `backend.createTexture`
+(so the Babylon backend just sees a 64×4096 target). The synth3d *precompute* and the render3d
+*raymarch* are both fullscreen `drawBuffers:2` MRT passes (`{color, geoOut}`) that `_executeMRT`
+already runs; shaders index the atlas with `texelFetch(volumeCache, ivec2(x, y + z·volSize))`.
+`createTexture3D` is never called. The 6-face cubemap **bake** (`renderCubemap()`) is host
+orchestration (a per-face `setUniform('cubeBasis', …)` + `render` + `readPixels` loop) and is flagged
+WIP in the reference itself — only the per-face raymarch is validated here.
+
+## The mesh triangle raster (the one genuinely new pass type)
+
+`render/meshRender` (`drawMode:'triangles'`) is the only staged pass type needing new code
+(`_executeTriangles`): bind the output FBO, attach a `DEPTH_COMPONENT24` renderbuffer (Babylon RTs
+are created `generateDepthBuffer:false`), `enable(DEPTH_TEST)`+`depthFunc(LESS)`, `enable(CULL_FACE)`
++`frontFace(CCW)`+`cullFace(BACK)`, `clear(DEPTH_BUFFER_BIT)`, then `drawArrays(TRIANGLES, 0, count)`
+from the empty VAO — `count='input'` = the mesh position texture's texel count. The custom vertex
+(already supported via `spec.vertex`) fetches xyz/normal per `gl_VertexID` from `global_mesh0_*`.
+Two subtleties that mirror `webgl2.js`:
+- **Chain-scope strip.** The expander references geometry as `global_mesh0_positions_chain_0`, but the
+  Pipeline allocates it unscoped (`global_mesh0_positions`). `_resolveInput`/`_triCount` try the
+  scoped id, then strip `_chain_\d+$` and retry (webgl2.bindTextures:1332). Without this the geometry
+  binds to the 1×1 default and `count` falls back to 3.
+- **External geometry.** `meshLoader` declares `externalMesh` — geometry is host-loaded from an OBJ,
+  exactly like `media`'s external texture. The headless corpus renders empty (flat bg), which the
+  triangles path reproduces byte-for-byte. To prove the raster itself, `parity/mesh-raster-check.mjs`
+  injects an identical procedural sphere into **both** engines' mesh textures and compares: a
+  depth-tested, back-face-culled, Blinn-Phong sphere, max-abs-diff 0.
 
 ## Parity invariants (same as the WebGL2 reference)
 
@@ -98,10 +131,15 @@ Readback matches the golden exactly: read the surface as float, quantize `round(
 to 0..255, flip rows bottom-up→top-down. Result: **86/87 pass at strict `max-diff ≤ 2.001`**
 (most byte-identical); `reactionDiffusion` is the documented continuous-solver skip.
 
-## Adding the staged pass types
+## Remaining staged pass types
 
-MRT (`pass.drawBuffers>1` / multiple `outputs`), `drawMode:'points'|'billboards'` (agent
-deposit), and 3D volumes/meshes currently `console.warn` and skip in `executePass`. To add them,
-mirror the corresponding `webgl2.js` branch on Babylon's `MultiRenderTarget` (MRT) /
-`engine.bindFramebuffer` + a manual `engine.drawArrays`-equivalent for point/triangle draws, then
-extend the parity corpus with the agent/3D programs.
+MRT (`pass.drawBuffers>1` / multiple `outputs`), `drawMode:'points'|'billboards'` (agent deposit),
+`drawMode:'triangles'` (mesh raster), 3D-volume raymarch, and single-face cubemaps are all
+implemented in `executePass` and parity-verified (179/184 byte-identical). What's left:
+- **6-face cubemap bake** — `renderCubemap()` is a host-level loop (per-face `setUniform('cubeBasis')`
+  + `render` + `readPixels`) that the reused reference `Pipeline` already provides; it would slot into
+  `NoisemakerRenderer`. Flagged WIP in the reference, so its golden path may be unstable.
+- **Host OBJ loading for `meshLoader`** — parse `share/meshes/*.obj` and upload to the mesh surfaces
+  (a `NoisemakerRenderer` concern, like wiring an external texture for `media`). The raster it feeds
+  is already proven.
+- **WebGPU** — the same reused GLSL via Babylon's GLSL→WGSL translation.

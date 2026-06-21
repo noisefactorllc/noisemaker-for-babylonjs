@@ -161,8 +161,12 @@ export class BabylonBackend {
   }
 
   createTexture3D (id, spec) {
-    // 3D volumes (synth3d/filter3d) — staged; not used by the Tier-1 2D corpus.
-    throw new Error('BabylonBackend.createTexture3D not yet implemented (3D staged)')
+    // Real GPU 3D textures (Pipeline `spec.is3D`/`spec.depth`). NOT used by any shipped effect:
+    // the synth3d/filter3d/render3d/renderLit3d/cubemap "volumes" are 2D ATLASES (e.g. 64×4096 =
+    // 64 slices of 64²) the Pipeline allocates via the normal createTexture path and shaders read
+    // with texelFetch(volumeCache, ivec2(x, y + z*volSize)). The whole 3D-raymarch + cubemap chain
+    // is byte-identical without this. Left throwing as a guard; implement only if an is3D effect lands.
+    throw new Error('BabylonBackend.createTexture3D not implemented (no shipped effect uses a real 3D texture; 3D volumes are 2D atlases)')
   }
 
   destroyTexture (id) {
@@ -311,10 +315,11 @@ export class BabylonBackend {
 
     // GPGPU scatter draws (agent deposit): custom vertex + gl_VertexID + empty VAO.
     if (dm === 'points' || dm === 'billboards') return this._executePoints(effectivePass, prog, state, dm)
+    // Mesh raster (triangles, depth+cull, gl_VertexID geometry fetch) — render/meshRender. Checked
+    // before MRT: a triangles pass is single-output here, but keep the order explicit.
+    if (dm === 'triangles') return this._executeTriangles(effectivePass, prog, state)
     // Multiple render targets (agent state / 3D volume precompute): fullscreen into N attachments.
     if (isMRT) return this._executeMRT(effectivePass, prog, state, outputKeys)
-    // Mesh raster (triangles, depth+cull) — staged (render/meshRender).
-    if (dm === 'triangles') { console.warn(`[BabylonBackend] drawMode 'triangles' (mesh) staged: ${effectivePass.id}`); return }
 
     // Single-output fullscreen (the proven 2D path).
     const outputId = this._resolveOutputId(effectivePass.outputs?.color ?? Object.values(effectivePass.outputs || {})[0], state)
@@ -455,6 +460,73 @@ export class BabylonBackend {
     return Math.max(0, count | 0)
   }
 
+  // Mesh triangle raster (render/meshRender): a custom vertex (gl_VertexID + texelFetch of the
+  // mesh position/normal textures) draws `count` vertices with depth-test + back-face cull into
+  // a single output, exactly like the webgl2.js `drawMode:'triangles'` branch. Geometry lives in
+  // the mesh surfaces (global_mesh0_positions/normals); with no host-loaded OBJ those are zeroed,
+  // so every triangle is degenerate and the output is just the prior clear (matches the reference's
+  // empty-mesh render). meshLoader declares `externalMesh` — external geometry, like media's
+  // externalTexture — so this path is correct-if-fed; the parity corpus does not exercise geometry.
+  _executeTriangles (pass, prog, state) {
+    const gl = this.gl
+    const outputId = this._resolveOutputId(pass.outputs?.color ?? pass.outputs?.fragColor ?? Object.values(pass.outputs || {})[0], state)
+    const outRec = this.textures.get(outputId)
+    if (!outRec) { console.warn(`[BabylonBackend] triangles ${pass.id}: no output ${outputId}`); return }
+    const count = this._triCount(pass, state)
+    this.engine.bindFramebuffer(outRec.rtw) // bind FBO + viewport
+    this._ensureDepthBuffer(outRec) // attach a DEPTH_COMPONENT24 renderbuffer to the bound FBO
+    gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LESS); gl.depthMask(true)
+    gl.enable(gl.CULL_FACE); gl.frontFace(gl.CCW); gl.cullFace(gl.BACK)
+    gl.clear(gl.DEPTH_BUFFER_BIT)
+    const effect = prog.wrapper.effect
+    this.engine.enableEffect(prog.wrapper.drawWrapper)
+    this._bindInputs(pass, prog, effect, state)
+    this._bindUniforms(pass, prog, effect, state)
+    this._setBlendRaw(pass.blend) // meshRender uses blend:false → BLEND disabled
+    gl.bindVertexArray(this._emptyVAO)
+    gl.drawArrays(gl.TRIANGLES, 0, count)
+    gl.bindVertexArray(null)
+    gl.disable(gl.DEPTH_TEST); gl.disable(gl.CULL_FACE); gl.disable(gl.BLEND)
+    this.engine.unBindFramebuffer(outRec.rtw)
+    this.engine.wipeCaches(true) // resync Babylon's cached GL state after the raw draw
+  }
+
+  // A depth renderbuffer for the mesh pass. Babylon's render targets are created without depth
+  // (generateDepthBuffer:false); attach our own to the currently-bound FBO, cached by size and
+  // reattached (Babylon's RTW FBO is stable per target, but reattach is cheap + safe). The
+  // attachment is harmless to later fullscreen 2D passes — they run with DEPTH_TEST disabled.
+  _ensureDepthBuffer (outRec) {
+    const gl = this.gl
+    if (!this._depthRBs) this._depthRBs = new Map()
+    const key = `${outRec.width}x${outRec.height}`
+    let rb = this._depthRBs.get(key)
+    if (!rb) { rb = gl.createRenderbuffer(); this._depthRBs.set(key, rb) }
+    gl.bindRenderbuffer(gl.RENDERBUFFER, rb)
+    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT24, outRec.width, outRec.height)
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, rb)
+    gl.bindRenderbuffer(gl.RENDERBUFFER, null)
+  }
+
+  // Mesh vertex count: number, or 'input'/'auto' → texel count of the mesh position texture
+  // (one vertex per texel). countUniform reads the live count from a uniform. Mirrors webgl2.js.
+  _triCount (pass, state) {
+    let count = pass.count ?? 3
+    if (pass.countUniform) {
+      const v = (pass.uniforms && pass.uniforms[pass.countUniform]) ?? state?.globalUniforms?.[pass.countUniform]
+      if (v != null) return Math.max(0, v | 0)
+    }
+    if (count === 'input' || count === 'auto') {
+      const meshId = pass.inputs?.meshPositions || pass.inputs?.inputTex
+      // Same scoped→unscoped chain fallback as input binding (webgl2.js:1220).
+      const rec = (meshId && this.textures.get(meshId)) ||
+        (meshId && this.textures.get(String(meshId).replace(/_chain_\d+$/, ''))) ||
+        this.textures.get(this._resolveOutputId(meshId, state))
+      const w = rec?.width; const h = rec?.height
+      count = (w && h) ? w * h : 3
+    }
+    return Math.max(0, count | 0)
+  }
+
   _executeBlit (pass, state) {
     // Internal copy pass (program:'blit'): inputs.src -> outputs.color (a surface).
     let outputId = pass.outputs?.color || Object.values(pass.outputs || {})[0]
@@ -491,8 +563,13 @@ export class BabylonBackend {
     if (texId == null || texId === 'none') return this._defaultTexture
     const gname = parseGlobalName(texId)
     if (gname) {
-      const rec = this.textures.get(texId)
+      let rec = this.textures.get(texId) // scoped id first (e.g. global_mesh0_positions_chain_0)
       if (rec) return rec.thin
+      // Chain-scope fallback (mirrors webgl2.bindTextures): the expander adds `_chain_N` suffixes,
+      // but externally/host-uploaded shared resources (mesh geometry) are stored under the
+      // unscoped base id (global_mesh0_positions). Strip the suffix and retry.
+      const unscoped = texId.replace(/_chain_\d+$/, '')
+      if (unscoped !== texId) { rec = this.textures.get(unscoped); if (rec) return rec.thin }
       const surf = state.surfaces?.[gname]
       if (surf && surf.thin) return surf.thin
       if (surf && surf.handle) return surf.handle
