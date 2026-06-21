@@ -48,9 +48,11 @@ window.nmRunFatGraph = async function (fat, opts = {}) {
   const pipeline = new Pipeline(graph, backend)
 
   await pipeline.init(size, size)
-  // Render several frames at a pinned normalized time so feedback/state surfaces settle,
-  // exactly like the golden harness (frames: 8, time pinned).
-  for (let i = 0; i < frames; i++) pipeline.render(time)
+  // Pinned time (ts=0): feedback/state surfaces settle (8-frame default). ts>0 ADVANCES time
+  // per frame (tt=(t+i*ts)%1) — matches the golden harness's --timestep, used to evolve
+  // continuous solvers (navierStokes/reactionDiffusion) over ~30s for a steady-state compare.
+  const ts = opts.timestep || 0
+  for (let i = 0; i < frames; i++) pipeline.render(ts > 0 ? (time + i * ts) % 1 : time)
 
   // Resolve the render surface's current read texture (mirrors Pipeline's present step).
   const name = graph.renderSurface

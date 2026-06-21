@@ -52,12 +52,13 @@ export function encodePNG (width, height, rgba) {
 }
 
 function parseArgs (argv) {
-  const a = { size: 256, time: 0.25, frames: 8, rebuild: false, name: argv[0] }
+  const a = { size: 256, time: 0.25, frames: 8, timestep: 0, rebuild: false, name: argv[0] }
   for (let i = 1; i < argv.length; i++) {
     const k = argv[i]
     if (k === '--size') a.size = +argv[++i]
     else if (k === '--time') a.time = +argv[++i]
     else if (k === '--frames') a.frames = +argv[++i]
+    else if (k === '--timestep') a.timestep = +argv[++i]
     else if (k === '--out') a.out = argv[++i]
     else if (k === '--rebuild') a.rebuild = true
   }
@@ -103,7 +104,7 @@ async function main () {
     const result = await page.evaluate(async ({ fat, opts, viaRenderer }) => {
       const fn = viaRenderer ? window.nmRunViaRenderer : window.nmRunFatGraph
       try { return { ok: true, ...(await fn(fat, opts)) } } catch (e) { return { ok: false, error: String((e && e.stack) || e) } }
-    }, { fat, opts: { size: args.size, time: args.time, frames: args.frames, debug: !!process.env.NM_DEBUG }, viaRenderer })
+    }, { fat, opts: { size: args.size, time: args.time, frames: args.frames, timestep: args.timestep, debug: !!process.env.NM_DEBUG }, viaRenderer })
     if (!result.ok) throw new Error('harness error: ' + result.error + (errs.length ? '\nconsole:\n' + errs.join('\n') : ''))
     if (process.env.NM_DEBUG && result.debug) process.stderr.write('[debug] ' + JSON.stringify(result.debug, null, 2) + '\n')
     writeFileSync(out, encodePNG(result.width, result.height, Uint8Array.from(result.data)))

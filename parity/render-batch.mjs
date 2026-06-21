@@ -13,6 +13,16 @@ import { chromium } from 'playwright'
 import { exportFatGraph } from '../tools/export-fat-graph.mjs'
 import { ROOT, INDEX_HTML, encodePNG, ensureBundle } from './render-candidate.mjs'
 
+// Effects that need TIME EVOLUTION to a steady state rather than a pinned frame: continuous
+// solvers (Gray-Scott / Navier-Stokes). Run ~30s at the demo's natural rate (1/600 normalized
+// per 60fps frame over a 10s loop); the chaotic transient washes out to a deterministic
+// attractor that is bit-identical to the golden (same ANGLE/Metal driver). Goldens for these
+// MUST be generated with the matching batch-golden --frames/--timestep.
+const EVOLVE = {
+  reactionDiffusion: { frames: 1800, timestep: 0.0016667 },
+  navierStokes: { frames: 1800, timestep: 0.0016667 }
+}
+
 function parse (argv) {
   const o = { size: 256, time: 0.25, frames: 8, names: [], all: false }
   for (let i = 0; i < argv.length; i++) {
@@ -50,9 +60,11 @@ async function main () {
       if (!existsSync(dslPath)) continue
       try {
         const fat = await exportFatGraph(readFileSync(dslPath, 'utf8'))
+        const ev = EVOLVE[name]
+        const opts = { size: o.size, time: o.time, frames: ev ? ev.frames : o.frames, timestep: ev ? ev.timestep : 0 }
         const res = await page.evaluate(async ({ fat, opts }) => {
           try { return { ok: true, ...(await window.nmRunFatGraph(fat, opts)) } } catch (e) { return { ok: false, error: String((e && e.stack) || e) } }
-        }, { fat, opts: { size: o.size, time: o.time, frames: o.frames } })
+        }, { fat, opts })
         if (!res.ok) { failed.push(name); err++; process.stderr.write(`[batch] ERR  ${name}: ${res.error.split('\n')[0]}\n`); continue }
         writeFileSync(join(ROOT, 'parity', 'out', `${name}.candidate.png`), encodePNG(res.width, res.height, Uint8Array.from(res.data)))
         ok++; process.stderr.write(`[batch] ok   ${name}\n`)

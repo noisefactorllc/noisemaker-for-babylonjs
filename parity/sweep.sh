@@ -21,9 +21,11 @@ tol_for() {
     *) echo "2.001 0.98";;
   esac
 }
-# Documented skips: continuous solvers (not bit-reproducible) + external-input effects (need a
-# MIDI/media/asset source the parity harness doesn't provide — golden is degenerate/black).
-is_skip() { case "$1" in reactionDiffusion|navierStokes|media|text|remap) return 0;; *) return 1;; esac; }
+# Documented skips: external-input effects only — they need a MIDI/media/glyph/projection source
+# the parity harness doesn't provide (golden is degenerate/black). The continuous solvers
+# (reactionDiffusion, navierStokes) are NOT skipped: render-batch evolves them ~30s to a steady
+# state that is bit-identical to the golden (see the EVOLVE map in render-batch.mjs).
+is_skip() { case "$1" in media|text|remap) return 0;; *) return 1;; esac; }
 
 PY="parity/.venv/bin/python"
 
@@ -40,7 +42,7 @@ node parity/render-batch.mjs "${NAMES[@]}" 2>&1 | grep -E "ERR|rendered" | sed '
 # Grade.
 pass=0; fail=0; skip=0; failed=""
 for n in "${NAMES[@]}"; do
-  if is_skip "$n"; then echo "[SKIP] $n — continuous solver (documented, not bit-reproducible)"; skip=$((skip+1)); continue; fi
+  if is_skip "$n"; then echo "[SKIP] $n — external input (MIDI/media/glyph/projection not supplied by the harness)"; skip=$((skip+1)); continue; fi
   [[ -f "parity/out/$n.candidate.png" ]] || { echo "[FAIL] $n — no candidate rendered"; fail=$((fail+1)); failed="$failed $n"; continue; }
   read -r tol ssim <<<"$(tol_for "$n")"
   r=$("$PY" parity/compare.py "parity/out/$n.golden.png" "parity/out/$n.candidate.png" --name "$n" --tolerance "$tol" --ssim-min "$ssim" 2>&1)
