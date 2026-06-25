@@ -65,8 +65,22 @@ export async function bootEngine () {
       process.stderr.write(`[engine] skip ${id}: ${err?.message || err}\n`)
       continue
     }
-    const instance = mod.default
+    let instance = mod.default
     if (!instance) continue
+    // Some mini-bundles (classicNoisedeck/*, media, meshLoader) export a CLASS, not an instance.
+    // Instantiate it and carry the STATIC shaders onto the instance — otherwise globals/passes/GLSL
+    // are absent and the effect registers as an empty shell (→ S001 "unknown argument" / S005
+    // "illegal chain" / empty graph). Plain-object bundles (e.g. synth/*) pass through unchanged.
+    if (typeof instance === 'function') {
+      const Cls = instance
+      try {
+        instance = new Cls()
+        if (Cls.shaders && !instance.shaders) instance.shaders = Cls.shaders
+      } catch (err) {
+        process.stderr.write(`[engine] skip ${id}: class instantiation failed: ${err?.message || err}\n`)
+        continue
+      }
+    }
     if (!instance.namespace) instance.namespace = ns
     const func = instance.func || eff
 

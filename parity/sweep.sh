@@ -42,6 +42,10 @@ fi
 
 # Render all candidates in ONE browser session.
 echo "=== rendering ${#NAMES[@]} candidates (one browser) ==="
+# Hardening: clear any stale candidate PNGs first. If a candidate fails to render, the file must
+# be ABSENT so the grader (below) reports "no candidate rendered" — otherwise an errored render
+# would be silently graded against a leftover candidate from a previous run and falsely PASS.
+for n in "${NAMES[@]}"; do rm -f "parity/out/$n.candidate.png"; done
 node parity/render-batch.mjs "${NAMES[@]}" 2>&1 | grep -E "ERR|rendered" | sed 's/^/  /'
 
 # Grade.
