@@ -21,8 +21,9 @@ engine runs in the browser at [noisedeck.app](https://noisedeck.app).
 animated backgrounds from code, with no image files.
 
 Babylon.js is JavaScript over WebGL2/WebGPU — the exact environment Noisemaker already targets — so
-**nothing is translated**. This port runs the **published engine as-is** and adds one new piece: a
-`BabylonBackend` that lets the unchanged engine render through `@babylonjs/core`.
+**nothing is translated**. This port runs the **published engine as-is** and adds two small pieces:
+a `BabylonBackend` (the Backend-interface impl) and a `NoisemakerRenderer` host that exposes the
+result as a Babylon texture.
 
 ## What you can do with it
 
@@ -66,7 +67,7 @@ Then load it and render a frame:
 ```js
 import { Engine } from '@babylonjs/core/Engines/engine.js'
 import { Pipeline } from './vendor/noisemaker/noisemaker-shaders-core.esm.js'
-import { NoisemakerRenderer } from 'noisemaker-babylon'
+import { NoisemakerRenderer } from './src/runtime/renderer.js'
 import fatGraph from './demo.fatgraph.json'
 
 const engine = new Engine(canvas, true)
@@ -80,6 +81,12 @@ chain effects, write the result to an output surface (`.write(o0)`), then pick o
 (`render(o0)`).
 
 ## Use it in your own Babylon project
+
+> **Install into your own project.** This package isn't published to npm yet. Until it is, install
+> it from git — `npm i github:noisefactorllc/noisemaker-babylonjs` — or vendor `src/runtime/` into
+> your app and run `vendor/fetch.sh` to pull the engine. The snippets here import the renderer by
+> its in-repo path (`./src/runtime/renderer.js`); the demos in `examples/` import it as
+> `../src/runtime/renderer.js`.
 
 `NoisemakerRenderer` keeps a stable output texture you can hand straight to any material, and drives
 the effect forward each frame:
@@ -138,6 +145,8 @@ engine (only the backend differs), so a same-engine diff is exact:
 
 ```bash
 npm install && bash vendor/fetch.sh    # deps + fetch the published engine (gitignored)
+python3 -m venv parity/.venv && parity/.venv/bin/pip install numpy pillow   # compare.py deps
+npx playwright install chromium        # headless browser for the candidate renders
 bash parity/sweep.sh                    # goldens + candidates, both via the vendored engine
 bash parity/run.sh noise                # just one program
 #   -> [PASS] noise: max-abs-diff=0 ...
@@ -149,7 +158,7 @@ across all Noisemaker ports).
 ## Repo layout
 
 ```
-src/runtime/babylonBackend.js   the Backend impl on @babylonjs/core (the one new component)
+src/runtime/babylonBackend.js   the Backend impl on @babylonjs/core
 src/runtime/renderer.js         NoisemakerRenderer host (stable output texture for materials)
 tools/export-fat-graph.mjs      DSL → runnable "fat graph" (compiler + GLSL attached)
 vendor/fetch.sh                 fetches the published engine from the CDN (gitignored)
