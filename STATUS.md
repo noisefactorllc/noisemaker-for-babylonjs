@@ -1,6 +1,6 @@
 # noisemaker-babylon — status & parity
 
-*Last verified 2026-06-21. The sources of truth are `parity/sweep.sh`, `parity/corpus/sweep.sh`, and
+*Last verified 2026-07-09. The sources of truth are `parity/sweep.sh`, `parity/corpus/sweep.sh`, and
 `tools/catalog.mjs`.*
 
 This file holds the detailed coverage and parity numbers. For what the project is and how to use it,
@@ -8,12 +8,12 @@ see the [README](README.md).
 
 ## Coverage
 
-**184 catalogued effects** (`tools/catalog.mjs`); **180 are byte-identical** to the reference, and 4
+**185 catalogued effects** (`tools/catalog.mjs`); **181 are byte-identical** to the reference, and 4
 are not byte-verified because they need a live external input.
 
 | Group | What's in it | State |
 |---|---|---|
-| 2D effects | noise, filters, mixers, classic generators (149) | byte-identical |
+| 2D effects | noise, filters, mixers, classic generators (150) | byte-identical |
 | Agent / points sims | physarum, life, flock, dla, lenia, … (10) | byte-identical |
 | Continuous solvers | `reactionDiffusion`, `navierStokes` | byte-identical (evolved) |
 | 3D-volume raymarch | 7 `synth3d` generators × `render3d` / `renderLit3d` (isosurface + voxel), `flow3d`, `palette3d` | byte-identical |
@@ -23,7 +23,7 @@ are not byte-verified because they need a live external input.
 
 ## Parity
 
-- **Whole catalog (single-frame, `parity/sweep.sh`):** 180/184 byte-identical (max-abs-diff 0).
+- **Whole catalog (single-frame, `parity/sweep.sh`):** 181/185 byte-identical (max-abs-diff 0).
   Because the candidate renders on the **same WebGL2 / ANGLE / Metal driver** as the golden, the
   match is exact — **no effect needs the relaxed tolerances** the Metal-backed Unity / Godot / TD
   ports required.
@@ -43,7 +43,7 @@ this is a true same-engine diff, not a cross-implementation comparison.
 
 ## Known limits
 
-Four of the 184 catalogued effects are **not** byte-verified. Each needs a runtime input the headless
+Four of the 185 catalogued effects are **not** byte-verified. Each needs a runtime input the headless
 parity harness can't supply deterministically — these are the only gaps in the catalog.
 
 | Effect | Namespace | External input it needs |
@@ -69,6 +69,16 @@ parity harness can't supply deterministically — these are the only gaps in the
 - **Standalone package.** The port consumes the published engine at build/test time via
   `vendor/fetch.sh` (gitignored — the `node_modules` posture). Packaging `noisemaker-babylon` itself
   as a distributable npm module (that fetches the engine on install) is open.
+- **Large unpublished reference delta.** The reference source tree (sibling `noisemaker` checkout)
+  is ~63 shader commits ahead of what's published to `shaders.noisedeck.app/1` (through reference
+  commit `b7c1bc36`, vs. the currently vendored core build `29725b18`) — roughly 21 new filters
+  (`parallax` is the only one of these published so far; `unsharpMask`, `highPass`, `median`,
+  `morphology`, `directionalBlur`, `spinBlur`, `scatter`, `wind`, `pondRipples`, `extrude`,
+  `halftone`, `stipple`, `oilPaint`, `watercolor`, `plasticWrap`, `relief`, `photocopy`, `stamp`,
+  `chrome`, `hatch` are not) plus assorted effect extensions and engine fixes. This port is
+  **published-CDN-only by design** (`vendor/fetch.sh` never reads the sibling checkout — see
+  ARCHITECTURE.md), so this gap can't be bridged from here; it closes automatically the next time
+  those commits are published to `/1` and `vendor/fetch.sh` is re-run.
 
 ## How the 3D / cubemap / remap paths work
 

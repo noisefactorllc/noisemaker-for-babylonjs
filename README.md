@@ -17,7 +17,7 @@ That little language is Noisemaker's **DSL** (a domain-specific language for vis
 engine runs in the browser at [noisedeck.app](https://noisedeck.app).
 
 **noisemaker-babylon** runs that same engine inside **Babylon.js** — the same programs and the same
-~180 effects, rendered as part of a Babylon scene. Use it to make textures, materials, skyboxes, and
+~185 effects, rendered as part of a Babylon scene. Use it to make textures, materials, skyboxes, and
 animated backgrounds from code, with no image files.
 
 Babylon.js is JavaScript over WebGL2/WebGPU — the exact environment Noisemaker already targets — so
@@ -114,7 +114,7 @@ Two runnable demos (`node examples/build.mjs`, then open the HTML):
 
 ## What works today
 
-- The **whole effect catalog** (~180 effects: noise, filters, mixers, classic generators) renders,
+- The **whole effect catalog** (~185 effects: noise, filters, mixers, classic generators) renders,
   and is **pixel-identical to the web reference** — the candidate runs on the same WebGL2 driver as
   the reference, so the match is exact (no rounding tolerance).
 - **Particle/agent sims and fluid (navier–stokes)** render and match the reference.

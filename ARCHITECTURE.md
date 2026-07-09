@@ -86,8 +86,8 @@ isolates `BabylonBackend` vs `WebGL2Backend`). Both render in **headless Chromiu
 WebGL2 driver** (a
 real GPU; `NullEngine` does no GPU work). `parity/compare.py` grades max-abs-diff + SSIM.
 
-**Result: 180 of 184 effects BYTE-IDENTICAL to the reference** (max-diff 0) — the entire catalog
-except 4 external-input effects. That's 149 renderable-2D effects + all 10 agent/points sims +
+**Result: 181 of 185 effects BYTE-IDENTICAL to the reference** (max-diff 0) — the entire catalog
+except 4 external-input effects. That's 150 renderable-2D effects + all 10 agent/points sims +
 `reactionDiffusion`/`navierStokes` + the **full 3D-volume raymarch** (7 synth3d generators ×
 `render3d`/`renderLit3d` × isosurface/voxel + `flow3d`/`palette3d`) + **single-face cubemaps**
 (`renderCubemapSurface`/`renderCubemap3d`) + the **SMRTicles wrappers** (`pointsEmit`/`pointsRender`/
@@ -138,7 +138,7 @@ Babylon's `ALPHA_ADD` (= `SRC_ALPHA, ONE`, which crushes HDR trail accumulation)
   2-/3-input mixers, blit, blend, uniforms, half-float, readback, **MRT, points/billboards-deposit
   agent sims, 3D-volume raymarch, `meshRender` triangle raster, `loopBegin`/`loopEnd`, SMRTicles
   wrappers, std140 UBO (`remap`)**); `NoisemakerRenderer` (+ `renderCubemap()` → 6-face bake to a
-  Babylon cube texture); the parity sweep (180/184 byte-identical) + the live-corpus + mesh-raster +
+  Babylon cube texture); the parity sweep (181/185 byte-identical) + the live-corpus + mesh-raster +
   cubemap-bake harnesses; two Babylon example scenes (procedural texture, baked-cubemap skybox). The
   test target + 19/19 corpus + all 6 cube faces byte-identical.
 - STAGED: host-side OBJ loading for `meshLoader` (external geometry, like `media`'s external texture —

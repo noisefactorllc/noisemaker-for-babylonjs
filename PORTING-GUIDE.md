@@ -175,7 +175,7 @@ vendored engine, except `media`/`text` (external input the headless harness can'
 
 Every pass type is implemented and parity-verified: MRT, `drawMode:'points'|'billboards'` (agent
 deposit), `drawMode:'triangles'` (mesh raster), 3D-volume raymarch, single-face + 6-face-baked
-cubemaps, and the std140 **UBO** path (`remap`) — **180/184 byte-identical** (the 4 external-input
+cubemaps, and the std140 **UBO** path (`remap`) — **181/185 byte-identical** (the 4 external-input
 effects media/text/roll/meshLoader aside). The one remaining feature:
 - **Host OBJ loading for `meshLoader`** — parse `share/meshes/*.obj` and upload to the mesh surfaces
   (a `NoisemakerRenderer` concern, like wiring an external texture for `media`). The triangle raster it
