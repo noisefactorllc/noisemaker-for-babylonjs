@@ -49,6 +49,7 @@ GPU operations and (b) Babylon not mangling the reused GLSL (see PORTING-GUIDE.m
   | `bindUniforms` (pass then globals, by GL type) | `effect.setFloat/Int/Bool/Float2/3/4` by parsed uniform type |
   | blit (`v_texCoord` copy) | `gl_FragCoord`/`texelFetch` copy wrapper |
   | `extractUniformBlocks`/`bindUniformBlocks`/`packUniformsWithLayout` (std140 UBO) | raw-GL UBO (`createBuffer`/`uniformBlockBinding`/`bufferSubData`/`bindBufferBase`), same std140 packing — `remap` only |
+  | `uploadDataTexture` (raw CPU->GPU data upload) | `createTexture` (or resize) + raw `texSubImage2D` on the underlying GL texture — `roll`'s MIDI note-grid only |
   | `present` (Y at canvas) | (offscreen parity reads surfaces directly) |
   | `readPixels` (float→`round(v*255)`, flip to top-down) | `engine._readTexturePixels` (Float32) → same quantize + flip |
   - All 2D textures NEAREST/CLAMP (surfaces are sampled NEAREST — load-bearing for warp effects).
@@ -86,18 +87,28 @@ isolates `BabylonBackend` vs `WebGL2Backend`). Both render in **headless Chromiu
 WebGL2 driver** (a
 real GPU; `NullEngine` does no GPU work). `parity/compare.py` grades max-abs-diff + SSIM.
 
-**Result: 181 of 185 effects BYTE-IDENTICAL to the reference** (max-diff 0) — the entire catalog
-except 4 external-input effects. That's 150 renderable-2D effects + all 10 agent/points sims +
-`reactionDiffusion`/`navierStokes` + the **full 3D-volume raymarch** (7 synth3d generators ×
+**Result: 206 of 210 effects BYTE-IDENTICAL to the reference** (max-diff 0) — the entire catalog
+except 4 external-input effects (three of those four are themselves byte-identical on their no-input
+fallback path — see STATUS.md). That's 179 renderable-2D effects (including all 25 of the 2026-07
+artistic-filter release: `chrome`, `strokes`, `hatch`, `texture`'s new modes, …) + all 10 agent/points
+sims + `reactionDiffusion`/`navierStokes` + the **full 3D-volume raymarch** (7 synth3d generators ×
 `render3d`/`renderLit3d` × isosurface/voxel + `flow3d`/`palette3d`) + **single-face cubemaps**
 (`renderCubemapSurface`/`renderCubemap3d`) + the **SMRTicles wrappers** (`pointsEmit`/`pointsRender`/
 `pointsBillboardRender`) + **`loopBegin`/`loopEnd`** + points-based `wormhole` + the **`remap`
 polygon-zone router** (std140 UBO — see below). Because candidate and golden share the
-WebGL2/ANGLE/Metal driver, parity is exact — **zero effects need the relaxed tolerances the
-Metal-backed godot/td ports required**, and the stateful/continuous/agent effects converge to a
-bit-identical steady state when evolved ~30s (the `EVOLVE` map in `render-batch.mjs`). The 4
+WebGL2/ANGLE/Metal driver, parity is exact — **zero effects need relaxed tolerances** (the
+per-effect safety-net map `parity/sweep.sh` used to carry for `newton`/`shadow`/`uvRemap`/
+`distortion`/`edge`/`pinch`/`crt` was retired this round once a full re-grade proved all of them
+byte-exact too), and the stateful/continuous/agent effects (including `reactionDiffusion`) converge
+to a bit-identical steady state when evolved ~30s (the `EVOLVE` map in `render-batch.mjs`). The 4
 non-byte-identical effects all require an external source the headless harness can't supply:
 **media** (texture), **text** (glyphs), **roll** (MIDI), **meshLoader** (OBJ — not yet vetted).
+
+**Beyond defaults: every mode of every artistic filter.** 101 (effect, mode) fixtures across 19
+effects — every enum/define-selected mode of `texture` (15), `hatch` (6), `morphology`
+(dilate/erode × square/round), etc., not just each effect's default configuration — are individually
+fixtured, minted, and graded, all byte-identical. See STATUS.md's "Mode coverage" section and
+`parity/mode-coverage.json`.
 
 **`remap` was mis-filed as external-input.** Its inputs are engine surfaces (`zoneN_tex: read(oN)`),
 not external data — the only "external" part is the 8-zone polygon config the Remap web app produces,
@@ -116,17 +127,18 @@ the UBO bind is a no-op for them (verified: noise/cell/julia/gabor/mandelbrot/ma
 shaders read it with `texelFetch(volumeCache, ivec2(x, y + z·volSize))`. The synth3d precompute and
 the `render3d`/`renderLit3d`/cubemap raymarch are all fullscreen `drawBuffers:2` MRT passes the
 existing `_executeMRT` already runs. No real GPU 3D texture is used anywhere (`createTexture3D`
-stays a guard). The only two genuinely-new backend pieces were the mesh `drawMode:'triangles'` raster
+stays a guard). The only three genuinely-new backend pieces were the mesh `drawMode:'triangles'` raster
 (`_executeTriangles`: a `DEPTH_COMPONENT24` renderbuffer + depth test + back-face cull + `gl_VertexID`
 geometry fetch from an empty VAO, plus a `_chain_\d+$` strip in input/count resolution so chain-scoped
-mesh refs find the unscoped surface — mirrors `webgl2.bindTextures`), and the std140 **UBO** path
-(`_bindUniformBlocks`/`_extractUniformBlocks`/`_packUniformsWithLayout`) for `remap`.
+mesh refs find the unscoped surface — mirrors `webgl2.bindTextures`), the std140 **UBO** path
+(`_bindUniformBlocks`/`_extractUniformBlocks`/`_packUniformsWithLayout`) for `remap`, and (this round)
+`uploadDataTexture` for `roll`'s MIDI note-grid.
 
 **End-to-end validation.** The complex emergent test program (3D perlin → 1M-agent flow-field
 particles [MRT+points+billboards] → blur → navierStokes ×40 → palette/lighting/adjust/bloom/lens/
 vignette) is byte-identical at every 5s sample over 30s. The **live NoiseBLASTER! corpus** —
-19 real shared compositions fetched from `blaster.noisedeck.app` (`parity/corpus/`) — is
-**19/19 byte-identical**. The **mesh triangle raster** was proven byte-identical by injecting an
+real shared compositions fetched from `blaster.noisedeck.app` (`parity/corpus/`) — matches the
+reference; see STATUS.md for the current pass count. The **mesh triangle raster** was proven byte-identical by injecting an
 identical procedural sphere into both engines' mesh textures — a depth-tested, back-face-culled,
 Blinn-Phong-lit sphere, max-abs-diff 0. The one load-bearing fix
 that unlocked the agent sims + corpus was the additive deposit blend: raw `blendFunc(ONE,ONE)`, not
@@ -137,10 +149,11 @@ Babylon's `ALPHA_ADD` (= `SRC_ALPHA, ONE`, which crushes HDR trail accumulation)
 - DONE: compiler + pipeline reuse; `BabylonBackend` (fullscreen render, multi-pass, filters,
   2-/3-input mixers, blit, blend, uniforms, half-float, readback, **MRT, points/billboards-deposit
   agent sims, 3D-volume raymarch, `meshRender` triangle raster, `loopBegin`/`loopEnd`, SMRTicles
-  wrappers, std140 UBO (`remap`)**); `NoisemakerRenderer` (+ `renderCubemap()` → 6-face bake to a
-  Babylon cube texture); the parity sweep (181/185 byte-identical) + the live-corpus + mesh-raster +
+  wrappers, std140 UBO (`remap`), `uploadDataTexture` (`roll`)**); `NoisemakerRenderer` (+
+  `renderCubemap()` → 6-face bake to a Babylon cube texture); the parity sweep (206/210
+  byte-identical, 101/101 mode-matrix fixtures byte-identical) + the live-corpus + mesh-raster +
   cubemap-bake harnesses; two Babylon example scenes (procedural texture, baked-cubemap skybox). The
-  test target + 19/19 corpus + all 6 cube faces byte-identical.
+  test target + live corpus + all 6 cube faces byte-identical.
 - STAGED: host-side OBJ loading for `meshLoader` (external geometry, like `media`'s external texture —
   **the effect is not yet vetted**; the triangle raster it feeds IS proven byte-identical via injection);
   vendoring the reference engine for a standalone published package (today the parity harness + example

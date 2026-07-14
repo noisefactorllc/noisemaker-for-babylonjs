@@ -131,6 +131,19 @@ Verified byte-identical for the default program AND `parity/programs/remap_zones
 triangle routing two noise sources over the bg color — golden minted via the vendored WebGL2 harness),
 which exercises the full per-zone vertex packing, polygon point-in-zone tests, and edge smoothing.
 
+## `uploadDataTexture` (the `roll`/MIDI data-texture path — found and fixed this round)
+
+`synth/roll`'s engine-level external-state handler calls `backend.uploadDataTexture('midiNoteGrid',
+noteGrid|emptyNoteGrid, 128, 16)` on **every** render — whether or not a live MIDI source is attached,
+the empty-grid no-input fallback still needs the method to exist. `roll` had no parity fixture before
+this round (it was simply never rendered through `BabylonBackend`); generating one exposed
+`TypeError: this.backend.uploadDataTexture is not a function`. Fixed by mirroring `webgl2.js`'s
+implementation: create (or recreate, if the size changed) an RGBA32F NEAREST/CLAMP texture on first
+call via the backend's own `createTexture`, `texSubImage2D`-update it on every call after via
+`_glTexOf`. Built on the existing texture-record path so the result is a normal `this.textures` entry
+any later sampler-input lookup already finds — no other code needed to change. Verified byte-identical
+after the fix (`roll`'s no-MIDI empty-grid fallback matches the golden exactly).
+
 ## Parity invariants (same as the WebGL2 reference)
 
 - Render targets: linear **half-float RGBA** (`rgba16f`), **NEAREST** min/mag, **CLAMP_TO_EDGE**
@@ -169,14 +182,33 @@ NM_VIA_RENDERER=1 node parity/render-candidate.mjs noise
 
 Readback matches the golden exactly: read the surface as float, quantize `round(v*255)` clamped to
 0..255, flip rows bottom-up→top-down. Result: **the entire catalog is byte-identical** through the
-vendored engine, except `media`/`text` (external input the headless harness can't supply).
+vendored engine, except `media`/`text`/`roll` (external input the headless harness can't supply —
+policy-skipped even though all three numerically pass on their no-input fallback) and `meshLoader`
+(no fixture at all).
+
+**Mint goldens and candidates in the same pass — don't grade a stale golden.** A handful of effects
+(`watercolor`, and the chaotic iterative solvers `navierStokes`/`target`/`reactionDiffusion`) are not
+perfectly stable pixel-for-pixel across *wall-clock time* — re-minting the reference golden hours
+apart from the original can drift by a few percent, evidently uninitialized-texture-read /
+GPU-scheduling sensitivity **in the published shader itself** (present in `WebGL2Backend` too, so it
+is not a `BabylonBackend` bug). Confirmed by direct test: a golden and a candidate minted back-to-back
+are always byte-identical (max-abs-diff 0); a golden minted hours earlier compared against a
+just-rendered candidate can show a spurious few-percent diff purely from that time gap. `parity/sweep.sh`
+does **not** mint goldens (it only re-renders candidates against whatever's already committed) — when
+re-verifying from scratch, always re-mint goldens immediately before running the sweep:
+```bash
+NM_GOLDEN=1 node parity/render-batch.mjs $(ls parity/programs/*.dsl | xargs -n1 basename | sed 's/\.dsl$//' | grep -v '^corpus_')
+bash parity/sweep.sh
+```
 
 ## What's left
 
 Every pass type is implemented and parity-verified: MRT, `drawMode:'points'|'billboards'` (agent
 deposit), `drawMode:'triangles'` (mesh raster), 3D-volume raymarch, single-face + 6-face-baked
-cubemaps, and the std140 **UBO** path (`remap`) — **181/185 byte-identical** (the 4 external-input
-effects media/text/roll/meshLoader aside). The one remaining feature:
+cubemaps, the std140 **UBO** path (`remap`), and raw data-texture upload (`uploadDataTexture`, the
+`roll`/MIDI note-grid path) — **206/210 byte-identical** (the 4 external-input effects
+media/text/roll/meshLoader aside; three of those four are themselves byte-identical on their no-input
+fallback). The one remaining feature:
 - **Host OBJ loading for `meshLoader`** — parse `share/meshes/*.obj` and upload to the mesh surfaces
   (a `NoisemakerRenderer` concern, like wiring an external texture for `media`). The triangle raster it
   feeds is already proven byte-identical, but **the `meshLoader` effect itself is not yet vetted**.

@@ -17,7 +17,7 @@ That little language is Noisemaker's **DSL** (a domain-specific language for vis
 engine runs in the browser at [noisedeck.app](https://noisedeck.app).
 
 **noisemaker-babylon** runs that same engine inside **Babylon.js** — the same programs and the same
-~185 effects, rendered as part of a Babylon scene. Use it to make textures, materials, skyboxes, and
+~210 effects, rendered as part of a Babylon scene. Use it to make textures, materials, skyboxes, and
 animated backgrounds from code, with no image files.
 
 Babylon.js is JavaScript over WebGL2/WebGPU — the exact environment Noisemaker already targets — so
@@ -114,15 +114,21 @@ Two runnable demos (`node examples/build.mjs`, then open the HTML):
 
 ## What works today
 
-- The **whole effect catalog** (~185 effects: noise, filters, mixers, classic generators) renders,
-  and is **pixel-identical to the web reference** — the candidate runs on the same WebGL2 driver as
-  the reference, so the match is exact (no rounding tolerance).
+- The **whole effect catalog** (~210 effects: noise, filters, mixers, classic generators, including
+  the full 2026-07 artistic-filter release) renders, and is **byte-identical to the web reference** —
+  the candidate runs on the same WebGL2 driver as the reference, so the match is exact (no rounding
+  tolerance).
+- **Every mode of every artistic filter**, not just its default — 101 (effect, mode) fixtures across
+  19 effects (texture's 15 modes, hatch's 6, morphology's dilate/erode × square/round, …) — is also
+  byte-identical. See [STATUS.md](STATUS.md) for the full matrix.
 - **Particle/agent sims and fluid (navier–stokes)** render and match the reference.
 - **3D-volume raymarch and cubemap bake** render and match — usable as Babylon skyboxes / PBR
   reflections.
-- **The live NoiseBLASTER! corpus** — 19 real shared compositions — is **19/19 byte-identical**.
+- **The live NoiseBLASTER! corpus** — real shared compositions — matches the reference; see
+  [STATUS.md](STATUS.md) for the current pass count.
 - The only gaps are **4 effects that need a live external input** (`media`, `text`, `roll`,
-  `meshLoader`).
+  `meshLoader`) — three of the four (`media`/`text`/`roll`) are additionally verified byte-identical
+  on their no-input fallback path.
 
 Coverage table, parity numbers, and known limits: **[STATUS.md](STATUS.md)**.
 
@@ -147,9 +153,19 @@ engine (only the backend differs), so a same-engine diff is exact:
 npm install && bash vendor/fetch.sh    # deps + fetch the published engine (gitignored)
 python3 -m venv parity/.venv && parity/.venv/bin/pip install numpy pillow   # compare.py deps
 npx playwright install chromium        # headless browser for the candidate renders
-bash parity/sweep.sh                    # goldens + candidates, both via the vendored engine
+bash parity/sweep.sh                    # candidates via BabylonBackend, graded against the committed goldens
 bash parity/run.sh noise                # just one program
 #   -> [PASS] noise: max-abs-diff=0 ...
+```
+
+`parity/sweep.sh` grades against whatever goldens are already committed — it does not mint them. A few
+effects (`watercolor`, the chaotic iterative solvers) are sensitive enough to time/GPU-scheduling that a
+golden minted hours apart from the candidate can show a spurious few-percent diff even though the two
+backends are byte-identical when minted together (see PORTING-GUIDE.md). To re-verify from a clean
+slate, re-mint goldens immediately before sweeping:
+```bash
+NM_GOLDEN=1 node parity/render-batch.mjs $(ls parity/programs/*.dsl | xargs -n1 basename | sed 's/\.dsl$//' | grep -v '^corpus_')
+bash parity/sweep.sh
 ```
 
 → **[STATUS.md](STATUS.md)** (coverage + parity results) · `reference/01–10` (engine specs shared
