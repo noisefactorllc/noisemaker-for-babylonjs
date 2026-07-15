@@ -2,7 +2,8 @@
 // render-batch.mjs [names...] [--all] [--size 256] [--time 0.25] [--frames 8]
 //
 // Renders many programs in ONE headless-Chromium session (fast full sweep). Each program gets a
-// fresh canvas inside the page (disposed between runs). Default: the Babylon candidate
+// fresh canvas inside the page (disposed between runs). With --dual, both the reference golden
+// and Babylon candidate are rendered before moving to the next program. Default: the candidate
 // (BabylonBackend) -> parity/out/<name>.candidate.png. With NM_GOLDEN=1: the reference golden via
 // the vendored WebGL2Backend (same engine + fat graph, only the backend differs) ->
 // parity/out/<name>.golden.png. With --all (or no names), renders every program in parity/programs
@@ -39,7 +40,7 @@ const EVOLVE = {
 }
 
 function parse (argv) {
-  const o = { size: 256, time: 0.25, frames: 8, names: [], all: false }
+  const o = { size: 256, time: 0.25, frames: 8, names: [], all: false, dual: false }
   for (let i = 0; i < argv.length; i++) {
     const k = argv[i]
     if (k === '--size') o.size = +argv[++i]
@@ -47,6 +48,7 @@ function parse (argv) {
     else if (k === '--frames') o.frames = +argv[++i]
     else if (k === '--timestep') o.timestep = +argv[++i]
     else if (k === '--all') o.all = true
+    else if (k === '--dual') o.dual = true
     else o.names.push(k)
   }
   return o
@@ -58,8 +60,12 @@ async function main () {
   // Babylon candidate. Goldens being minted don't exist yet, so this mode never auto-discovers
   // by existing-golden — pass explicit names.
   const GOLDEN = !!process.env.NM_GOLDEN
-  const harnessFn = GOLDEN ? 'nmRunFatGraphWebGL2' : 'nmRunFatGraph'
-  const suffix = GOLDEN ? 'golden' : 'candidate'
+  const modes = o.dual
+    ? [
+        { harnessFn: 'nmRunFatGraphWebGL2', suffix: 'golden' },
+        { harnessFn: 'nmRunFatGraph', suffix: 'candidate' }
+      ]
+    : [{ harnessFn: GOLDEN ? 'nmRunFatGraphWebGL2' : 'nmRunFatGraph', suffix: GOLDEN ? 'golden' : 'candidate' }]
   let names = o.names
   if (o.all || names.length === 0) {
     names = readdirSync(join(ROOT, 'parity', 'programs'))
@@ -84,11 +90,13 @@ async function main () {
         const fat = await exportFatGraph(readFileSync(dslPath, 'utf8'))
         const ev = EVOLVE[name]
         const opts = { size: o.size, time: o.time, frames: ev ? ev.frames : o.frames, timestep: ev ? ev.timestep : (o.timestep || 0) }
-        const res = await page.evaluate(async ({ fat, opts, harnessFn }) => {
-          try { return { ok: true, ...(await window[harnessFn](fat, opts)) } } catch (e) { return { ok: false, error: String((e && e.stack) || e) } }
-        }, { fat, opts, harnessFn })
-        if (!res.ok) { failed.push(name); err++; process.stderr.write(`[batch] ERR  ${name}: ${res.error.split('\n')[0]}\n`); continue }
-        writeFileSync(join(ROOT, 'parity', 'out', `${name}.${suffix}.png`), encodePNG(res.width, res.height, Uint8Array.from(res.data)))
+        for (const mode of modes) {
+          const res = await page.evaluate(async ({ fat, opts, harnessFn }) => {
+            try { return { ok: true, ...(await window[harnessFn](fat, opts)) } } catch (e) { return { ok: false, error: String((e && e.stack) || e) } }
+          }, { fat, opts, harnessFn: mode.harnessFn })
+          if (!res.ok) throw new Error(`${mode.suffix}: ${res.error.split('\n')[0]}`)
+          writeFileSync(join(ROOT, 'parity', 'out', `${name}.${mode.suffix}.png`), encodePNG(res.width, res.height, Uint8Array.from(res.data)))
+        }
         ok++; process.stderr.write(`[batch] ok   ${name}\n`)
       } catch (e) { failed.push(name); err++; process.stderr.write(`[batch] ERR  ${name}: ${String(e).split('\n')[0]}\n`) }
     }

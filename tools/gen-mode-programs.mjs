@@ -49,17 +49,19 @@ export const CASES = [
   ['lowPoly_border', 'lowPoly', 'borderWidth: 10'],
   ['lowPoly_light', 'lowPoly', 'lightIntensity: 50'],
   // emboss - style (define STYLE), 2 choices
-  ...['color', 'gray'].map(m => [`emboss_${m}`, 'emboss', `style: ${m}`]),
+  ['emboss_color', 'emboss', 'style: color'],
+  ['emboss_gray', 'emboss', 'style: gray, angle: 37, height: 4, colorAmount: 55'],
   // invert - mode (runtime uniform), 2 choices
   ...['full', 'solarize'].map(m => [`invert_${m}`, 'invert', `mode: ${m}`]),
   // hatch - mode (define MODE), all 6 vendored choices (brief named only 4 of these)
-  ...['pen', 'charcoal', 'chalkCharcoal', 'conte', 'crosshatch', 'coloredPencil'].map(m => [`hatch_${m}`, 'hatch', `mode: ${m}`]),
+  ...['pen', 'charcoal', 'chalkCharcoal', 'conte', 'crosshatch', 'coloredPencil'].map(m => [`hatch_${m}`, 'hatch', `mode: ${m}, direction: rightDiag`]),
+  ['hatch_coloredPencil_leftDiag', 'hatch', 'mode: coloredPencil, direction: leftDiag'],
   // halftone - mode(color/mono, define MODE) x pattern(dot/line/circle, define PATTERN, only
   // meaningful when mode=mono)
   ['halftone_color', 'halftone', 'mode: color'],
   ...['dot', 'line', 'circle'].map(p => [`halftone_mono_${p}`, 'halftone', `mode: mono, pattern: ${p}`]),
   // relief - mode (define MODE), 3 choices
-  ...['basRelief', 'plaster', 'notePaper'].map(m => [`relief_${m}`, 'relief', `mode: ${m}`]),
+  ...['basRelief', 'plaster', 'notePaper'].map(m => [`relief_${m}`, 'relief', `mode: ${m}, lightAngle: 37`]),
   // stipple - mode (define MODE), all 5 vendored choices (brief named only 3 of these)
   ...['pointillize', 'mezzoDots', 'mezzoLines', 'mezzoStrokes', 'reticulation'].map(m => [`stipple_${m}`, 'stipple', `mode: ${m}`]),
   // mosaicTiles - mode (define MODE), 2 choices
@@ -69,23 +71,29 @@ export const CASES = [
   ...['dilate', 'erode'].flatMap(m => ['square', 'round'].map(s => [`morphology_${m}_${s}`, 'morphology', `mode: ${m}, shape: ${s}`])),
   // edge - kernel(fine/bold/contour, runtime uniform) + contourSide(lower/upper, only under contour)
   ...['fine', 'bold', 'contour'].map(k => [`edge_${k}`, 'edge', `kernel: ${k}`]),
-  ['edge_contour_upper', 'edge', 'kernel: contour, contourSide: upper'],
-  // extrude - type(blocks/pyramids) + depthSource(luminance/random), both define
+  ['edge_contour_upper', 'edge', 'kernel: contour, contourSide: upper, invert: on'],
+  // extrude - type(blocks/pyramids) x depthSource(luminance/random), both define
   ['extrude_blocks', 'extrude', 'type: blocks'],
   ['extrude_pyramids', 'extrude', 'type: pyramids'],
   ['extrude_depthRandom', 'extrude', 'depthSource: random'],
+  ['extrude_pyramids_random', 'extrude', 'type: pyramids, depthSource: random'],
   // lensFlare - lensType, 4 choices
-  ...['zoom50_300', 'prime35', 'prime105', 'moviePrime'].map(l => [`lensFlare_${l}`, 'lensFlare', `lensType: ${l}`]),
+  ...['zoom50_300', 'prime35', 'prime105', 'moviePrime'].map(l => [`lensFlare_${l}`, 'lensFlare', `lensType: ${l}, centerX: 0.31, centerY: 0.67`]),
   // oilPaint - mode, 6 choices
   ...['facet', 'daubs', 'dryBrush', 'fresco', 'knife', 'sponge'].map(m => [`oilPaint_${m}`, 'oilPaint', `mode: ${m}`]),
   // pondRipples - style(3) + wrap(3), both define; wrap's own default (mirror) already covered
   // by the style sweep so only its other 2 values are added
-  ...['aroundCenter', 'outFromCenter', 'pondRipples'].map(s => [`pondRipples_${s}`, 'pondRipples', `style: ${s}`]),
-  ...['repeat', 'clamp'].map(w => [`pondRipples_wrap_${w}`, 'pondRipples', `wrap: ${w}`]),
+  ...['aroundCenter', 'outFromCenter', 'pondRipples'].map(s => [`pondRipples_${s}`, 'pondRipples', `style: ${s}, amount: 70`]),
+  ...['repeat', 'clamp'].map(w => [`pondRipples_wrap_${w}`, 'pondRipples', `style: pondRipples, wrap: ${w}, amount: 70`]),
   // scatter - mode, 5 choices
   ...['normal', 'darkenOnly', 'lightenOnly', 'anisotropic', 'clumped'].map(m => [`scatter_${m}`, 'scatter', `mode: ${m}`]),
-  // wind - method, 3 choices
-  ...['wind', 'blast', 'stagger'].map(m => [`wind_${m}`, 'wind', `method: ${m}`]),
+  // wind - method(3) x direction(2)
+  ...['wind', 'blast', 'stagger'].map(m => [`wind_${m}`, 'wind', `method: ${m}, direction: fromLeft`]),
+  ...['wind', 'blast', 'stagger'].map(m => [`wind_${m}_fromRight`, 'wind', `method: ${m}, direction: fromRight`]),
+  // corrective non-default parameter cases from the frozen artistic release matrix
+  ['directionalBlur_angled', 'directionalBlur', 'angle: 37, distance: 75'],
+  ['plasticWrap_directed', 'plasticWrap', 'lightDirection: vec3(0.2, -0.4, 0.8)'],
+  ['spinBlur_offCenter', 'spinBlur', 'amount: 30, centerX: 0.35, centerY: 0.3'],
   // dither (bonus - see file header: evidence-based substitute for the "grain{~10 types}" mismatch)
   ...['bayer2x2', 'bayer4x4', 'bayer8x8', 'dot', 'line', 'crosshatch', 'noise', 'errorDiffusion'].map(t => [`dither_${t}`, 'dither', `type: ${t}`]),
   ...['monochrome', 'dotMatrixGreen', 'amberMonitor', 'pico8', 'commodore64', 'cgaPalette1', 'zxSpectrum', 'appleII', 'ega'].map(p => [`dither_palette_${p}`, 'dither', `palette: ${p}`])

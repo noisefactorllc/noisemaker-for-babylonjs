@@ -4,2825 +4,5795 @@
     "effect": "filter/adjust",
     "mode": "default",
     "golden": "parity/out/adjust.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/adjust.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "alphaMask",
     "effect": "mixer/alphaMask",
     "mode": "default",
     "golden": "parity/out/alphaMask.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/alphaMask.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "applyMode",
     "effect": "mixer/applyMode",
     "mode": "default",
     "golden": "parity/out/applyMode.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/applyMode.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "attractor",
     "effect": "points/attractor",
     "mode": "default",
     "golden": "parity/out/attractor.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/attractor.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "bc",
     "effect": "filter/bc",
     "mode": "default",
     "golden": "parity/out/bc.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/bc.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "billboard_flow",
     "effect": null,
     "mode": "default",
     "golden": "parity/out/billboard_flow.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/billboard_flow.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "bitwise",
     "effect": "synth/bitwise",
     "mode": "default",
     "golden": "parity/out/bitwise.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/bitwise.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "blendMode",
     "effect": "mixer/blendMode",
     "mode": "default",
     "golden": "parity/out/blendMode.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/blendMode.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "bloom",
     "effect": "filter/bloom",
     "mode": "default",
     "golden": "parity/out/bloom.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/bloom.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "blur",
     "effect": "filter/blur",
     "mode": "default",
     "golden": "parity/out/blur.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/blur.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "buddhabrot",
     "effect": "points/buddhabrot",
     "mode": "default",
     "golden": "parity/out/buddhabrot.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/buddhabrot.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "bulge",
     "effect": "filter/bulge",
     "mode": "default",
     "golden": "parity/out/bulge.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/bulge.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "ca3d",
     "effect": null,
     "mode": "default",
     "golden": "parity/out/ca3d.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/ca3d.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
-  },
-  {
-    "program": "cell",
-    "effect": "synth/cell",
-    "mode": "default",
-    "golden": "parity/out/cell.golden.png",
-    "max_abs_diff": 0,
-    "passed": true,
-    "skipped": false
-  },
-  {
-    "program": "cell3d_lit",
-    "effect": null,
-    "mode": "default",
-    "golden": "parity/out/cell3d_lit.golden.png",
-    "max_abs_diff": 0,
-    "passed": true,
-    "skipped": false
-  },
-  {
-    "program": "cell3d_r",
-    "effect": null,
-    "mode": "default",
-    "golden": "parity/out/cell3d_r.golden.png",
-    "max_abs_diff": 0,
-    "passed": true,
-    "skipped": false
-  },
-  {
-    "program": "cellSplit",
-    "effect": "mixer/cellSplit",
-    "mode": "default",
-    "golden": "parity/out/cellSplit.golden.png",
-    "max_abs_diff": 0,
-    "passed": true,
-    "skipped": false
-  },
-  {
-    "program": "cellularAutomata",
-    "effect": "synth/cellularAutomata",
-    "mode": "default",
-    "golden": "parity/out/cellularAutomata.golden.png",
-    "max_abs_diff": 0,
-    "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "celShading",
     "effect": "filter/celShading",
     "mode": "default",
     "golden": "parity/out/celShading.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/celShading.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
+  },
+  {
+    "program": "cell",
+    "effect": "synth/cell",
+    "mode": "default",
+    "golden": "parity/out/cell.golden.png",
+    "candidate": "parity/out/cell.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
+    "passed": true,
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
+  },
+  {
+    "program": "cell3d_lit",
+    "effect": null,
+    "mode": "default",
+    "golden": "parity/out/cell3d_lit.golden.png",
+    "candidate": "parity/out/cell3d_lit.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
+    "passed": true,
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
+  },
+  {
+    "program": "cell3d_r",
+    "effect": null,
+    "mode": "default",
+    "golden": "parity/out/cell3d_r.golden.png",
+    "candidate": "parity/out/cell3d_r.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
+    "passed": true,
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
+  },
+  {
+    "program": "cellSplit",
+    "effect": "mixer/cellSplit",
+    "mode": "default",
+    "golden": "parity/out/cellSplit.golden.png",
+    "candidate": "parity/out/cellSplit.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
+    "passed": true,
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
+  },
+  {
+    "program": "cellularAutomata",
+    "effect": "synth/cellularAutomata",
+    "mode": "default",
+    "golden": "parity/out/cellularAutomata.golden.png",
+    "candidate": "parity/out/cellularAutomata.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
+    "passed": true,
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "centerMask",
     "effect": "mixer/centerMask",
     "mode": "default",
     "golden": "parity/out/centerMask.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/centerMask.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "channel",
     "effect": "filter/channel",
     "mode": "default",
     "golden": "parity/out/channel.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/channel.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "channelCombine",
     "effect": "mixer/channelCombine",
     "mode": "default",
     "golden": "parity/out/channelCombine.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/channelCombine.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "chroma",
     "effect": "filter/chroma",
     "mode": "default",
     "golden": "parity/out/chroma.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/chroma.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "chromaticAberration",
     "effect": "filter/chromaticAberration",
     "mode": "default",
     "golden": "parity/out/chromaticAberration.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/chromaticAberration.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "chrome",
     "effect": "filter/chrome",
     "mode": "default",
     "golden": "parity/out/chrome.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/chrome.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "clouds",
     "effect": "filter/clouds",
     "mode": "default",
     "golden": "parity/out/clouds.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/clouds.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "cnd_bitEffects",
     "effect": "classicNoisedeck/bitEffects",
     "mode": "default",
     "golden": "parity/out/cnd_bitEffects.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/cnd_bitEffects.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "cnd_caustic",
     "effect": "classicNoisedeck/caustic",
     "mode": "default",
     "golden": "parity/out/cnd_caustic.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/cnd_caustic.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "cnd_cellNoise",
     "effect": "classicNoisedeck/cellNoise",
     "mode": "default",
     "golden": "parity/out/cnd_cellNoise.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/cnd_cellNoise.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "cnd_cellRefract",
     "effect": "classicNoisedeck/cellRefract",
     "mode": "default",
     "golden": "parity/out/cnd_cellRefract.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/cnd_cellRefract.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "cnd_coalesce",
     "effect": "classicNoisedeck/coalesce",
     "mode": "default",
     "golden": "parity/out/cnd_coalesce.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/cnd_coalesce.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "cnd_colorLab",
     "effect": "classicNoisedeck/colorLab",
     "mode": "default",
     "golden": "parity/out/cnd_colorLab.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/cnd_colorLab.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "cnd_composite",
     "effect": "classicNoisedeck/composite",
     "mode": "default",
     "golden": "parity/out/cnd_composite.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/cnd_composite.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "cnd_effects",
     "effect": "classicNoisedeck/effects",
     "mode": "default",
     "golden": "parity/out/cnd_effects.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/cnd_effects.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "cnd_fractal",
     "effect": "classicNoisedeck/fractal",
     "mode": "default",
     "golden": "parity/out/cnd_fractal.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/cnd_fractal.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "cnd_glitch",
     "effect": "classicNoisedeck/glitch",
     "mode": "default",
     "golden": "parity/out/cnd_glitch.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/cnd_glitch.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "cnd_kaleido",
     "effect": "classicNoisedeck/kaleido",
     "mode": "default",
     "golden": "parity/out/cnd_kaleido.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/cnd_kaleido.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "cnd_lensDistortion",
     "effect": "classicNoisedeck/lensDistortion",
     "mode": "default",
     "golden": "parity/out/cnd_lensDistortion.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/cnd_lensDistortion.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "cnd_moodscape",
     "effect": "classicNoisedeck/moodscape",
     "mode": "default",
     "golden": "parity/out/cnd_moodscape.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/cnd_moodscape.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "cnd_noise",
     "effect": "classicNoisedeck/noise",
     "mode": "default",
     "golden": "parity/out/cnd_noise.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/cnd_noise.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "cnd_noise3d",
     "effect": "classicNoisedeck/noise3d",
     "mode": "default",
     "golden": "parity/out/cnd_noise3d.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/cnd_noise3d.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "cnd_refract",
     "effect": "classicNoisedeck/refract",
     "mode": "default",
     "golden": "parity/out/cnd_refract.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/cnd_refract.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "cnd_shapeMixer",
     "effect": "classicNoisedeck/shapeMixer",
     "mode": "default",
     "golden": "parity/out/cnd_shapeMixer.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/cnd_shapeMixer.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "cnd_shapes",
     "effect": "classicNoisedeck/shapes",
     "mode": "default",
     "golden": "parity/out/cnd_shapes.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/cnd_shapes.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "cnd_shapes3d",
     "effect": "classicNoisedeck/shapes3d",
     "mode": "default",
     "golden": "parity/out/cnd_shapes3d.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/cnd_shapes3d.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "cnd_splat",
     "effect": "classicNoisedeck/splat",
     "mode": "default",
     "golden": "parity/out/cnd_splat.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/cnd_splat.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "colorReplace",
     "effect": "filter/colorReplace",
     "mode": "default",
     "golden": "parity/out/colorReplace.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/colorReplace.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "colorspace",
     "effect": "filter/colorspace",
     "mode": "default",
     "golden": "parity/out/colorspace.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/colorspace.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "convolutionFeedback",
     "effect": "filter/convolutionFeedback",
     "mode": "default",
     "golden": "parity/out/convolutionFeedback.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/convolutionFeedback.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "corrupt",
     "effect": "filter/corrupt",
     "mode": "default",
     "golden": "parity/out/corrupt.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/corrupt.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "craquelure",
     "effect": "filter/craquelure",
     "mode": "default",
     "golden": "parity/out/craquelure.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/craquelure.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "crt",
     "effect": "filter/crt",
     "mode": "default",
     "golden": "parity/out/crt.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/crt.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "cube3d",
     "effect": null,
     "mode": "default",
     "golden": "parity/out/cube3d.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/cube3d.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "cubeSurface",
     "effect": null,
     "mode": "default",
     "golden": "parity/out/cubeSurface.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/cubeSurface.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "curl",
     "effect": "synth/curl",
     "mode": "default",
     "golden": "parity/out/curl.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/curl.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "degauss",
     "effect": "filter/degauss",
     "mode": "default",
     "golden": "parity/out/degauss.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/degauss.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "deriv",
     "effect": "filter/deriv",
     "mode": "default",
     "golden": "parity/out/deriv.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/deriv.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "directionalBlur",
     "effect": "filter/directionalBlur",
     "mode": "default",
     "golden": "parity/out/directionalBlur.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/directionalBlur.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
+  },
+  {
+    "program": "directionalBlur_angled",
+    "effect": "filter/directionalBlur",
+    "mode": "angled",
+    "golden": "parity/out/directionalBlur_angled.golden.png",
+    "candidate": "parity/out/directionalBlur_angled.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
+    "passed": true,
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "distortion",
     "effect": "mixer/distortion",
     "mode": "default",
     "golden": "parity/out/distortion.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/distortion.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "dither",
     "effect": "filter/dither",
     "mode": "default",
     "golden": "parity/out/dither.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/dither.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "dither_bayer2x2",
     "effect": "filter/dither",
     "mode": "type: bayer2x2",
     "golden": "parity/out/dither_bayer2x2.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/dither_bayer2x2.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "dither_bayer4x4",
     "effect": "filter/dither",
     "mode": "type: bayer4x4",
     "golden": "parity/out/dither_bayer4x4.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/dither_bayer4x4.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "dither_bayer8x8",
     "effect": "filter/dither",
     "mode": "type: bayer8x8",
     "golden": "parity/out/dither_bayer8x8.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/dither_bayer8x8.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "dither_crosshatch",
     "effect": "filter/dither",
     "mode": "type: crosshatch",
     "golden": "parity/out/dither_crosshatch.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/dither_crosshatch.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "dither_dot",
     "effect": "filter/dither",
     "mode": "type: dot",
     "golden": "parity/out/dither_dot.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/dither_dot.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "dither_errorDiffusion",
     "effect": "filter/dither",
     "mode": "type: errorDiffusion",
     "golden": "parity/out/dither_errorDiffusion.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/dither_errorDiffusion.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "dither_line",
     "effect": "filter/dither",
     "mode": "type: line",
     "golden": "parity/out/dither_line.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/dither_line.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "dither_noise",
     "effect": "filter/dither",
     "mode": "type: noise",
     "golden": "parity/out/dither_noise.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/dither_noise.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "dither_palette_amberMonitor",
     "effect": "filter/dither",
     "mode": "palette: amberMonitor",
     "golden": "parity/out/dither_palette_amberMonitor.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/dither_palette_amberMonitor.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "dither_palette_appleII",
     "effect": "filter/dither",
     "mode": "palette: appleII",
     "golden": "parity/out/dither_palette_appleII.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/dither_palette_appleII.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "dither_palette_cgaPalette1",
     "effect": "filter/dither",
     "mode": "palette: cgaPalette1",
     "golden": "parity/out/dither_palette_cgaPalette1.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/dither_palette_cgaPalette1.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "dither_palette_commodore64",
     "effect": "filter/dither",
     "mode": "palette: commodore64",
     "golden": "parity/out/dither_palette_commodore64.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/dither_palette_commodore64.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "dither_palette_dotMatrixGreen",
     "effect": "filter/dither",
     "mode": "palette: dotMatrixGreen",
     "golden": "parity/out/dither_palette_dotMatrixGreen.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/dither_palette_dotMatrixGreen.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "dither_palette_ega",
     "effect": "filter/dither",
     "mode": "palette: ega",
     "golden": "parity/out/dither_palette_ega.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/dither_palette_ega.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "dither_palette_monochrome",
     "effect": "filter/dither",
     "mode": "palette: monochrome",
     "golden": "parity/out/dither_palette_monochrome.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/dither_palette_monochrome.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "dither_palette_pico8",
     "effect": "filter/dither",
     "mode": "palette: pico8",
     "golden": "parity/out/dither_palette_pico8.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/dither_palette_pico8.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "dither_palette_zxSpectrum",
     "effect": "filter/dither",
     "mode": "palette: zxSpectrum",
     "golden": "parity/out/dither_palette_zxSpectrum.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/dither_palette_zxSpectrum.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "dla",
     "effect": "points/dla",
     "mode": "default",
     "golden": "parity/out/dla.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/dla.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "edge",
     "effect": "filter/edge",
     "mode": "default",
     "golden": "parity/out/edge.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/edge.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "edge_bold",
     "effect": "filter/edge",
     "mode": "kernel: bold",
     "golden": "parity/out/edge_bold.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/edge_bold.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "edge_contour",
     "effect": "filter/edge",
     "mode": "kernel: contour",
     "golden": "parity/out/edge_contour.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/edge_contour.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "edge_contour_upper",
     "effect": "filter/edge",
     "mode": "kernel: contour, contourSide: upper",
     "golden": "parity/out/edge_contour_upper.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/edge_contour_upper.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "edge_fine",
     "effect": "filter/edge",
     "mode": "kernel: fine",
     "golden": "parity/out/edge_fine.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/edge_fine.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "emboss",
     "effect": "filter/emboss",
     "mode": "default",
     "golden": "parity/out/emboss.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/emboss.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "emboss_color",
     "effect": "filter/emboss",
     "mode": "style: color",
     "golden": "parity/out/emboss_color.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/emboss_color.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "emboss_gray",
     "effect": "filter/emboss",
     "mode": "style: gray",
     "golden": "parity/out/emboss_gray.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/emboss_gray.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "extrude",
     "effect": "filter/extrude",
     "mode": "default",
     "golden": "parity/out/extrude.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/extrude.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0000001192092896,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "extrude_blocks",
     "effect": "filter/extrude",
     "mode": "type: blocks",
     "golden": "parity/out/extrude_blocks.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/extrude_blocks.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0000001192092896,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "extrude_depthRandom",
     "effect": "filter/extrude",
     "mode": "depthSource: random",
     "golden": "parity/out/extrude_depthRandom.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/extrude_depthRandom.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "extrude_pyramids",
     "effect": "filter/extrude",
     "mode": "type: pyramids",
     "golden": "parity/out/extrude_pyramids.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/extrude_pyramids.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
+  },
+  {
+    "program": "extrude_pyramids_random",
+    "effect": "filter/extrude",
+    "mode": "pyramids_random",
+    "golden": "parity/out/extrude_pyramids_random.golden.png",
+    "candidate": "parity/out/extrude_pyramids_random.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
+    "passed": true,
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "feedback",
     "effect": "filter/feedback",
     "mode": "default",
     "golden": "parity/out/feedback.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/feedback.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "fibers",
     "effect": "filter/fibers",
     "mode": "default",
     "golden": "parity/out/fibers.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/fibers.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "flipMirror",
     "effect": "filter/flipMirror",
     "mode": "default",
     "golden": "parity/out/flipMirror.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/flipMirror.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "flock",
     "effect": "points/flock",
     "mode": "default",
     "golden": "parity/out/flock.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/flock.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "flow",
     "effect": "points/flow",
     "mode": "default",
     "golden": "parity/out/flow.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/flow.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "flow3d_r",
     "effect": null,
     "mode": "default",
     "golden": "parity/out/flow3d_r.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/flow3d_r.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "flythrough3d_r",
     "effect": null,
     "mode": "default",
     "golden": "parity/out/flythrough3d_r.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/flythrough3d_r.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "focusBlur",
     "effect": "mixer/focusBlur",
     "mode": "default",
     "golden": "parity/out/focusBlur.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/focusBlur.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "fractal3d_lit",
     "effect": null,
     "mode": "default",
     "golden": "parity/out/fractal3d_lit.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/fractal3d_lit.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "fractal3d_r",
     "effect": null,
     "mode": "default",
     "golden": "parity/out/fractal3d_r.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/fractal3d_r.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "fxaa",
     "effect": "filter/fxaa",
     "mode": "default",
     "golden": "parity/out/fxaa.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/fxaa.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "gabor",
     "effect": "synth/gabor",
     "mode": "default",
     "golden": "parity/out/gabor.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/gabor.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "glowingEdge",
     "effect": "filter/glowingEdge",
     "mode": "default",
     "golden": "parity/out/glowingEdge.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/glowingEdge.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "glyphMap",
     "effect": "filter/glyphMap",
     "mode": "default",
     "golden": "parity/out/glyphMap.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/glyphMap.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "grade",
     "effect": "filter/grade",
     "mode": "default",
     "golden": "parity/out/grade.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/grade.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "gradient",
     "effect": "synth/gradient",
     "mode": "default",
     "golden": "parity/out/gradient.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/gradient.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "grain",
     "effect": "filter/grain",
     "mode": "default",
     "golden": "parity/out/grain.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/grain.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "grime",
     "effect": "filter/grime",
     "mode": "default",
     "golden": "parity/out/grime.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/grime.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "halftone",
     "effect": "filter/halftone",
     "mode": "default",
     "golden": "parity/out/halftone.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/halftone.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "halftone_color",
     "effect": "filter/halftone",
     "mode": "mode: color",
     "golden": "parity/out/halftone_color.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/halftone_color.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "halftone_mono_circle",
     "effect": "filter/halftone",
     "mode": "mode: mono, pattern: circle",
     "golden": "parity/out/halftone_mono_circle.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/halftone_mono_circle.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "halftone_mono_dot",
     "effect": "filter/halftone",
     "mode": "mode: mono, pattern: dot",
     "golden": "parity/out/halftone_mono_dot.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/halftone_mono_dot.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "halftone_mono_line",
     "effect": "filter/halftone",
     "mode": "mode: mono, pattern: line",
     "golden": "parity/out/halftone_mono_line.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/halftone_mono_line.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "hatch",
     "effect": "filter/hatch",
     "mode": "default",
     "golden": "parity/out/hatch.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/hatch.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "hatch_chalkCharcoal",
     "effect": "filter/hatch",
     "mode": "mode: chalkCharcoal",
     "golden": "parity/out/hatch_chalkCharcoal.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/hatch_chalkCharcoal.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "hatch_charcoal",
     "effect": "filter/hatch",
     "mode": "mode: charcoal",
     "golden": "parity/out/hatch_charcoal.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/hatch_charcoal.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "hatch_coloredPencil",
     "effect": "filter/hatch",
     "mode": "mode: coloredPencil",
     "golden": "parity/out/hatch_coloredPencil.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/hatch_coloredPencil.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
+  },
+  {
+    "program": "hatch_coloredPencil_leftDiag",
+    "effect": "filter/hatch",
+    "mode": "coloredPencil_leftDiag",
+    "golden": "parity/out/hatch_coloredPencil_leftDiag.golden.png",
+    "candidate": "parity/out/hatch_coloredPencil_leftDiag.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
+    "passed": true,
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "hatch_conte",
     "effect": "filter/hatch",
     "mode": "mode: conte",
     "golden": "parity/out/hatch_conte.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/hatch_conte.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "hatch_crosshatch",
     "effect": "filter/hatch",
     "mode": "mode: crosshatch",
     "golden": "parity/out/hatch_crosshatch.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/hatch_crosshatch.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "hatch_pen",
     "effect": "filter/hatch",
     "mode": "mode: pen",
     "golden": "parity/out/hatch_pen.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/hatch_pen.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "highPass",
     "effect": "filter/highPass",
     "mode": "default",
     "golden": "parity/out/highPass.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/highPass.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "historicPalette",
     "effect": "filter/historicPalette",
     "mode": "default",
     "golden": "parity/out/historicPalette.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/historicPalette.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "hs",
     "effect": "filter/hs",
     "mode": "default",
     "golden": "parity/out/hs.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/hs.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "hydraulic",
     "effect": "points/hydraulic",
     "mode": "default",
     "golden": "parity/out/hydraulic.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/hydraulic.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "invert",
     "effect": "filter/invert",
     "mode": "default",
     "golden": "parity/out/invert.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/invert.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "invert_full",
     "effect": "filter/invert",
     "mode": "mode: full",
     "golden": "parity/out/invert_full.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/invert_full.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "invert_solarize",
     "effect": "filter/invert",
     "mode": "mode: solarize",
     "golden": "parity/out/invert_solarize.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/invert_solarize.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "julia",
     "effect": "synth/julia",
     "mode": "default",
     "golden": "parity/out/julia.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/julia.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "lenia",
     "effect": "points/lenia",
     "mode": "default",
     "golden": "parity/out/lenia.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/lenia.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "lens",
     "effect": "filter/lens",
     "mode": "default",
     "golden": "parity/out/lens.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/lens.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "lensFlare",
     "effect": "filter/lensFlare",
     "mode": "default",
     "golden": "parity/out/lensFlare.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/lensFlare.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "lensFlare_moviePrime",
     "effect": "filter/lensFlare",
     "mode": "lensType: moviePrime",
     "golden": "parity/out/lensFlare_moviePrime.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/lensFlare_moviePrime.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "lensFlare_prime105",
     "effect": "filter/lensFlare",
     "mode": "lensType: prime105",
     "golden": "parity/out/lensFlare_prime105.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/lensFlare_prime105.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "lensFlare_prime35",
     "effect": "filter/lensFlare",
     "mode": "lensType: prime35",
     "golden": "parity/out/lensFlare_prime35.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/lensFlare_prime35.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "lensFlare_zoom50_300",
     "effect": "filter/lensFlare",
     "mode": "lensType: zoom50_300",
     "golden": "parity/out/lensFlare_zoom50_300.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/lensFlare_zoom50_300.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "lensWarp",
     "effect": "filter/lensWarp",
     "mode": "default",
     "golden": "parity/out/lensWarp.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/lensWarp.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "life",
     "effect": "points/life",
     "mode": "default",
     "golden": "parity/out/life.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/life.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
-  },
-  {
-    "program": "lighting",
-    "effect": "filter/lighting",
-    "mode": "default",
-    "golden": "parity/out/lighting.golden.png",
-    "max_abs_diff": 0,
-    "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "lightLeak",
     "effect": "filter/lightLeak",
     "mode": "default",
     "golden": "parity/out/lightLeak.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/lightLeak.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
+  },
+  {
+    "program": "lighting",
+    "effect": "filter/lighting",
+    "mode": "default",
+    "golden": "parity/out/lighting.golden.png",
+    "candidate": "parity/out/lighting.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
+    "passed": true,
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "loop_accum",
     "effect": null,
     "mode": "default",
     "golden": "parity/out/loop_accum.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/loop_accum.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "lowPoly",
     "effect": "filter/lowPoly",
     "mode": "default",
     "golden": "parity/out/lowPoly.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/lowPoly.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "lowPoly_border",
     "effect": "filter/lowPoly",
     "mode": "borderWidth: 10",
     "golden": "parity/out/lowPoly_border.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/lowPoly_border.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "lowPoly_distance2",
     "effect": "filter/lowPoly",
     "mode": "mode: distance2",
     "golden": "parity/out/lowPoly_distance2.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/lowPoly_distance2.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "lowPoly_distance3",
     "effect": "filter/lowPoly",
     "mode": "mode: distance3",
     "golden": "parity/out/lowPoly_distance3.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/lowPoly_distance3.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "lowPoly_edges",
     "effect": "filter/lowPoly",
     "mode": "mode: edges",
     "golden": "parity/out/lowPoly_edges.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/lowPoly_edges.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "lowPoly_flat",
     "effect": "filter/lowPoly",
     "mode": "mode: flat",
     "golden": "parity/out/lowPoly_flat.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/lowPoly_flat.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "lowPoly_light",
     "effect": "filter/lowPoly",
     "mode": "lightIntensity: 50",
     "golden": "parity/out/lowPoly_light.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/lowPoly_light.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "mandala",
     "effect": "synth/mandala",
     "mode": "default",
     "golden": "parity/out/mandala.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/mandala.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "mandelbrot",
     "effect": "synth/mandelbrot",
     "mode": "default",
     "golden": "parity/out/mandelbrot.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/mandelbrot.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "mashup",
     "effect": "mixer/mashup",
     "mode": "default",
     "golden": "parity/out/mashup.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/mashup.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "media",
     "effect": "synth/media",
     "mode": "default",
     "golden": "parity/out/media.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/media.candidate.png",
+    "status": "SKIP",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": true
+    "skipped": true,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "numeric fallback passed; external input is not supplied"
+    }
   },
   {
     "program": "median",
     "effect": "filter/median",
     "mode": "default",
     "golden": "parity/out/median.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/median.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "mesh_basic",
     "effect": null,
     "mode": "default",
     "golden": "parity/out/mesh_basic.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/mesh_basic.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "mnca",
     "effect": "synth/mnca",
     "mode": "default",
     "golden": "parity/out/mnca.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/mnca.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "modPattern",
     "effect": "synth/modPattern",
     "mode": "default",
     "golden": "parity/out/modPattern.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/modPattern.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "morphology",
     "effect": "filter/morphology",
     "mode": "default",
     "golden": "parity/out/morphology.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/morphology.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "morphology_dilate_round",
     "effect": "filter/morphology",
     "mode": "mode: dilate, shape: round",
     "golden": "parity/out/morphology_dilate_round.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/morphology_dilate_round.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "morphology_dilate_square",
     "effect": "filter/morphology",
     "mode": "mode: dilate, shape: square",
     "golden": "parity/out/morphology_dilate_square.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/morphology_dilate_square.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "morphology_erode_round",
     "effect": "filter/morphology",
     "mode": "mode: erode, shape: round",
     "golden": "parity/out/morphology_erode_round.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/morphology_erode_round.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "morphology_erode_square",
     "effect": "filter/morphology",
     "mode": "mode: erode, shape: square",
     "golden": "parity/out/morphology_erode_square.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/morphology_erode_square.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "mosaicTiles",
     "effect": "filter/mosaicTiles",
     "mode": "default",
     "golden": "parity/out/mosaicTiles.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/mosaicTiles.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "mosaicTiles_mosaic",
     "effect": "filter/mosaicTiles",
     "mode": "mode: mosaic",
     "golden": "parity/out/mosaicTiles_mosaic.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/mosaicTiles_mosaic.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "mosaicTiles_shifted",
     "effect": "filter/mosaicTiles",
     "mode": "mode: shifted",
     "golden": "parity/out/mosaicTiles_shifted.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/mosaicTiles_shifted.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "motionBlur",
     "effect": "filter/motionBlur",
     "mode": "default",
     "golden": "parity/out/motionBlur.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/motionBlur.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "navierStokes",
     "effect": "synth/navierStokes",
     "mode": "default",
     "golden": "parity/out/navierStokes.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/navierStokes.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "newton",
     "effect": "synth/newton",
     "mode": "default",
     "golden": "parity/out/newton.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/newton.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "noise",
     "effect": "synth/noise",
     "mode": "default",
     "golden": "parity/out/noise.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/noise.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "noise3d_r",
     "effect": null,
     "mode": "default",
     "golden": "parity/out/noise3d_r.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/noise3d_r.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
-  },
-  {
-    "program": "normalize",
-    "effect": "filter/normalize",
-    "mode": "default",
-    "golden": "parity/out/normalize.golden.png",
-    "max_abs_diff": 0,
-    "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "normalMap",
     "effect": "filter/normalMap",
     "mode": "default",
     "golden": "parity/out/normalMap.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/normalMap.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
+  },
+  {
+    "program": "normalize",
+    "effect": "filter/normalize",
+    "mode": "default",
+    "golden": "parity/out/normalize.golden.png",
+    "candidate": "parity/out/normalize.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
+    "passed": true,
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "octaveWarp",
     "effect": "filter/octaveWarp",
     "mode": "default",
     "golden": "parity/out/octaveWarp.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/octaveWarp.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "oilPaint",
     "effect": "filter/oilPaint",
     "mode": "default",
     "golden": "parity/out/oilPaint.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/oilPaint.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "oilPaint_daubs",
     "effect": "filter/oilPaint",
     "mode": "mode: daubs",
     "golden": "parity/out/oilPaint_daubs.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/oilPaint_daubs.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "oilPaint_dryBrush",
     "effect": "filter/oilPaint",
     "mode": "mode: dryBrush",
     "golden": "parity/out/oilPaint_dryBrush.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/oilPaint_dryBrush.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "oilPaint_facet",
     "effect": "filter/oilPaint",
     "mode": "mode: facet",
     "golden": "parity/out/oilPaint_facet.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/oilPaint_facet.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "oilPaint_fresco",
     "effect": "filter/oilPaint",
     "mode": "mode: fresco",
     "golden": "parity/out/oilPaint_fresco.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/oilPaint_fresco.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "oilPaint_knife",
     "effect": "filter/oilPaint",
     "mode": "mode: knife",
     "golden": "parity/out/oilPaint_knife.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/oilPaint_knife.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "oilPaint_sponge",
     "effect": "filter/oilPaint",
     "mode": "mode: sponge",
     "golden": "parity/out/oilPaint_sponge.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/oilPaint_sponge.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "osc2d",
     "effect": "synth/osc2d",
     "mode": "default",
     "golden": "parity/out/osc2d.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/osc2d.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "osd",
     "effect": "filter/osd",
     "mode": "default",
     "golden": "parity/out/osd.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/osd.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "outline",
     "effect": "filter/outline",
     "mode": "default",
     "golden": "parity/out/outline.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/outline.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "palette",
     "effect": "filter/palette",
     "mode": "default",
     "golden": "parity/out/palette.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/palette.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "palette3d_r",
     "effect": null,
     "mode": "default",
     "golden": "parity/out/palette3d_r.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/palette3d_r.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "parallax",
     "effect": "filter/parallax",
     "mode": "default",
     "golden": "parity/out/parallax.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/parallax.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "patchwork",
     "effect": "filter/patchwork",
     "mode": "default",
     "golden": "parity/out/patchwork.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/patchwork.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "pattern",
     "effect": "synth/pattern",
     "mode": "default",
     "golden": "parity/out/pattern.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/pattern.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "patternMix",
     "effect": "mixer/patternMix",
     "mode": "default",
     "golden": "parity/out/patternMix.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/patternMix.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "perlin",
     "effect": "synth/perlin",
     "mode": "default",
     "golden": "parity/out/perlin.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/perlin.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "photocopy",
     "effect": "filter/photocopy",
     "mode": "default",
     "golden": "parity/out/photocopy.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/photocopy.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "physarum",
     "effect": "points/physarum",
     "mode": "default",
     "golden": "parity/out/physarum.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/physarum.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "physical",
     "effect": "points/physical",
     "mode": "default",
     "golden": "parity/out/physical.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/physical.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "pinch",
     "effect": "filter/pinch",
     "mode": "default",
     "golden": "parity/out/pinch.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/pinch.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
-  },
-  {
-    "program": "pixels",
-    "effect": "filter/pixels",
-    "mode": "default",
-    "golden": "parity/out/pixels.golden.png",
-    "max_abs_diff": 0,
-    "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "pixelSort",
     "effect": "filter/pixelSort",
     "mode": "default",
     "golden": "parity/out/pixelSort.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/pixelSort.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
+  },
+  {
+    "program": "pixels",
+    "effect": "filter/pixels",
+    "mode": "default",
+    "golden": "parity/out/pixels.golden.png",
+    "candidate": "parity/out/pixels.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
+    "passed": true,
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "plasticWrap",
     "effect": "filter/plasticWrap",
     "mode": "default",
     "golden": "parity/out/plasticWrap.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/plasticWrap.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
+  },
+  {
+    "program": "plasticWrap_directed",
+    "effect": "filter/plasticWrap",
+    "mode": "directed",
+    "golden": "parity/out/plasticWrap_directed.golden.png",
+    "candidate": "parity/out/plasticWrap_directed.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
+    "passed": true,
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "polar",
     "effect": "filter/polar",
     "mode": "default",
     "golden": "parity/out/polar.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/polar.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "polygon",
     "effect": "synth/polygon",
     "mode": "default",
     "golden": "parity/out/polygon.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/polygon.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "pondRipples",
     "effect": "filter/pondRipples",
     "mode": "default",
     "golden": "parity/out/pondRipples.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/pondRipples.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "pondRipples_aroundCenter",
     "effect": "filter/pondRipples",
     "mode": "style: aroundCenter",
     "golden": "parity/out/pondRipples_aroundCenter.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/pondRipples_aroundCenter.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "pondRipples_outFromCenter",
     "effect": "filter/pondRipples",
     "mode": "style: outFromCenter",
     "golden": "parity/out/pondRipples_outFromCenter.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/pondRipples_outFromCenter.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "pondRipples_pondRipples",
     "effect": "filter/pondRipples",
     "mode": "style: pondRipples",
     "golden": "parity/out/pondRipples_pondRipples.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/pondRipples_pondRipples.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "pondRipples_wrap_clamp",
     "effect": "filter/pondRipples",
     "mode": "wrap: clamp",
     "golden": "parity/out/pondRipples_wrap_clamp.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/pondRipples_wrap_clamp.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "pondRipples_wrap_repeat",
     "effect": "filter/pondRipples",
     "mode": "wrap: repeat",
     "golden": "parity/out/pondRipples_wrap_repeat.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/pondRipples_wrap_repeat.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "posterize",
     "effect": "filter/posterize",
     "mode": "default",
     "golden": "parity/out/posterize.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/posterize.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "prismaticAberration",
     "effect": "filter/prismaticAberration",
     "mode": "default",
     "golden": "parity/out/prismaticAberration.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/prismaticAberration.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "rd3d_r",
     "effect": null,
     "mode": "default",
     "golden": "parity/out/rd3d_r.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/rd3d_r.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "reactionDiffusion",
     "effect": "synth/reactionDiffusion",
     "mode": "default",
     "golden": "parity/out/reactionDiffusion.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/reactionDiffusion.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "reindex",
     "effect": "filter/reindex",
     "mode": "default",
     "golden": "parity/out/reindex.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/reindex.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "relief",
     "effect": "filter/relief",
     "mode": "default",
     "golden": "parity/out/relief.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/relief.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "relief_basRelief",
     "effect": "filter/relief",
     "mode": "mode: basRelief",
     "golden": "parity/out/relief_basRelief.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/relief_basRelief.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "relief_notePaper",
     "effect": "filter/relief",
     "mode": "mode: notePaper",
     "golden": "parity/out/relief_notePaper.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/relief_notePaper.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "relief_plaster",
     "effect": "filter/relief",
     "mode": "mode: plaster",
     "golden": "parity/out/relief_plaster.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/relief_plaster.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "remap",
     "effect": "synth/remap",
     "mode": "default",
     "golden": "parity/out/remap.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/remap.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "remap_zones",
     "effect": null,
     "mode": "default",
     "golden": "parity/out/remap_zones.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/remap_zones.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "renderLit3d",
     "effect": "render/renderLit3d",
     "mode": "default",
     "golden": "parity/out/renderLit3d.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/renderLit3d.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "repeat",
     "effect": "filter/repeat",
     "mode": "default",
     "golden": "parity/out/repeat.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/repeat.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "reverb",
     "effect": "filter/reverb",
     "mode": "default",
     "golden": "parity/out/reverb.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/reverb.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "ridge",
     "effect": "filter/ridge",
     "mode": "default",
     "golden": "parity/out/ridge.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/ridge.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "roll",
     "effect": "synth/roll",
     "mode": "default",
     "golden": "parity/out/roll.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/roll.candidate.png",
+    "status": "SKIP",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": true,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "numeric fallback passed; external input is not supplied"
+    }
   },
   {
     "program": "rotate",
     "effect": "filter/rotate",
     "mode": "default",
     "golden": "parity/out/rotate.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/rotate.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "sacredGeometry",
     "effect": "synth/sacredGeometry",
     "mode": "default",
     "golden": "parity/out/sacredGeometry.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/sacredGeometry.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "scale",
     "effect": "filter/scale",
     "mode": "default",
     "golden": "parity/out/scale.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/scale.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "scanlineError",
     "effect": "filter/scanlineError",
     "mode": "default",
     "golden": "parity/out/scanlineError.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/scanlineError.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "scatter",
     "effect": "filter/scatter",
     "mode": "default",
     "golden": "parity/out/scatter.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/scatter.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "scatter_anisotropic",
     "effect": "filter/scatter",
     "mode": "mode: anisotropic",
     "golden": "parity/out/scatter_anisotropic.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/scatter_anisotropic.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "scatter_clumped",
     "effect": "filter/scatter",
     "mode": "mode: clumped",
     "golden": "parity/out/scatter_clumped.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/scatter_clumped.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "scatter_darkenOnly",
     "effect": "filter/scatter",
     "mode": "mode: darkenOnly",
     "golden": "parity/out/scatter_darkenOnly.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/scatter_darkenOnly.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "scatter_lightenOnly",
     "effect": "filter/scatter",
     "mode": "mode: lightenOnly",
     "golden": "parity/out/scatter_lightenOnly.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/scatter_lightenOnly.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "scatter_normal",
     "effect": "filter/scatter",
     "mode": "mode: normal",
     "golden": "parity/out/scatter_normal.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/scatter_normal.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "scope",
     "effect": "synth/scope",
     "mode": "default",
     "golden": "parity/out/scope.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/scope.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "scratches",
     "effect": "filter/scratches",
     "mode": "default",
     "golden": "parity/out/scratches.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/scratches.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "scroll",
     "effect": "filter/scroll",
     "mode": "default",
     "golden": "parity/out/scroll.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/scroll.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "seamless",
     "effect": "filter/seamless",
     "mode": "default",
     "golden": "parity/out/seamless.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/seamless.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "shadow",
     "effect": "mixer/shadow",
     "mode": "default",
     "golden": "parity/out/shadow.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/shadow.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "shape",
     "effect": "synth/shape",
     "mode": "default",
     "golden": "parity/out/shape.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/shape.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "shape3d",
     "effect": "synth3d/shape3d",
     "mode": "default",
     "golden": "parity/out/shape3d.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/shape3d.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "shape3d_voxel",
     "effect": null,
     "mode": "default",
     "golden": "parity/out/shape3d_voxel.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/shape3d_voxel.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "shapeMask",
     "effect": "mixer/shapeMask",
     "mode": "default",
     "golden": "parity/out/shapeMask.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/shapeMask.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "sharpen",
     "effect": "filter/sharpen",
     "mode": "default",
     "golden": "parity/out/sharpen.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/sharpen.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "simpleAberration",
     "effect": "filter/simpleAberration",
     "mode": "default",
     "golden": "parity/out/simpleAberration.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/simpleAberration.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "sine",
     "effect": "filter/sine",
     "mode": "default",
     "golden": "parity/out/sine.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/sine.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "skew",
     "effect": "filter/skew",
     "mode": "default",
     "golden": "parity/out/skew.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/skew.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "smooth",
     "effect": "filter/smooth",
     "mode": "default",
     "golden": "parity/out/smooth.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/smooth.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "smoothstep",
     "effect": "filter/smoothstep",
     "mode": "default",
     "golden": "parity/out/smoothstep.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/smoothstep.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "smrticle_physarum",
     "effect": null,
     "mode": "default",
     "golden": "parity/out/smrticle_physarum.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/smrticle_physarum.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "smrticle_physical",
     "effect": null,
     "mode": "default",
     "golden": "parity/out/smrticle_physical.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/smrticle_physical.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "snow",
     "effect": "filter/snow",
     "mode": "default",
     "golden": "parity/out/snow.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/snow.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "sobel",
     "effect": "filter/sobel",
     "mode": "default",
     "golden": "parity/out/sobel.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/sobel.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "solid",
     "effect": "synth/solid",
     "mode": "default",
     "golden": "parity/out/solid.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/solid.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "spatter",
     "effect": "filter/spatter",
     "mode": "default",
     "golden": "parity/out/spatter.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/spatter.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "spectrum",
     "effect": "synth/spectrum",
     "mode": "default",
     "golden": "parity/out/spectrum.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/spectrum.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "spinBlur",
     "effect": "filter/spinBlur",
     "mode": "default",
     "golden": "parity/out/spinBlur.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/spinBlur.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
+  },
+  {
+    "program": "spinBlur_offCenter",
+    "effect": "filter/spinBlur",
+    "mode": "offCenter",
+    "golden": "parity/out/spinBlur_offCenter.golden.png",
+    "candidate": "parity/out/spinBlur_offCenter.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
+    "passed": true,
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "spiral",
     "effect": "filter/spiral",
     "mode": "default",
     "golden": "parity/out/spiral.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/spiral.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "split",
     "effect": "mixer/split",
     "mode": "default",
     "golden": "parity/out/split.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/split.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "spookyTicker",
     "effect": "filter/spookyTicker",
     "mode": "default",
     "golden": "parity/out/spookyTicker.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/spookyTicker.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "stamp",
     "effect": "filter/stamp",
     "mode": "default",
     "golden": "parity/out/stamp.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/stamp.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "step",
     "effect": "filter/step",
     "mode": "default",
     "golden": "parity/out/step.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/step.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "stipple",
     "effect": "filter/stipple",
     "mode": "default",
     "golden": "parity/out/stipple.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/stipple.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "stipple_mezzoDots",
     "effect": "filter/stipple",
     "mode": "mode: mezzoDots",
     "golden": "parity/out/stipple_mezzoDots.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/stipple_mezzoDots.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "stipple_mezzoLines",
     "effect": "filter/stipple",
     "mode": "mode: mezzoLines",
     "golden": "parity/out/stipple_mezzoLines.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/stipple_mezzoLines.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "stipple_mezzoStrokes",
     "effect": "filter/stipple",
     "mode": "mode: mezzoStrokes",
     "golden": "parity/out/stipple_mezzoStrokes.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/stipple_mezzoStrokes.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "stipple_pointillize",
     "effect": "filter/stipple",
     "mode": "mode: pointillize",
     "golden": "parity/out/stipple_pointillize.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/stipple_pointillize.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "stipple_reticulation",
     "effect": "filter/stipple",
     "mode": "mode: reticulation",
     "golden": "parity/out/stipple_reticulation.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/stipple_reticulation.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "strayHair",
     "effect": "filter/strayHair",
     "mode": "default",
     "golden": "parity/out/strayHair.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/strayHair.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "strokes",
     "effect": "filter/strokes",
     "mode": "default",
     "golden": "parity/out/strokes.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/strokes.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "strokes_angled",
     "effect": "filter/strokes",
     "mode": "mode: angled",
     "golden": "parity/out/strokes_angled.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/strokes_angled.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "strokes_dark",
     "effect": "filter/strokes",
     "mode": "mode: dark",
     "golden": "parity/out/strokes_dark.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/strokes_dark.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "strokes_smudge",
     "effect": "filter/strokes",
     "mode": "mode: smudge",
     "golden": "parity/out/strokes_smudge.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/strokes_smudge.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "strokes_sprayed",
     "effect": "filter/strokes",
     "mode": "mode: sprayed",
     "golden": "parity/out/strokes_sprayed.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/strokes_sprayed.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "strokes_sumiE",
     "effect": "filter/strokes",
     "mode": "mode: sumiE",
     "golden": "parity/out/strokes_sumiE.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/strokes_sumiE.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "subdivide",
     "effect": "synth/subdivide",
     "mode": "default",
     "golden": "parity/out/subdivide.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/subdivide.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "target",
     "effect": null,
     "mode": "default",
     "golden": "parity/out/target.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/target.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "target_particles",
     "effect": null,
     "mode": "default",
     "golden": "parity/out/target_particles.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/target_particles.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "temporalAberration",
     "effect": "filter/temporalAberration",
     "mode": "default",
     "golden": "parity/out/temporalAberration.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/temporalAberration.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "testPattern",
     "effect": "synth/testPattern",
     "mode": "default",
     "golden": "parity/out/testPattern.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/testPattern.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "tetraColorArray",
     "effect": "filter/tetraColorArray",
     "mode": "default",
     "golden": "parity/out/tetraColorArray.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/tetraColorArray.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "tetraCosine",
     "effect": "filter/tetraCosine",
     "mode": "default",
     "golden": "parity/out/tetraCosine.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/tetraCosine.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "text",
     "effect": "filter/text",
     "mode": "default",
     "golden": "parity/out/text.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/text.candidate.png",
+    "status": "SKIP",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": true
+    "skipped": true,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "numeric fallback passed; external input is not supplied"
+    }
   },
   {
     "program": "texture",
     "effect": "filter/texture",
     "mode": "default",
     "golden": "parity/out/texture.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/texture.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "texture_canvas",
     "effect": "filter/texture",
     "mode": "mode: canvas",
     "golden": "parity/out/texture_canvas.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/texture_canvas.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "texture_clumped",
     "effect": "filter/texture",
     "mode": "mode: clumped",
     "golden": "parity/out/texture_clumped.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/texture_clumped.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "texture_contrasty",
     "effect": "filter/texture",
     "mode": "mode: contrasty",
     "golden": "parity/out/texture_contrasty.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/texture_contrasty.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "texture_crosshatch",
     "effect": "filter/texture",
     "mode": "mode: crosshatch",
     "golden": "parity/out/texture_crosshatch.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/texture_crosshatch.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "texture_enlarged",
     "effect": "filter/texture",
     "mode": "mode: enlarged",
     "golden": "parity/out/texture_enlarged.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/texture_enlarged.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "texture_halftone",
     "effect": "filter/texture",
     "mode": "mode: halftone",
     "golden": "parity/out/texture_halftone.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/texture_halftone.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "texture_horizontal",
     "effect": "filter/texture",
     "mode": "mode: horizontal",
     "golden": "parity/out/texture_horizontal.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/texture_horizontal.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "texture_paper",
     "effect": "filter/texture",
     "mode": "mode: paper",
     "golden": "parity/out/texture_paper.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/texture_paper.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "texture_regular",
     "effect": "filter/texture",
     "mode": "mode: regular",
     "golden": "parity/out/texture_regular.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/texture_regular.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "texture_soft",
     "effect": "filter/texture",
     "mode": "mode: soft",
     "golden": "parity/out/texture_soft.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/texture_soft.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "texture_speckle",
     "effect": "filter/texture",
     "mode": "mode: speckle",
     "golden": "parity/out/texture_speckle.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/texture_speckle.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "texture_sprinkles",
     "effect": "filter/texture",
     "mode": "mode: sprinkles",
     "golden": "parity/out/texture_sprinkles.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/texture_sprinkles.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "texture_stippled",
     "effect": "filter/texture",
     "mode": "mode: stippled",
     "golden": "parity/out/texture_stippled.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/texture_stippled.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "texture_stucco",
     "effect": "filter/texture",
     "mode": "mode: stucco",
     "golden": "parity/out/texture_stucco.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/texture_stucco.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "texture_vertical",
     "effect": "filter/texture",
     "mode": "mode: vertical",
     "golden": "parity/out/texture_vertical.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/texture_vertical.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "threshold",
     "effect": "filter/threshold",
     "mode": "default",
     "golden": "parity/out/threshold.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/threshold.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "thresholdMix",
     "effect": "mixer/thresholdMix",
     "mode": "default",
     "golden": "parity/out/thresholdMix.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/thresholdMix.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "tile",
     "effect": "filter/tile",
     "mode": "default",
     "golden": "parity/out/tile.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/tile.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "tint",
     "effect": "filter/tint",
     "mode": "default",
     "golden": "parity/out/tint.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/tint.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "translate",
     "effect": "filter/translate",
     "mode": "default",
     "golden": "parity/out/translate.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/translate.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "tunnel",
     "effect": "filter/tunnel",
     "mode": "default",
     "golden": "parity/out/tunnel.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/tunnel.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "unsharpMask",
     "effect": "filter/unsharpMask",
     "mode": "default",
     "golden": "parity/out/unsharpMask.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/unsharpMask.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "uvRemap",
     "effect": "mixer/uvRemap",
     "mode": "default",
     "golden": "parity/out/uvRemap.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/uvRemap.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "vaseline",
     "effect": "filter/vaseline",
     "mode": "default",
     "golden": "parity/out/vaseline.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/vaseline.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "vignette",
     "effect": "filter/vignette",
     "mode": "default",
     "golden": "parity/out/vignette.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/vignette.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "warp",
     "effect": "filter/warp",
     "mode": "default",
     "golden": "parity/out/warp.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/warp.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "watercolor",
     "effect": "filter/watercolor",
     "mode": "default",
     "golden": "parity/out/watercolor.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/watercolor.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "waves",
     "effect": "filter/waves",
     "mode": "default",
     "golden": "parity/out/waves.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/waves.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "wind",
     "effect": "filter/wind",
     "mode": "default",
     "golden": "parity/out/wind.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/wind.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "wind_blast",
     "effect": "filter/wind",
     "mode": "method: blast",
     "golden": "parity/out/wind_blast.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/wind_blast.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
+  },
+  {
+    "program": "wind_blast_fromRight",
+    "effect": "filter/wind",
+    "mode": "blast_fromRight",
+    "golden": "parity/out/wind_blast_fromRight.golden.png",
+    "candidate": "parity/out/wind_blast_fromRight.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
+    "passed": true,
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "wind_stagger",
     "effect": "filter/wind",
     "mode": "method: stagger",
     "golden": "parity/out/wind_stagger.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/wind_stagger.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
+  },
+  {
+    "program": "wind_stagger_fromRight",
+    "effect": "filter/wind",
+    "mode": "stagger_fromRight",
+    "golden": "parity/out/wind_stagger_fromRight.golden.png",
+    "candidate": "parity/out/wind_stagger_fromRight.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
+    "passed": true,
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "wind_wind",
     "effect": "filter/wind",
     "mode": "method: wind",
     "golden": "parity/out/wind_wind.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/wind_wind.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
+  },
+  {
+    "program": "wind_wind_fromRight",
+    "effect": "filter/wind",
+    "mode": "wind_fromRight",
+    "golden": "parity/out/wind_wind_fromRight.golden.png",
+    "candidate": "parity/out/wind_wind_fromRight.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
+    "passed": true,
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "wobble",
     "effect": "filter/wobble",
     "mode": "default",
     "golden": "parity/out/wobble.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/wobble.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "wormhole",
     "effect": "filter/wormhole",
     "mode": "default",
     "golden": "parity/out/wormhole.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/wormhole.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   },
   {
     "program": "zoomBlur",
     "effect": "filter/zoomBlur",
     "mode": "default",
     "golden": "parity/out/zoomBlur.golden.png",
-    "max_abs_diff": 0,
+    "candidate": "parity/out/zoomBlur.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
     "passed": true,
-    "skipped": false
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
   }
 ]
