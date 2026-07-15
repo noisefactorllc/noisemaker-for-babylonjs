@@ -1,4 +1,4 @@
-# noisemaker-babylon
+# Noisemaker for Babylon.js
 
 > Run **Noisemaker**'s procedural visuals in **Babylon.js**.
 
@@ -16,7 +16,7 @@ render(o0)
 That little language is Noisemaker's **DSL** (a domain-specific language for visuals). The original
 engine runs in the browser at [noisedeck.app](https://noisedeck.app).
 
-**noisemaker-babylon** runs that same engine inside **Babylon.js** — the same programs and the same
+**Noisemaker for Babylon.js** runs that same engine inside **Babylon.js** — the same programs and the same
 ~210 effects, rendered as part of a Babylon scene. Use it to make textures, materials, skyboxes, and
 animated backgrounds from code, with no image files.
 

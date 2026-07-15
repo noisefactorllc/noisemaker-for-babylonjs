@@ -1,7 +1,7 @@
 {
-  "name": "noisemaker-babylon",
+  "name": "noisemaker-babylonjs",
   "version": "0.1.0",
-  "description": "Babylon.js port of the Noisemaker procedural shader engine — DSL compiler, render-graph executor, and effects collection, running pixel-identically to the reference WebGL2 engine.",
+  "description": "Noisemaker for Babylon.js — DSL compiler, render-graph executor, and effects collection running pixel-identically to the reference WebGL2 engine.",
   "author": "Noise Factor LLC <team@noisefactor.io>",
   "license": "MIT",
   "type": "module",

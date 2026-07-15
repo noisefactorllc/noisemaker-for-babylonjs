@@ -1,4 +1,4 @@
-# noisemaker-babylon — status & parity
+# Noisemaker for Babylon.js — status & parity
 
 *Last verified 2026-07-14. The sources of truth are `parity/sweep.sh`, `parity/corpus/sweep.sh`, and
 `tools/catalog.mjs`.*
@@ -201,7 +201,7 @@ mesh textures. Only the host OBJ-load → mesh-surface upload step is unvetted.
 - **`meshLoader`** — parse OBJ → populate the mesh surfaces. **The triangle-raster path it feeds is
   already proven byte-identical**; only the host OBJ-load → mesh-surface step is unvetted.
 - **Standalone package.** The port consumes the published engine at build/test time via
-  `vendor/fetch.sh` (gitignored — the `node_modules` posture). Packaging `noisemaker-babylon` itself
+  `vendor/fetch.sh` (gitignored — the `node_modules` posture). Packaging `noisemaker-babylonjs` itself
   as a distributable npm module (that fetches the engine on install) is open.
 - **Unpublished reference delta: CLOSED this round** (see "This round's vendor sync" above) — no
   longer a follow-up item. `vendor/fetch.sh` is the only source of truth for this port; it never reads

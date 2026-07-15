@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare two PNGs for the noisemaker-babylon parity harness.
+"""Compare two PNGs for the Noisemaker for Babylon.js parity harness.
 
 Loads a GOLDEN reference PNG (minted by the vendored WebGL2Backend via
 NM_GOLDEN=1) and a CANDIDATE PNG (the BabylonBackend render), computes

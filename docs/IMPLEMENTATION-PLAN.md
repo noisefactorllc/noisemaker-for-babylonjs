@@ -1,8 +1,8 @@
-# noisemaker-babylon — Implementation Plan
+# Noisemaker for Babylon.js — Implementation Plan
 
 A Babylon.js port of the Noisemaker procedural shader engine (DSL compiler, render-graph
 executor, effects collection), pixel-identical to the reference WebGL2 engine. Sibling to
-`noisemaker-hlsl` (Unity), `noisemaker-godot`, `noisemaker-td`.
+`noisemaker-unity` (Unity), `noisemaker-godot`, `noisemaker-td`.
 
 ## The key insight: a deeper seam than the foreign-language ports
 

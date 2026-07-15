@@ -1,4 +1,4 @@
-# noisemaker-babylon — Porting Guide
+# Noisemaker for Babylon.js — Porting Guide
 
 Unlike the Unity/Godot/TD ports, **there is no shader translation**: Babylon's WebGL2 path is
 GLSL ES 3.00 with the same `gl_FragCoord` bottom-left origin as the reference, so effect shaders

@@ -1,4 +1,4 @@
-// noisemaker-babylon — Babylon.js port of the Noisemaker procedural shader engine.
+// Noisemaker for Babylon.js — Babylon.js port of the Noisemaker procedural shader engine.
 //
 // The DSL compiler + render-graph + effects are the REFERENCE engine, reused verbatim (it is
 // plain JS driving WebGL2/WebGPU — the exact Babylon environment). This package provides the
