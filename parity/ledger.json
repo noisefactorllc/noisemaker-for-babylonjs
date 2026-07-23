@@ -3690,6 +3690,42 @@
     }
   },
   {
+    "program": "pondRipples_speed",
+    "effect": "filter/pondRipples",
+    "mode": "speed",
+    "golden": "parity/out/pondRipples_speed.golden.png",
+    "candidate": "parity/out/pondRipples_speed.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
+    "passed": true,
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
+  },
+  {
+    "program": "pondRipples_speed_neg5",
+    "effect": "filter/pondRipples",
+    "mode": "speed_neg5",
+    "golden": "parity/out/pondRipples_speed_neg5.golden.png",
+    "candidate": "parity/out/pondRipples_speed_neg5.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
+    "passed": true,
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
+  },
+  {
     "program": "pondRipples_wrap_clamp",
     "effect": "filter/pondRipples",
     "mode": "wrap: clamp",

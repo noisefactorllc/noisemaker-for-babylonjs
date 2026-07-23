@@ -1,7 +1,9 @@
 # Noisemaker for Babylon.js — status & parity
 
-*Last verified 2026-07-14. The sources of truth are `parity/sweep.sh`, `parity/corpus/sweep.sh`, and
-`tools/catalog.mjs`.*
+*Last verified 2026-07-23 against the published engine carrying reference `349e9909` (re-fetched via
+`vendor/fetch.sh`): full sweep **321/321 PASS**, 3 documented external-input skips, every graded
+effect still byte-exact at max-abs-diff 0. The sources of truth are `parity/sweep.sh`,
+`parity/corpus/sweep.sh`, and `tools/catalog.mjs`.*
 
 This file holds the detailed coverage and parity numbers. For what the project is and how to use it,
 see the [README](README.md).
