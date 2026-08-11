@@ -114,6 +114,236 @@ window.nmRunFatGraph = async function (fat, opts = {}) {
   return out
 }
 
+// Exercise the public sink + asynchronous frame-export contract through Babylon's real WebGL2
+// context, then compare the queued PBO result with the backend's established synchronous reader.
+window.nmRunFrameExport = async function (fat, opts = {}) {
+  const size = opts.size || 256
+  const time = opts.time ?? 0.25
+  const frames = opts.frames || 8
+  const canvas = document.createElement('canvas')
+  canvas.width = size
+  canvas.height = size
+  document.body.appendChild(canvas)
+
+  const engine = new Engine(canvas, false, {
+    preserveDrawingBuffer: true,
+    premultipliedAlpha: false,
+    alpha: false,
+    stencil: false,
+    antialias: false,
+    powerPreference: 'high-performance'
+  }, false)
+  const backend = new BabylonBackend(engine)
+  const graph = reconstruct(fat)
+  const pipeline = new Pipeline(graph, backend)
+  await pipeline.init(size, size)
+
+  const queue = backend.createFrameExportQueue({ slots: 2 })
+  let exported = null
+  pipeline.addSink({
+    configure (descriptor) { queue.configure(descriptor) },
+    submit (textureId, timestamp) {
+      if (exported) return false
+      return queue.enqueue(textureId, timestamp, (frame, completedTimestamp) => {
+        if (exported) return
+        exported = {
+          width: frame.width,
+          height: frame.height,
+          rowStride: frame.rowStride,
+          data: Array.from(frame.data),
+          timestamp: completedTimestamp
+        }
+      })
+    },
+    close (options) { queue.close(options) }
+  })
+
+  for (let i = 0; i < frames; i++) {
+    pipeline.render(time, 1000 + i)
+    queue.poll()
+  }
+  for (let i = 0; i < 120 && !exported; i++) {
+    await new Promise(resolve => setTimeout(resolve, 0))
+    queue.poll()
+  }
+  if (!exported) throw new Error('Babylon frame export did not complete')
+
+  const name = graph.renderSurface
+  const surface = pipeline.surfaces.get(name) || pipeline.surfaces.get(String(name).replace(/^global_/, ''))
+  const readId = pipeline.frameReadTextures.get(name) ?? surface?.read
+  if (!readId) throw new Error('nmRunFrameExport: render surface not found: ' + name)
+  const synchronous = await backend.readPixels(readId)
+  const out = {
+    width: exported.width,
+    height: exported.height,
+    rowStride: exported.rowStride,
+    timestamp: exported.timestamp,
+    exported: exported.data,
+    synchronous: Array.from(synchronous.data),
+    stats: { ...queue.stats }
+  }
+
+  try { pipeline.dispose() } catch { /* noop */ }
+  try { engine.dispose() } catch { /* noop */ }
+  try { canvas.remove() } catch { /* noop */ }
+  return out
+}
+
+window.nmRunFrameExportAlphaModes = async function () {
+  const width = 3
+  const height = 2
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+  document.body.appendChild(canvas)
+
+  const engine = new Engine(canvas, false, {
+    preserveDrawingBuffer: true,
+    premultipliedAlpha: false,
+    alpha: false,
+    stencil: false,
+    antialias: false,
+    powerPreference: 'high-performance'
+  }, false)
+  const backend = new BabylonBackend(engine)
+  let queue = null
+
+  try {
+    await backend.init()
+    backend.createTexture('source', {
+      width,
+      height,
+      format: 'rgba8',
+      usage: ['render', 'sample']
+    })
+
+    // texSubImage2D rows begin at the GL bottom; the exporter must return the top row first.
+    const source = new Uint8Array([
+      255, 0, 255, 128, 0, 255, 255, 64, 255, 255, 0, 0,
+      255, 255, 255, 128, 0, 255, 0, 64, 255, 0, 0, 255
+    ])
+    const gl = backend.gl
+    const sourceRecord = backend.textures.get('source')
+    gl.bindTexture(gl.TEXTURE_2D, backend._glTexOf(sourceRecord))
+    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, source)
+    gl.bindTexture(gl.TEXTURE_2D, null)
+    engine.wipeCaches(true)
+
+    queue = backend.createFrameExportQueue({ slots: 2 })
+    const exportFrame = async (alphaMode, colorSpace = 'srgb') => {
+      let completed = null
+      queue.configure({ width, height, format: 'rgba8unorm', colorSpace, alphaMode, fps: 60 })
+      if (!queue.enqueue('source', 0, frame => { completed = Array.from(frame.data) })) {
+        throw new Error(`Failed to enqueue ${alphaMode} frame export`)
+      }
+      for (let i = 0; i < 120 && !completed; i++) {
+        queue.poll()
+        if (!completed) await new Promise(resolve => setTimeout(resolve, 0))
+      }
+      if (!completed) throw new Error(`${alphaMode} frame export did not complete`)
+      return completed
+    }
+
+    const straight = await exportFrame('straight')
+    const opaque = await exportFrame('opaque')
+    const premultiplied = await exportFrame('premultiplied')
+    const displayP3 = await exportFrame('straight', 'display-p3')
+    return {
+      width,
+      height,
+      rowStride: width * 4,
+      straight,
+      opaque,
+      premultiplied,
+      displayP3Accepted: displayP3.every((value, index) => value === straight[index])
+    }
+  } finally {
+    try { queue?.close() } catch { /* noop */ }
+    try { backend.destroy() } catch { /* noop */ }
+    try { engine.dispose() } catch { /* noop */ }
+    try { canvas.remove() } catch { /* noop */ }
+  }
+}
+
+// Prove the public renderer abandons raw resources on loss and rebuilds only after Babylon has
+// restored its managed resources. Chromium's WEBGL_lose_context extension exercises the real path.
+window.nmRunRendererContextRestore = async function (fat, opts = {}) {
+  const size = opts.size || 256
+  const time = opts.time ?? 0.25
+  const canvas = document.createElement('canvas')
+  canvas.width = size
+  canvas.height = size
+  document.body.appendChild(canvas)
+  const engine = new Engine(canvas, false, {
+    preserveDrawingBuffer: true,
+    premultipliedAlpha: false,
+    alpha: false,
+    stencil: false,
+    antialias: false,
+    powerPreference: 'high-performance'
+  }, false)
+
+  let resolveLost
+  let resolveRestored
+  const lost = new Promise(resolve => { resolveLost = resolve })
+  const restored = new Promise(resolve => { resolveRestored = resolve })
+  const nm = new NoisemakerRenderer(engine, {
+    Pipeline,
+    size,
+    onContextLost: resolveLost,
+    onContextRestored: resolveRestored
+  })
+  const rendererLostObserver = nm._contextLostObserver
+  const rendererRestoredObserver = nm._contextRestoredObserver
+  await nm.loadGraph(fat)
+  nm.renderFrame(time, 999)
+  const before = Array.from((await nm.readPixels()).data)
+  const originalPipeline = nm.pipeline
+
+  const queue = nm.createFrameExportQueue({ slots: 2 })
+  let sinkCloseOptions = null
+  nm.addSink({
+    configure (descriptor) { queue.configure(descriptor) },
+    submit (textureId, timestamp) { return queue.enqueue(textureId, timestamp, () => {}) },
+    close (options) {
+      sinkCloseOptions = options || {}
+      queue.close(options)
+    }
+  })
+
+  const extension = engine._gl.getExtension('WEBGL_lose_context')
+  if (!extension) throw new Error('WEBGL_lose_context is unavailable')
+  extension.loseContext()
+  await Promise.race([
+    lost,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('context loss timeout')), 5000))
+  ])
+  await new Promise(resolve => setTimeout(resolve, 0))
+  extension.restoreContext()
+  await Promise.race([
+    restored,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('context restoration timeout')), 10000))
+  ])
+
+  const replacementPipeline = nm.pipeline
+  nm.renderFrame(time, 1000)
+  const after = Array.from((await nm.readPixels()).data)
+  nm.dispose()
+  await new Promise(resolve => setTimeout(resolve, 0))
+  const out = {
+    pipelineReplaced: !!replacementPipeline && replacementPipeline !== originalPipeline,
+    sinkCloseOptions,
+    before,
+    after,
+    contextLostObserversRemoved: Number(!engine.onContextLostObservable.observers.includes(rendererLostObserver)),
+    contextRestoredObserversRemoved: Number(!engine.onContextRestoredObservable.observers.includes(rendererRestoredObserver))
+  }
+
+  try { engine.dispose() } catch { /* noop */ }
+  try { canvas.remove() } catch { /* noop */ }
+  return out
+}
+
 // GOLDEN path: the SAME vendored Pipeline + fat graph, driven by the reference `WebGL2Backend`
 // instead of `BabylonBackend`. This is the purest parity test — identical engine, only the
 // backend differs — and it lets the harness mint its own goldens with no sibling checkout.

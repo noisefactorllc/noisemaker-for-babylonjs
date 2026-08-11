@@ -7,3 +7,4 @@
 // exposes the result as a Babylon texture. See ARCHITECTURE.md.
 export { BabylonBackend } from './runtime/babylonBackend.js'
 export { NoisemakerRenderer, reconstructGraph } from './runtime/renderer.js'
+export { FrameExportQueue } from './runtime/frameExport.js'

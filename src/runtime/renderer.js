@@ -25,7 +25,8 @@ export function reconstructGraph (fat) {
 export class NoisemakerRenderer {
   /**
    * @param {import('@babylonjs/core').AbstractEngine} engine
-   * @param {{ Pipeline: any, size?: number }} options - `Pipeline` is the reference Pipeline class.
+   * @param {{ Pipeline: any, size?: number, onContextLost?: Function, onContextRestored?: Function, onError?: Function }} options
+   *   `Pipeline` is the reference Pipeline class.
    */
   constructor (engine, options = {}) {
     this.engine = engine
@@ -37,35 +38,182 @@ export class NoisemakerRenderer {
     this._outId = '__nm_output'
     this._outputTexture = null
     this._time = 0
+    this._fatGraph = null
+    this._loadOptions = {}
+    this._isContextLost = false
+    this._disposed = false
+    this._lifecycleGeneration = 0
+    this._lastBackendInvalidationGeneration = -1
+    this._invalidatedBackends = new Set()
+    this._onContextLost = options.onContextLost || null
+    this._onContextRestored = options.onContextRestored || null
+    this._onError = options.onError || null
+    this._contextLostObserver = this.engine?.onContextLostObservable?.add?.(() => this._handleContextLost()) ?? null
+    this._contextRestoredObserver = this.engine?.onContextRestoredObservable?.add?.(() => {
+      this._handleContextRestored().catch(error => this._reportError(error))
+    }) ?? null
   }
 
   /** Compile/load a fat graph and prepare the pipeline + a stable output texture. */
   async loadGraph (fatGraph, opts = {}) {
     if (!this._Pipeline) throw new Error('NoisemakerRenderer requires options.Pipeline (the reference Pipeline class).')
-    if (opts.size) this.size = opts.size
+    if (this._disposed) throw new Error('NoisemakerRenderer is disposed')
+    const generation = this._advanceLifecycle()
+    this._fatGraph = fatGraph
+    this._loadOptions = { ...opts }
+    return this._loadGraph(fatGraph, opts, generation)
+  }
 
-    this.backend = new BabylonBackend(this.engine)
-    this.graph = reconstructGraph(fatGraph)
-    this.pipeline = new this._Pipeline(this.graph, this.backend)
-    await this.pipeline.init(this.size, this.size)
+  /** @private Build a fresh backend/pipeline without exposing a partially initialized result. */
+  async _loadGraph (fatGraph, opts = {}, generation = this._lifecycleGeneration) {
+    const size = opts.size || this.size
+    const backend = new BabylonBackend(this.engine)
+    const graph = reconstructGraph(fatGraph)
+    const pipeline = new this._Pipeline(graph, backend)
 
-    // Stable output: passes ping-pong their surfaces every frame, so a material can't hold the
-    // raw read buffer. We blit the render surface into a dedicated texture after each frame and
-    // hand out that (constant) texture instead.
-    this.backend.createTexture(this._outId, {
-      width: this.size, height: this.size, format: 'rgba16f', usage: ['render', 'sample']
-    })
-    this._outputTexture = this.backend.textures.get(this._outId).thin
+    try {
+      await pipeline.init(size, size)
+      backend.createTexture(this._outId, {
+        width: size, height: size, format: 'rgba16f', usage: ['render', 'sample']
+      })
+    } catch (error) {
+      this._disposeStalePipeline(pipeline, generation)
+      if (!this._isLifecycleCurrent(generation) || this._isContextLost || this._disposed) return null
+      throw error
+    }
+
+    if (!this._isLifecycleCurrent(generation) || this._isContextLost || this._disposed) {
+      this._disposeStalePipeline(pipeline, generation)
+      return null
+    }
+
+    const previousPipeline = this.pipeline
+    this.size = size
+    this.backend = backend
+    this.graph = graph
+    this.pipeline = pipeline
+    this._outputTexture = backend.textures.get(this._outId).thin
+
+    if (previousPipeline && previousPipeline !== pipeline) {
+      try { previousPipeline.dispose?.() } catch { /* noop */ }
+    }
     return this
   }
 
+  /** @private Invalidate pending lifecycle work and record unsafe backend generations. */
+  _advanceLifecycle ({ backendLost = false } = {}) {
+    this._lifecycleGeneration++
+    if (backendLost) this._lastBackendInvalidationGeneration = this._lifecycleGeneration
+    return this._lifecycleGeneration
+  }
+
+  /** @private */
+  _isLifecycleCurrent (generation) { return this._lifecycleGeneration === generation }
+
+  /** @private Dispose an initialization result that completed after invalidation. */
+  _disposeStalePipeline (pipeline, generation) {
+    if (!pipeline || pipeline === this.pipeline) return
+    const backendLost = this._lastBackendInvalidationGeneration > generation
+    const backend = pipeline.backend
+    try { pipeline.dispose?.(backendLost ? { backendLost: true } : {}) } catch { /* noop */ }
+    if (backendLost) this._retireInvalidatedBackend(backend)
+  }
+
+  /** @private Retain invalid GPU state until restoration, or clean it immediately once safe. */
+  _retireInvalidatedBackend (backend) {
+    if (!backend) return
+    if (this._isContextLost && !this._disposed) {
+      this._invalidatedBackends.add(backend)
+      return
+    }
+    try { backend.destroy?.({ abandonRawResources: true }) } catch (error) { this._reportError(error) }
+  }
+
+  /** @private Dispose Babylon-managed state while abandoning invalid raw WebGL handles. */
+  _destroyInvalidatedBackends () {
+    const backends = [...this._invalidatedBackends]
+    this._invalidatedBackends.clear()
+    for (const backend of backends) {
+      try { backend.destroy?.({ abandonRawResources: true }) } catch (error) { this._reportError(error) }
+    }
+  }
+
+  /** @private Close sinks immediately without touching lost GPU handles. */
+  _handleContextLost () {
+    if (this._disposed || this._isContextLost) return
+    this._advanceLifecycle({ backendLost: true })
+    this._isContextLost = true
+
+    const deadPipeline = this.pipeline
+    if (this.backend) this._invalidatedBackends.add(this.backend)
+    this.pipeline = null
+    this.backend = null
+    this.graph = null
+    this._outputTexture = null
+    try { deadPipeline?.dispose?.({ backendLost: true }) } catch (error) { this._reportError(error) }
+    try { this._onContextLost?.() } catch (error) { this._reportError(error) }
+  }
+
+  /** @private Release Babylon-managed remnants, then rebuild against the restored context. */
+  async _handleContextRestored () {
+    if (this._disposed || !this._isContextLost) return
+    const generation = this._advanceLifecycle()
+    this._destroyInvalidatedBackends()
+    this._isContextLost = false
+
+    if (this._fatGraph) {
+      const restored = await this._loadGraph(this._fatGraph, this._loadOptions, generation)
+      if (!restored || !this._isLifecycleCurrent(generation)) return
+    }
+    try { this._onContextRestored?.() } catch (error) { this._reportError(error) }
+  }
+
+  /** @private */
+  _reportError (error) {
+    if (typeof this._onError !== 'function') return
+    try { this._onError(error) } catch { /* noop */ }
+  }
+
+  /** @private */
+  _removeContextObservers () {
+    if (this._contextLostObserver) {
+      this.engine?.onContextLostObservable?.remove?.(this._contextLostObserver)
+      this._contextLostObserver = null
+    }
+    if (this._contextRestoredObserver) {
+      this.engine?.onContextRestoredObservable?.remove?.(this._contextRestoredObserver)
+      this._contextRestoredObserver = null
+    }
+  }
+
   /** Render one frame at a normalized 0..1 time and refresh the stable output texture. */
-  renderFrame (normalizedTime) {
-    if (!this.pipeline) return
+  renderFrame (normalizedTime, presentationTimestamp) {
+    if (!this.pipeline || this._isContextLost) return
     this._time = normalizedTime ?? this._time
-    this.pipeline.render(this._time)
+    this.pipeline.render(this._time, presentationTimestamp)
     const id = this._resolveRenderSurfaceId()
     if (id) this.backend.copyTexture(id, this._outId)
+  }
+
+  /** Register an output sink on the active pipeline. */
+  addSink (sink) {
+    if (!this.pipeline) {
+      throw new Error('NoisemakerRenderer has no active pipeline; load a graph before adding a sink')
+    }
+    if (typeof this.pipeline.addSink !== 'function') {
+      throw new Error('Active Noisemaker pipeline does not support output sinks')
+    }
+    return this.pipeline.addSink(sink)
+  }
+
+  /** Create a non-blocking frame-export queue for the active Babylon backend. */
+  createFrameExportQueue (options = {}) {
+    if (!this.pipeline) {
+      throw new Error('NoisemakerRenderer has no active pipeline; load a graph before creating a frame export queue')
+    }
+    const backend = this.pipeline.backend
+    if (typeof backend?.createFrameExportQueue !== 'function') return null
+    return backend.createFrameExportQueue(options)
   }
 
   _resolveRenderSurfaceId () {
@@ -133,11 +281,28 @@ export class NoisemakerRenderer {
    *    const ct = new CubeTexture('', scene); ct._texture = nm.cubeInternalTexture; scene.reflectionTexture = ct; */
   get cubeInternalTexture () { return this._cubeInternal ?? null }
 
-  dispose () {
+  dispose (options = {}) {
+    if (this._disposed) return
+    const backendLost = options.backendLost === true || this._isContextLost
+    this._disposed = true
+    this._advanceLifecycle({ backendLost })
+    this._removeContextObservers()
     try { this._cubeInternal?.dispose?.() } catch { /* noop */ }
-    try { this.backend?.destroy?.() } catch { /* noop */ }
+    const pipeline = this.pipeline
+    const backend = this.backend
     this.pipeline = null
     this.backend = null
+    try {
+      if (typeof pipeline?.dispose === 'function') {
+        pipeline.dispose(backendLost ? { backendLost: true } : (options.loseContext ? { loseContext: true } : {}))
+      } else if (!backendLost) {
+        backend?.destroy?.()
+      }
+    } catch { /* noop */ }
+    if (backendLost && backend) this._invalidatedBackends.add(backend)
+    this._destroyInvalidatedBackends()
+    this.graph = null
+    this._fatGraph = null
     this._outputTexture = null
     this._cubeInternal = null
   }

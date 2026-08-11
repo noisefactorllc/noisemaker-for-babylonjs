@@ -20,6 +20,14 @@ const HARNESS_DIR = join(__dirname, 'harness')
 const ENTRY = join(HARNESS_DIR, 'entry.js')
 const BUNDLE = join(HARNESS_DIR, 'bundle.js')
 export const INDEX_HTML = join(HARNESS_DIR, 'index.html')
+const BUNDLE_INPUTS = [
+  ENTRY,
+  join(ROOT, 'src/runtime/babylonBackend.js'),
+  join(ROOT, 'src/runtime/babylonFrameExport.js'),
+  join(ROOT, 'src/runtime/frameExport.js'),
+  join(ROOT, 'src/runtime/renderer.js'),
+  join(ROOT, 'vendor/noisemaker/noisemaker-shaders-core.esm.js')
+]
 
 // ---- minimal PNG encoder: top-down RGBA8 via zlib (matches the golden encoder) ----
 function crc32 (buf) {
@@ -65,12 +73,14 @@ function parseArgs (argv) {
   return a
 }
 
+export function bundleInputsAreFresh (bundle, inputs) {
+  if (!existsSync(bundle)) return false
+  const bundleTime = statSync(bundle).mtimeMs
+  return inputs.every(input => existsSync(input) && statSync(input).mtimeMs <= bundleTime)
+}
+
 export async function ensureBundle (rebuild) {
-  if (!rebuild && existsSync(BUNDLE)) {
-    const bt = statSync(BUNDLE).mtimeMs
-    const srcs = [ENTRY, join(ROOT, 'src/runtime/babylonBackend.js')]
-    if (srcs.every(s => statSync(s).mtimeMs <= bt)) return
-  }
+  if (!rebuild && bundleInputsAreFresh(BUNDLE, BUNDLE_INPUTS)) return
   await build({
     entryPoints: [ENTRY], bundle: true, format: 'iife', outfile: BUNDLE,
     platform: 'browser', target: 'es2020', logLevel: 'warning'

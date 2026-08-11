@@ -18,6 +18,7 @@
     "PORTING-GUIDE.md"
   ],
   "scripts": {
+    "test": "node --test test/*.test.js",
     "vendor": "bash vendor/fetch.sh",
     "fat-graph": "node tools/export-fat-graph.mjs",
     "examples": "node examples/build.mjs",

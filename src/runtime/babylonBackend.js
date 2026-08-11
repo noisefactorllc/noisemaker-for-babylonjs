@@ -21,6 +21,8 @@ import { EffectWrapper, EffectRenderer } from '@babylonjs/core/Materials/effectR
 import { ThinTexture } from '@babylonjs/core/Materials/Textures/thinTexture.js'
 import { ShaderLanguage } from '@babylonjs/core/Materials/shaderLanguage.js'
 import { Color4 } from '@babylonjs/core/Maths/math.color.js'
+import { BabylonFrameExportAdapter } from './babylonFrameExport.js'
+import { FrameExportQueue } from './frameExport.js'
 
 // Minimal fullscreen vertex. We supply our OWN (instead of Babylon's default "postprocess"
 // vertex) because that one declares `uniform vec2 scale;`, which collides with effects that
@@ -105,10 +107,15 @@ export class BabylonBackend {
     this._bindPass = null
     this._bindState = null
     this._copyWrapper = null
+    this._destroyed = false
   }
 
   getName () { return 'Babylon' }
   static isAvailable () { return true }
+
+  createFrameExportQueue (options = {}) {
+    return new FrameExportQueue(new BabylonFrameExportAdapter(this), options)
+  }
 
   async init () {
     // Raw WebGL2 context for the GPGPU paths (MRT FBOs + points/billboards draws) that don't
@@ -835,11 +842,37 @@ export class BabylonBackend {
     return { width, height, data: flipped }
   }
 
-  destroy () {
-    for (const id of [...this.textures.keys()]) this.destroyTexture(id)
-    for (const buf of this.uniformBuffers.values()) { try { this.gl.deleteBuffer(buf) } catch { /* noop */ } }
+  destroy (options = {}) {
+    if (this._destroyed) return
+    this._destroyed = true
+    const { skipTextures = false, abandonRawResources = false } = options
+
+    if (!skipTextures) {
+      for (const id of [...this.textures.keys()]) this.destroyTexture(id)
+    }
+    this.textures.clear()
+
+    for (const program of this.programs.values()) {
+      try { program.wrapper?.dispose?.() } catch { /* noop */ }
+    }
+    this.programs.clear()
+    try { this._copyWrapper?.dispose?.() } catch { /* noop */ }
+    try { this._defaultTexture?.dispose?.() } catch { /* noop */ }
+
+    if (!abandonRawResources) {
+      for (const buf of this.uniformBuffers.values()) { try { this.gl.deleteBuffer(buf) } catch { /* noop */ } }
+      for (const fbo of this._mrtFbos?.values?.() || []) { try { this.gl.deleteFramebuffer(fbo) } catch { /* noop */ } }
+      for (const rb of this._depthRBs?.values?.() || []) { try { this.gl.deleteRenderbuffer(rb) } catch { /* noop */ } }
+      try { if (this._emptyVAO) this.gl.deleteVertexArray(this._emptyVAO) } catch { /* noop */ }
+    }
     this.uniformBuffers.clear()
+    this._mrtFbos?.clear?.()
+    this._depthRBs?.clear?.()
+    this._emptyVAO = null
+    this._copyWrapper = null
+    this._defaultTexture = null
     try { this.effectRenderer?.dispose?.() } catch { /* noop */ }
+    this.effectRenderer = null
   }
 }
 
