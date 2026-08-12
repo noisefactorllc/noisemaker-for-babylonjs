@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>{{NM_PROGRAM_NAME_HTML}} · Noisedeck</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: #0a0a0c;
+    color: #e7e7ea;
+    font: 400 13px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    overflow: hidden;
+  }
+
+  header {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 14px 18px 10px;
+  }
+  #program-name {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    color: #f2f2f5;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  #status {
+    flex: none;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #6f6f7b;
+    white-space: nowrap;
+    transition: opacity 400ms ease;
+  }
+  #status.is-done { opacity: 0; }
+  #status.is-failed { color: #ff8fa8; opacity: 1; }
+
+  #stage {
+    position: relative;
+    display: flex;
+    min-height: 0;
+    padding: 0 18px;
+  }
+  /* The Babylon adapter renders square (one `size`), so the page sizes the
+     canvas to the largest square the stage holds and centres it, rather than
+     stretching a square render across a wide window. The script sets the exact
+     side in px; these are the pre-boot defaults. */
+  canvas {
+    display: block;
+    margin: auto;
+    width: 100%;
+    height: 100%;
+    border-radius: 3px;
+    background: #050506;
+    box-shadow: 0 0 0 1px #1c1c22, 0 24px 60px -30px #000;
+  }
+
+  footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 10px 18px 14px;
+    font-size: 11px;
+    color: #55555f;
+  }
+  footer a { color: inherit; text-decoration: none; border-bottom: 1px solid #2a2a33; }
+  footer a:hover { color: #9a9aa6; }
+
+  #err {
+    position: absolute;
+    left: 18px;
+    right: 18px;
+    bottom: 0;
+    padding: 14px 16px;
+    border: 1px solid #4a2230;
+    border-left-width: 3px;
+    border-radius: 3px;
+    background-color: #171014;
+    color: #f0c9d2;
+    font: 400 12px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    white-space: pre-wrap;
+    overflow: auto;
+    max-height: 70%;
+  }
+  #err[hidden] { display: none; }
+  #err strong { display: block; margin-bottom: 6px; color: #ff8fa8; font-weight: 500; }
+
+  @media (max-width: 600px) {
+    header, footer { padding-left: 12px; padding-right: 12px; }
+    #stage { padding: 0 12px; }
+    #err { left: 12px; right: 12px; }
+  }
+</style>
+
+<script type="importmap">
+{
+  "imports": {
+    "@babylonjs/core/Engines/engine.js": "./hostlib/babylon/babylon.esm.js",
+    "@babylonjs/core/Engines/constants.js": "./hostlib/babylon/babylon.esm.js",
+    "@babylonjs/core/Materials/effectRenderer.js": "./hostlib/babylon/babylon.esm.js",
+    "@babylonjs/core/Materials/shaderLanguage.js": "./hostlib/babylon/babylon.esm.js",
+    "@babylonjs/core/Materials/Textures/thinTexture.js": "./hostlib/babylon/babylon.esm.js",
+    "@babylonjs/core/Maths/math.color.js": "./hostlib/babylon/babylon.esm.js"
+  }
+}
+</script>
+</head>
+<body>
+
+<header>
+  <h1 id="program-name">{{NM_PROGRAM_NAME_HTML}}</h1>
+  <span id="status">loading engine</span>
+</header>
+
+<main id="stage">
+  <canvas id="nm-canvas"></canvas>
+  <div id="err" role="alert" hidden></div>
+</main>
+
+<footer>
+  <span>noisemaker {{NM_ENGINE_VERSION}} · babylon.js 9.13.0</span>
+  <span>made with Noisedeck</span>
+</footer>
+
+<script type="module">
+  import { Engine } from '@babylonjs/core/Engines/engine.js'
+  import { EffectRenderer, EffectWrapper } from '@babylonjs/core/Materials/effectRenderer.js'
+  import { ShaderLanguage } from '@babylonjs/core/Materials/shaderLanguage.js'
+  import { NoisemakerRenderer } from './adapter/src/runtime/renderer.js'
+
+  // ---- exported program -------------------------------------------------
+  const PROGRAM_NAME = {{NM_PROGRAM_NAME_JSON}};
+  // The compiled render graph, GLSL and all. Noisedeck compiles your program
+  // before the export, so this page never needs the DSL compiler, the effect
+  // manifest, or a single effect bundle — only the engine's Pipeline class.
+  const FAT = {{NM_FATGRAPH_JSON}};
+  const ENGINE_URL = './vendor/noisemaker/noisemaker-shaders-core.esm.min.js';
+  const LOOP_SECONDS = 15;
+  const MAX_SIZE = 1024;
+
+  const canvas = document.getElementById('nm-canvas');
+  const stage = document.getElementById('stage');
+  const statusEl = document.getElementById('status');
+  const errEl = document.getElementById('err');
+  const nameEl = document.getElementById('program-name');
+
+  nameEl.textContent = PROGRAM_NAME;
+
+  function setStatus(text, state) {
+    statusEl.className = state || '';
+    if (text !== null) statusEl.textContent = text;
+  }
+
+  function showError(e) {
+    setStatus('failed', 'is-failed');
+    errEl.hidden = false;
+    errEl.textContent = '';
+    const title = document.createElement('strong');
+    title.textContent = 'This program could not start.';
+    errEl.appendChild(title);
+    errEl.appendChild(document.createTextNode(String((e && e.stack) || e)));
+    console.error('Noisedeck export failed:', e);
+  }
+
+  // The graph is inlined above so the page holds everything it needs in one
+  // file. It also ships beside this page as program.fatgraph.json, which is
+  // what a hand-built page (or one whose graph you regenerated) would read.
+  async function loadFatGraph() {
+    if (FAT) return FAT;
+    try {
+      const response = await fetch('./program.fatgraph.json');
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
+    } catch (e) {
+      throw new Error(`no compiled graph: index.html carries none and ./program.fatgraph.json could not be read (${e.message})`);
+    }
+  }
+
+  // The largest square the stage holds, plus the render size for it: capped so
+  // a large window does not ask the GPU for a 4K simulation. Measured off the
+  // stage rather than the canvas, because the canvas is what we are about to
+  // resize — measuring it would ratchet the square down on every resize.
+  function measure() {
+    const style = getComputedStyle(stage);
+    const width = stage.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+    const height = stage.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+    const cssSide = Math.max(64, Math.floor(Math.min(width, height)));
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    return { cssSide, size: Math.max(256, Math.min(MAX_SIZE, Math.round(cssSide * dpr))) };
+  }
+
+  function applySize({ cssSide, size }) {
+    canvas.style.width = `${cssSide}px`;
+    canvas.style.height = `${cssSide}px`;
+    canvas.width = size;
+    canvas.height = size;
+  }
+
+  // Present the renderer's stable output texture on the canvas. Babylon's
+  // EffectRenderer draws a fullscreen quad; passing no output texture targets
+  // the default framebuffer, i.e. the canvas.
+  function buildPresenter(engine) {
+    const wrapper = new EffectWrapper({
+      engine,
+      name: 'nm_present',
+      useShaderStore: false,
+      useAsPostProcess: false,
+      allowEmptySourceTexture: true,
+      shaderLanguage: ShaderLanguage.GLSL,
+      samplerNames: ['src'],
+      uniformNames: [],
+      // `#version 300 es` must lead, or Babylon runs its ES1 -> ES3 migration
+      // over source that is already ES3 and the effect never compiles.
+      vertexShader: '#version 300 es\nprecision highp float;\nin vec2 position;\nout vec2 vUV;\nvoid main(){ vUV = position * 0.5 + 0.5; gl_Position = vec4(position, 0.0, 1.0); }\n',
+      fragmentShader: '#version 300 es\nprecision highp float;\nin vec2 vUV;\nuniform sampler2D src;\nout vec4 fragColor;\nvoid main(){ fragColor = vec4(texture(src, vUV).rgb, 1.0); }\n',
+    });
+    return wrapper;
+  }
+
+  async function boot() {
+    setStatus('loading graph');
+    const graph = await loadFatGraph();
+
+    const measured = measure();
+    const size = measured.size;
+    applySize(measured);
+
+    const engine = new Engine(canvas, false, {
+      preserveDrawingBuffer: false,
+      alpha: false,
+      antialias: false,
+      powerPreference: 'high-performance',
+    }, false);
+    engine.setSize(size, size);
+
+    setStatus('loading engine');
+    // The adapter never imports the engine itself — the host injects the
+    // reference Pipeline class, which is the whole seam that lets one adapter
+    // run against any pinned engine build.
+    const { Pipeline } = await import(ENGINE_URL);
+
+    setStatus('compiling');
+    const nm = new NoisemakerRenderer(engine, { Pipeline, size });
+    await nm.loadGraph(graph);
+
+    const presenter = buildPresenter(engine);
+    presenter.onApplyObservable.add(() => {
+      presenter.effect.setTexture('src', nm.outputTexture);
+    });
+    const effectRenderer = new EffectRenderer(engine);
+
+    setStatus('running', 'is-done');
+    const started = performance.now();
+    engine.runRenderLoop(() => {
+      nm.renderFrame(((performance.now() - started) / (LOOP_SECONDS * 1000)) % 1);
+      engine.restoreDefaultFramebuffer();
+      effectRenderer.render(presenter, null);
+    });
+
+    let pending = 0;
+    window.addEventListener('resize', () => {
+      clearTimeout(pending);
+      pending = setTimeout(() => {
+        const next = measure();
+        applySize(next);
+        if (next.size === nm.size) return;
+        engine.setSize(next.size, next.size);
+        nm.resize(next.size);
+      }, 120);
+    });
+  }
+
+  try {
+    await boot();
+  } catch (e) {
+    showError(e);
+  }
+</script>
+
+</body>
+</html>

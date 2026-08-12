@@ -1,0 +1,53 @@
+{
+  "configVersion": 1,
+  "id": "babylonjs",
+  "series": "0.1",
+  "shaderSource": "runtime",
+  "engineSource": "cdn",
+  "shaderDialects": ["glsl"],
+  "pageTemplate": true,
+  "gatedTopLevelDirs": {
+    "engine": "engine",
+    "hostlib": "engine",
+    "shaders": "shaders"
+  },
+  "subtrees": [
+    { "from": "src", "to": "adapter/src" }
+  ],
+  "licenses": [
+    { "from": "LICENSE", "to": "LICENSES/noisemaker-for-babylonjs-LICENSE.txt" }
+  ],
+  "overlays": [
+    {
+      "file": "adapter/src/compiler/index.js",
+      "with": "export-kit/overlay/compiler-index.js",
+      "anchor": "export { exportFatGraph } from '../../tools/export-fat-graph.mjs'"
+    }
+  ],
+  "shaderLayout": {
+    "root": "shaders"
+  },
+  "inject": {
+    "type": "fatgraph",
+    "target": "program.fatgraph.json"
+  },
+  "compat": {
+    "mode": "all"
+  },
+  "engineBytesFrom": ["hostlib/"],
+  "hostLib": {
+    "package": "@babylonjs/core",
+    "version": "9.13.0",
+    "from": "esbuild-bundle",
+    "reexports": [
+      "@babylonjs/core/Engines/engine.js",
+      "@babylonjs/core/Engines/constants.js",
+      "@babylonjs/core/Materials/effectRenderer.js",
+      "@babylonjs/core/Materials/shaderLanguage.js",
+      "@babylonjs/core/Materials/Textures/thinTexture.js",
+      "@babylonjs/core/Maths/math.color.js"
+    ],
+    "root": "hostlib/babylon",
+    "entry": "hostlib/babylon/babylon.esm.js"
+  }
+}
