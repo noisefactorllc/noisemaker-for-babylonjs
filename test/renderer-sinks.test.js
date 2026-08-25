@@ -214,6 +214,104 @@ test('renderer context loss abandons sinks and restoration replaces the dead pip
   ])
 })
 
+test('renderer restores the latest resized dimensions after context loss', async () => {
+  const lost = new FakeObservable()
+  const restored = new FakeObservable()
+  const engine = new NullEngine()
+  let finishRestoration
+  const restorationFinished = new Promise(resolve => { finishRestoration = resolve })
+  class TrackingPipeline {
+    constructor (_graph, backend) { this.backend = backend }
+    async init (width, height) { Object.assign(this, { width, height }) }
+    resize (width, height) { Object.assign(this, { width, height }) }
+    dispose (options = {}) {
+      if (!options.backendLost) this.backend?.destroy()
+      this.backend = null
+    }
+  }
+  engine.onContextLostObservable = lost
+  engine.onContextRestoredObservable = restored
+  const renderer = new NoisemakerRenderer(engine, {
+    Pipeline: TrackingPipeline,
+    onContextRestored: finishRestoration
+  })
+
+  try {
+    await renderer.loadGraph({ textures: {} }, { size: 64 })
+    renderer.resize(128)
+    lost.notify()
+    restored.notify()
+    await restorationFinished
+
+    assert.equal(renderer.size, 128)
+    assert.equal(renderer.pipeline.width, 128)
+    assert.equal(renderer.pipeline.height, 128)
+    assert.equal(renderer.backend.textures.get(renderer._outId).width, 128)
+    assert.equal(renderer.backend.textures.get(renderer._outId).height, 128)
+  } finally {
+    renderer.dispose()
+    engine.dispose()
+  }
+})
+
+test('renderer applies a resize requested during context restoration', async () => {
+  const lost = new FakeObservable()
+  const restored = new FakeObservable()
+  const engine = new NullEngine()
+  let pipelineCount = 0
+  let beginRestoration
+  let releaseRestoration
+  let finishRestoration
+  const restorationStarted = new Promise(resolve => { beginRestoration = resolve })
+  const restorationGate = new Promise(resolve => { releaseRestoration = resolve })
+  const restorationFinished = new Promise(resolve => { finishRestoration = resolve })
+  class DeferredPipeline {
+    constructor (_graph, backend) {
+      this.backend = backend
+      this.index = ++pipelineCount
+    }
+
+    async init (width, height) {
+      Object.assign(this, { width, height })
+      if (this.index === 2) {
+        beginRestoration()
+        await restorationGate
+      }
+    }
+
+    resize (width, height) { Object.assign(this, { width, height }) }
+    dispose (options = {}) {
+      if (!options.backendLost) this.backend?.destroy()
+      this.backend = null
+    }
+  }
+  engine.onContextLostObservable = lost
+  engine.onContextRestoredObservable = restored
+  const renderer = new NoisemakerRenderer(engine, {
+    Pipeline: DeferredPipeline,
+    onContextRestored: finishRestoration
+  })
+
+  try {
+    await renderer.loadGraph({ textures: {} }, { size: 64 })
+    lost.notify()
+    restored.notify()
+    await restorationStarted
+    renderer.resize(128)
+    releaseRestoration()
+    await restorationFinished
+
+    assert.equal(renderer.size, 128)
+    assert.equal(renderer.pipeline.width, 128)
+    assert.equal(renderer.pipeline.height, 128)
+    assert.equal(renderer.backend.textures.get(renderer._outId).width, 128)
+    assert.equal(renderer.backend.textures.get(renderer._outId).height, 128)
+  } finally {
+    renderer.dispose()
+    engine.dispose()
+  }
+})
+
 test('renderer disposal forwards backend-loss state and removes engine observers', () => {
   const lost = new FakeObservable()
   const restored = new FakeObservable()

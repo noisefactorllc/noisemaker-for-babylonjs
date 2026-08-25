@@ -67,14 +67,21 @@ export class NoisemakerRenderer {
   /** @private Build a fresh backend/pipeline without exposing a partially initialized result. */
   async _loadGraph (fatGraph, opts = {}, generation = this._lifecycleGeneration) {
     const size = opts.size || this.size
+    let effectiveSize = size
     const backend = new BabylonBackend(this.engine)
     const graph = reconstructGraph(fatGraph)
     const pipeline = new this._Pipeline(graph, backend)
 
     try {
       await pipeline.init(size, size)
+      if (!this._isLifecycleCurrent(generation) || this._isContextLost || this._disposed) {
+        this._disposeStalePipeline(pipeline, generation)
+        return null
+      }
+      effectiveSize = this._loadOptions.size || this.size
+      if (effectiveSize !== size) pipeline.resize?.(effectiveSize, effectiveSize)
       backend.createTexture(this._outId, {
-        width: size, height: size, format: 'rgba16f', usage: ['render', 'sample']
+        width: effectiveSize, height: effectiveSize, format: 'rgba16f', usage: ['render', 'sample']
       })
     } catch (error) {
       this._disposeStalePipeline(pipeline, generation)
@@ -88,7 +95,7 @@ export class NoisemakerRenderer {
     }
 
     const previousPipeline = this.pipeline
-    this.size = size
+    this.size = effectiveSize
     this.backend = backend
     this.graph = graph
     this.pipeline = pipeline
@@ -237,6 +244,7 @@ export class NoisemakerRenderer {
   /** Resize the render + output to a new square size. */
   resize (size) {
     this.size = size
+    this._loadOptions = { ...this._loadOptions, size }
     this.pipeline?.resize?.(size, size)
     this.backend?.destroyTexture?.(this._outId)
     this.backend?.createTexture?.(this._outId, { width: size, height: size, format: 'rgba16f', usage: ['render', 'sample'] })
