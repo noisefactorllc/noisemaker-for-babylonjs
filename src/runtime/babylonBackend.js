@@ -98,7 +98,8 @@ export class BabylonBackend {
     this.uniformBuffers = new Map()
     this.capabilities = {
       isMobile: false, floatBlend: true, floatLinear: false, colorBufferFloat: true,
-      maxDrawBuffers: 8, maxTextureSize: 4096, maxStateSize: 2048
+      maxDrawBuffers: 8, maxTextureSize: 4096, maxColorBytesPerSample: 64,
+      maxStateSize: 2048
     }
     this.effectRenderer = new EffectRenderer(engine)
     this._defaultTexture = null // 1x1 transparent black
@@ -122,6 +123,7 @@ export class BabylonBackend {
     // map onto Babylon's high-level draw API. Babylon still owns resource creation + shader
     // compile; these are the same operations webgl2.js does, on the same context.
     this.gl = this.engine._gl
+    this._detectCapabilities()
     this._emptyVAO = this.gl.createVertexArray() // no attributes — points draws use gl_VertexID
     this._mrtFbos = new Map() // cacheKey -> WebGLFramebuffer
     // 1x1 transparent-black default (matches webgl2 defaultTexture for unbound/none inputs).
@@ -136,6 +138,67 @@ export class BabylonBackend {
     // not-yet-ready effect (EffectRenderer.render silently skips an unready effect).
     this._copyWrapper = this._buildCopyWrapper()
     await this._whenReady(this._copyWrapper)
+  }
+
+  _detectCapabilities () {
+    const gl = this.gl
+    this.capabilities.maxDrawBuffers = gl.getParameter(gl.MAX_DRAW_BUFFERS)
+    this.capabilities.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE)
+    this.capabilities.maxColorBytesPerSample = this._probeColorBytesPerSample()
+  }
+
+  _probeColorBytesPerSample () {
+    const gl = this.gl
+    const combos = [
+      [64, [gl.RGBA32F, gl.RGBA32F, gl.RGBA32F, gl.RGBA32F]],
+      [48, [gl.RGBA32F, gl.RGBA32F, gl.RGBA32F]],
+      [40, [gl.RGBA32F, gl.RGBA32F, gl.RGBA16F]],
+      [32, [gl.RGBA32F, gl.RGBA16F, gl.RGBA16F]]
+    ]
+    let budget = 16
+    const drawFramebuffer = gl.getParameter(gl.DRAW_FRAMEBUFFER_BINDING)
+    const readFramebuffer = gl.getParameter(gl.READ_FRAMEBUFFER_BINDING)
+    const fbo = gl.createFramebuffer()
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo)
+    try {
+      for (const [bytes, formats] of combos) {
+        if (formats.length > this.capabilities.maxDrawBuffers) continue
+        const textures = []
+        let complete = false
+        try {
+          const attachments = []
+          for (let i = 0; i < formats.length; i++) {
+            const texture = gl.createTexture()
+            gl.bindTexture(gl.TEXTURE_2D, texture)
+            const internalFormat = formats[i]
+            const type = internalFormat === gl.RGBA32F ? gl.FLOAT : gl.HALF_FLOAT
+            gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, 2, 2, 0, gl.RGBA, type, null)
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, texture, 0)
+            textures.push(texture)
+            attachments.push(gl.COLOR_ATTACHMENT0 + i)
+          }
+          gl.drawBuffers(attachments)
+          complete = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE
+        } finally {
+          for (let i = 0; i < textures.length; i++) {
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, null, 0)
+            gl.deleteTexture(textures[i])
+          }
+        }
+        if (complete) {
+          budget = bytes
+          break
+        }
+      }
+    } finally {
+      gl.bindTexture(gl.TEXTURE_2D, null)
+      gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, drawFramebuffer)
+      gl.bindFramebuffer(gl.READ_FRAMEBUFFER, readFramebuffer)
+      gl.deleteFramebuffer(fbo)
+      while (gl.getError() !== gl.NO_ERROR) { /* drain probe errors */ }
+      this.engine.wipeCaches(true)
+    }
+    return budget
   }
 
   // ---- textures --------------------------------------------------------------
