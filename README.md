@@ -48,8 +48,8 @@ result as a Babylon texture.
 ## Install
 
 The engine itself is **not committed** to this repo. `vendor/fetch.sh` downloads the published
-distribution from the CDN (`shaders.noisedeck.app`) into a git-ignored `vendor/` — the same posture
-as `node_modules` (the fetch script is committed, never the downloaded bytes).
+distribution from the CDN (`shaders.noisedeck.app`) into a git-ignored `vendor/`, like `node_modules`.
+Only the fetch script is committed. Never commit the downloaded bytes.
 
 ```bash
 npm install            # @babylonjs/core (peer) + dev tooling
@@ -67,7 +67,7 @@ noise(seed: 1, scaleX: 30, colorMode: 1, speed: 25).write(o0)
 render(o0)" demo.fatgraph.json
 ```
 
-Then load it and render a frame:
+Then load the graph. Render a frame:
 
 ```js
 import { Engine } from '@babylonjs/core/Engines/engine.js'
@@ -81,20 +81,23 @@ await nm.loadGraph(fatGraph)
 nm.renderFrame(0)              // render one frame at normalized time 0
 ```
 
-**Every DSL program** has the same shape: name the namespaces it uses (`search synth, filter`),
-chain effects, write the result to an output surface (`.write(o0)`), then pick one to show
-(`render(o0)`).
+**Every DSL program** has the same shape:
+
+- Name the namespaces it uses (`search synth, filter`).
+- Chain the effects.
+- Write the result to an output surface (`.write(o0)`).
+- Select a surface to show (`render(o0)`).
 
 ## Use it in your own Babylon project
 
 > **Install into your own project.** This package isn't published to npm yet. Until it is, install
-> it from git — `npm i github:noisefactorllc/noisemaker-for-babylonjs` — or vendor `src/runtime/` into
-> your app and run `vendor/fetch.sh` to pull the engine. The snippets here import the renderer by
-> its in-repo path (`./src/runtime/renderer.js`); the demos in `examples/` import it as
+> it from git — `npm i github:noisefactorllc/noisemaker-for-babylonjs` — or copy `src/runtime/` into
+> your app. Run `vendor/fetch.sh` to download the engine. The snippets here import the renderer by
+> its in-repo path (`./src/runtime/renderer.js`). The demos in `examples/` import it as
 > `../src/runtime/renderer.js`.
 
-`NoisemakerRenderer` keeps a stable output texture you can hand straight to any material, and drives
-the effect forward each frame:
+`NoisemakerRenderer` keeps a stable output texture that you can assign to any material. It updates
+the effect each frame:
 
 ```js
 // Use the live output as a texture on any material:
@@ -129,7 +132,7 @@ Two runnable demos (`node examples/build.mjs`, then open the HTML):
 - **Particle/agent sims and fluid (navier–stokes)** render and match the reference.
 - **3D-volume raymarch and cubemap bake** render and match — usable as Babylon skyboxes / PBR
   reflections.
-- **The live NoiseBLASTER! corpus** — real shared compositions — matches the reference; see
+- **The live NoiseBLASTER! corpus** — real shared compositions — matches the reference. See
   [STATUS.md](STATUS.md) for the current pass count.
 - The only gaps are **4 effects that need a live external input** (`media`, `text`, `roll`,
   `meshLoader`) — three of the four (`media`/`text`/`roll`) are additionally verified byte-identical
@@ -163,11 +166,11 @@ bash parity/run.sh noise                # just one program
 #   -> [PASS] noise: max-abs-diff=0 ...
 ```
 
-`parity/sweep.sh` grades against whatever goldens are already committed — it does not mint them. A few
-effects (`watercolor`, the chaotic iterative solvers) are sensitive enough to time/GPU-scheduling that a
-golden minted hours apart from the candidate can show a spurious few-percent diff even though the two
-backends are byte-identical when minted together (see PORTING-GUIDE.md). To re-verify from a clean
-slate, re-mint goldens immediately before sweeping:
+`parity/sweep.sh` compares against the committed goldens. It does not generate them.
+A few effects (`watercolor`, the chaotic iterative solvers) are sensitive to time/GPU-scheduling.
+A golden generated hours apart from the candidate can show a spurious few-percent diff.
+The two backends are byte-identical when generated together (see PORTING-GUIDE.md).
+To check parity with new goldens, regenerate them immediately before the sweep:
 ```bash
 NM_GOLDEN=1 node parity/render-batch.mjs $(ls parity/programs/*.dsl | xargs -n1 basename | sed 's/\.dsl$//' | grep -v '^corpus_')
 bash parity/sweep.sh
