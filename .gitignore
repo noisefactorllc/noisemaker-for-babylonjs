@@ -29,3 +29,7 @@ examples/cubemap-bundle.js
 examples/demo.cubemap.fatgraph.json
 examples/hero-bundle.js
 examples/hero.png
+
+# Python
+__pycache__/
+*.pyc
