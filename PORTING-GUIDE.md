@@ -151,8 +151,12 @@ after the fix (`roll`'s no-MIDI empty-grid fallback matches the golden exactly).
 - Coordinate convention in every effect: `st = (gl_FragCoord.xy + tileOffset) / fullResolution.y`
   — divide by HEIGHT. Feed `time` **normalized 0..1**, `tileOffset=[0,0]`, `fullResolution=[w,h]`,
   `aspectRatio=w/h`, `renderScale=1`.
-- `define`-params (`NOISE_TYPE`, `LOOP_OFFSET`) come from `program.defines`, injected as
-  `#define`s via Babylon's `defines` option (NOT as uniforms — they have no `uniform` field).
+- `define`-params (`NOISE_TYPE`, `LOOP_OFFSET`, and — confirmed 2026-09 with `pointsRender`/
+  `pointsBillboardRender`'s `VIEW_MODE`/`BLEND_MODE`/`BLUR_LAYER` — a pass's `spec.defines`) come from
+  `program.defines`, injected as `#define`s via Babylon's `defines` option (NOT as uniforms — they have
+  no `uniform` field). This reaches a **custom vertex shader** (`spec.vertex`) the same as the fragment
+  shader — both are compiled from the one `EffectWrapper({vertexShader, fragmentShader, defines})` call,
+  and Babylon's `Effect._prepareEffect` applies the same `defines` string to both stages.
 - Uniform upload order: pass uniforms first, then global/system uniforms (skip names already set).
   Bind sampler inputs by name; `none`/missing → a 1×1 transparent-black texture.
 - Per-effect helpers (`prng`, `periodicFunction`, `hsv2rgb`, `rotate2D`, distance metrics) are

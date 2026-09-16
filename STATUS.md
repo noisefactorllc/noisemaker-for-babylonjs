@@ -1,36 +1,46 @@
 # Noisemaker for Babylon.js — status & parity
 
-*Last verified 2026-07-23 against the published engine carrying reference `349e9909` (re-fetched via
-`vendor/fetch.sh`): full sweep **321/321 PASS**, 3 documented external-input skips, every graded
-effect still byte-exact at max-abs-diff 0. The sources of truth are `parity/sweep.sh`,
-`parity/corpus/sweep.sh`, and `tools/catalog.mjs`.*
+*Last verified 2026-09-15 against the published engine at CDN build tag `6aa8010f-ca81f`
+(`noisemaker-shaders-core.esm.js`, 829471 bytes, re-fetched via `vendor/fetch.sh`) — source-side
+`noisefactorllc/noisemaker` @ `0ed489ec4684`: full sweep **325/325 PASS**, 3 documented
+external-input skips, every graded effect still byte-exact at max-abs-diff 0. The sources of truth
+are `parity/sweep.sh`, `parity/corpus/sweep.sh`, and `tools/catalog.mjs`.*
 
 This file holds the detailed coverage and parity numbers. For what the project is and how to use it,
 see the [README](README.md).
 
 ## Coverage
 
-**210 catalogued effects** (`tools/catalog.mjs`) — up from 185. The CDN republished `/1` in place with
-the full artistic-filter release: **25 new effects**, all `filter/*` (`chrome`, `craquelure`,
-`directionalBlur`, `extrude`, `halftone`, `hatch`, `highPass`, `lensFlare`, `median`, `morphology`,
-`mosaicTiles`, `oilPaint`, `patchwork`, `photocopy`, `plasticWrap`, `pondRipples`, `relief`, `scatter`,
-`spinBlur`, `stamp`, `stipple`, `strokes`, `unsharpMask`, `watercolor`, `wind`), plus content changes to
-12 existing effects (`dither`, `edge`, `emboss`, `grain`, `invert`, `lowPoly`, `parallax`,
-`temporalAberration`, `texture`, `channelCombine`, `mandala`, `sacredGeometry` — mostly new modes/params
-on the artistic filters) and the engine core itself.
+**213 catalogued effects** (`tools/catalog.mjs`) — up from 210. This round's `vendor/fetch.sh` pulled
+in upstream's landscape/heightfield release: **3 new effects** — `synth3d/heightmap3d` (a heightfield
+generator: separate height + diffuse 2D surfaces baked into the 64×4096 volume atlas), `render/renderLandscape3d`
+(isometric/perspective voxel raymarch with face lighting, the `heightmap3d` consumer), and
+`points/heightGrid` (arranges every `pointsEmit` slot into a deterministic XZ grid with height-mapped
+Y, for viewing through `pointsRender`/`pointsBillboardRender`) — plus content changes to 4 existing
+effects: `render/pointsRender` and `render/pointsBillboardRender` (both gained a `perspective` view
+mode — `posZ`/`fieldOfView`/camera-space projection — alongside the existing flat/ortho modes;
+`pointsBillboardRender` additionally gained depth-sorted alpha blending, a `depthKeys`/`depthMerge`
+GPU sort over up to 65536 particles, and aperture-based defocus via `spriteMeanTiles`/`spriteMean`/
+`clearDefocus`), `synth/remap` (267 → 275 std140 UBO slots: per-zone bounding-box culling, plus fixes
+to zone-edge seams, source alpha, and per-frame cost), and `synth/media` (premultiplied-alpha bilinear
+sampling so transparent texels stop darkening edges, and a zero-rotation fast path). See PORTING-GUIDE.md
+for why none of this needed new `BabylonBackend` code — the new effects are `type:'compute'` MRT/
+fullscreen passes (the existing 3D-volume path) and the perspective/depth/defocus passes are ordinary
+`drawMode:'billboards'` draws with `defines`-selected shader variants (the existing agent-deposit path,
+now proven to inject `defines` into a custom **vertex** shader too, not just fragment).
 
-**All 206 byte-verifiable effects are byte-identical** (max-abs-diff 0); the same 4 effects as before
+**All 209 byte-verifiable effects are byte-identical** (max-abs-diff 0); the same 4 effects as before
 need a live external input the headless harness can't supply deterministically — see Known limits below
-(three of the four now additionally verified byte-identical on their no-input fallback path).
+(three of the four are additionally verified byte-identical on their no-input fallback path).
 
 | Group | What's in it | State |
 |---|---|---|
-| 2D effects | noise, filters, mixers, classic generators (179 renderable, incl. all 25 new artistic filters) | byte-identical |
-| Agent / points sims | physarum, life, flock, dla, lenia, … (10) | byte-identical |
+| 2D effects | noise, filters, mixers, classic generators (179 renderable, incl. all 25 artistic filters) | byte-identical |
+| Agent / points sims | physarum, life, flock, dla, lenia, `heightGrid` (deterministic landscape-grid placement), … (11) | byte-identical |
 | Continuous solvers | `reactionDiffusion`, `navierStokes` | byte-identical (evolved, see below) |
-| 3D-volume raymarch | 7 `synth3d` generators × `render3d` / `renderLit3d` (isosurface + voxel), `flow3d`, `palette3d` | byte-identical |
+| 3D-volume raymarch | 8 `synth3d` generators (incl. NEW `heightmap3d`) × `render3d` / `renderLit3d` / NEW `renderLandscape3d` (isosurface + voxel + isometric/perspective landscape), `flow3d`, `palette3d` | byte-identical |
 | Cubemaps | `renderCubemapSurface`, `renderCubemap3d` — single-face + 6-face bake | byte-identical (all 6 faces) |
-| Wrappers & routing | SMRTicles (`pointsEmit` / `pointsRender` / `pointsBillboardRender`), `loopBegin` / `loopEnd`, `wormhole`, `remap` (std140 UBO) | byte-identical |
+| Wrappers & routing | SMRTicles (`pointsEmit` / `pointsRender` / `pointsBillboardRender`, both NEW perspective view + `pointsBillboardRender`'s depth-sort/defocus), `loopBegin` / `loopEnd`, `wormhole`, `remap` (std140 UBO, now 275 slots) | byte-identical |
 | External-input | `media`, `text`, `roll`, `meshLoader` | media/text/roll byte-identical on their no-input fallback (policy-skipped, see Known limits); meshLoader has no fixture |
 
 ## Mode coverage (new this round)
@@ -157,6 +167,48 @@ this is a true same-engine diff, not a cross-implementation comparison.
   re-minted through the re-vendored engine (not just the ones known to have changed) and every
   candidate re-rendered and re-graded — 314/314 non-corpus programs (roster + mode matrix), all
   byte-identical.
+
+## This round's vendor sync (210 → 213)
+
+Source-side: `noisefactorllc/noisemaker` `246ff57f43cc..0ed489ec4684` (a tearoff `ports-sync` job,
+27 upstream triggers consolidated). `bash vendor/fetch.sh` re-pulled `/1` in place:
+
+- **Manifest: 210 → 213** (+3, 0 removed): `synth3d/heightmap3d`, `render/renderLandscape3d`,
+  `points/heightGrid` — see Coverage above for what each does.
+- **Engine core changed**: `noisemaker-shaders-core.esm.js` 711810 → 829471 bytes. Build tag moved
+  **`6a56923b` → `6aa8010f`** (`ca81f` = 829471 bytes, size-consistent; Last-Modified Mon, 14 Sep 2026
+  14:13:35 GMT).
+- **4 existing mini-bundles changed content**: `render/pointsRender.js`, `render/pointsBillboardRender.js`
+  (both: new `perspective` view mode — `posZ`, `fieldOfView`, camera-space projection, on top of the
+  existing flat/ortho; `pointsBillboardRender` additionally: `blendMode: alpha` depth-sorted compositing
+  via a new `depthKeys` + 22-stage `depthMerge` GPU sort, and aperture-driven defocus via new
+  `spriteMeanTiles`/`spriteMean`/`clearDefocus` passes plus a `depositDefocus` draw), `synth/remap.js`
+  (267 → 275 std140 UBO slots: 8 new `zone{N}_bounds` vec4 fields for per-zone bounding-box culling,
+  plus fixes to zone-edge seam feathering, source alpha, and per-frame cost — see the definition.js
+  header comment), `synth/media.js` (premultiplied-alpha bilinear sampling — `sampleMedia()` interpolates
+  already-premultiplied texels instead of un-premultiplying after a straight-alpha linear filter — and a
+  `rotation != 0.0` fast path that skips `rotate2D` entirely at the identity).
+- **Backend impact: none.** The new effects are `type:'compute'` MRT/fullscreen passes — the same
+  zero-new-code 3D-volume path `render3d`/`renderLit3d` already use (see "3D-volume raymarch..." above).
+  The perspective/depth-sort/defocus passes are ordinary `drawMode:'billboards'` draws whose vertex AND
+  fragment stage both read `defines`-selected `#define`s (`VIEW_MODE`, `BLEND_MODE`, `BLUR_LAYER`) — the
+  existing agent-deposit path already forwards `spec.defines` into `EffectWrapper`, and this round is the
+  first to combine that with a **custom vertex** shader (`spec.vertex`); confirmed byte-identical, so no
+  fix was needed (the concern going in — recorded here since it's easy to get wrong porting into a
+  from-scratch backend — was whether Babylon's `defines` option reaches a raw vertex source the same way
+  it reaches the fragment source; it does, via the same `Effect._prepareEffect` call).
+- 4 new fixtures added covering all of the above:
+  `parity/programs/heightmap3d_landscape.dsl` (heightmap3d → renderLandscape3d, the upstream default
+  program), `parity/programs/heightGrid.dsl` (heightGrid → `pointsBillboardRender(viewMode: perspective,
+  aperture: 1.5, ...)`, also upstream's default program — exercises the defocus passes),
+  `parity/programs/heightgrid_billboard_alpha.dsl` (same grid, `blendMode: alpha` — exercises
+  `depthKeys`/`depthMerge`), `parity/programs/heightgrid_pointsrender_perspective.dsl` (same grid through
+  `pointsRender(viewMode: perspective, ...)` instead of the billboard renderer). All four are static
+  (particle positions don't move frame to frame), so none needed an `EVOLVE` entry.
+- Every previously-tracked golden was re-minted through the re-vendored engine (`NM_DUAL=1 bash
+  parity/sweep.sh`, mints golden + candidate together per the documented discipline above) and every
+  candidate re-rendered and re-graded — **325/325 non-corpus programs (roster + mode matrix + the 4 new
+  fixtures) byte-identical**, 3 skipped (`media`/`text`/`roll`, unchanged policy).
 
 ## Known limits
 
