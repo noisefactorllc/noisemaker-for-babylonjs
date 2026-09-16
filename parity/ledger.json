@@ -1574,7 +1574,7 @@
     "status": "PASS",
     "max_abs_diff": 0.0,
     "mean_abs_diff": 0.0,
-    "ssim": 1.0000001192092896,
+    "ssim": 1.0,
     "passed": true,
     "skipped": false,
     "policy": {
@@ -1592,7 +1592,7 @@
     "status": "PASS",
     "max_abs_diff": 0.0,
     "mean_abs_diff": 0.0,
-    "ssim": 1.0000001192092896,
+    "ssim": 1.0,
     "passed": true,
     "skipped": false,
     "policy": {
@@ -2201,6 +2201,78 @@
     "mode": "mode: pen",
     "golden": "parity/out/hatch_pen.golden.png",
     "candidate": "parity/out/hatch_pen.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
+    "passed": true,
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
+  },
+  {
+    "program": "heightGrid",
+    "effect": "filter/pointsBillboardRender",
+    "mode": "default",
+    "golden": "parity/out/heightGrid.golden.png",
+    "candidate": "parity/out/heightGrid.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
+    "passed": true,
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
+  },
+  {
+    "program": "heightgrid_billboard_alpha",
+    "effect": "filter/pointsBillboardRender",
+    "mode": "default",
+    "golden": "parity/out/heightgrid_billboard_alpha.golden.png",
+    "candidate": "parity/out/heightgrid_billboard_alpha.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
+    "passed": true,
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
+  },
+  {
+    "program": "heightgrid_pointsrender_perspective",
+    "effect": "filter/pointsRender",
+    "mode": "default",
+    "golden": "parity/out/heightgrid_pointsrender_perspective.golden.png",
+    "candidate": "parity/out/heightgrid_pointsrender_perspective.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
+    "passed": true,
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
+  },
+  {
+    "program": "heightmap3d_landscape",
+    "effect": "filter/renderLandscape3d",
+    "mode": "default",
+    "golden": "parity/out/heightmap3d_landscape.golden.png",
+    "candidate": "parity/out/heightmap3d_landscape.candidate.png",
     "status": "PASS",
     "max_abs_diff": 0.0,
     "mean_abs_diff": 0.0,

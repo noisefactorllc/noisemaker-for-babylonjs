@@ -2505,7 +2505,8 @@
     "role": "mixer",
     "threeD": false,
     "surfaceParams": [
-      "tex"
+      "tex",
+      "baseTex"
     ],
     "hasInputTex": true,
     "mrt": false,
@@ -2899,6 +2900,27 @@
   },
   {
     "ns": "points",
+    "dir": "heightGrid",
+    "func": "heightGrid",
+    "progName": "heightGrid",
+    "role": "mixer",
+    "threeD": false,
+    "surfaceParams": [
+      "heightTex",
+      "diffuseTex"
+    ],
+    "hasInputTex": true,
+    "mrt": true,
+    "points": false,
+    "compute": true,
+    "staged": true,
+    "hasDefault": true,
+    "defaultProgram": "search synth, points, render\n\nperlin(scale: 35, colorMode: rgb)\n  .write(o1)\n\nperlin(scale: 22, octaves: 4, colorMode: mono)\n  .write(o2)\n\nsolid()\n  .pointsEmit(stateSize: x256)\n  .heightGrid(heightTex: read(o2), diffuseTex: read(o1), heightScale: 25)\n  .pointsBillboardRender(viewMode: perspective, rotateX: 0.55, posY: -12, posZ: 22, pointSize: 2, density: 100, intensity: 0, inputIntensity: 0, depositOpacity: 65, sizeDistance: 150, brightnessDistance: 180, aperture: 1.5, focalDistance: 65)\n  .write(o0)\n\nrender(o0)",
+    "seed": false,
+    "have": false
+  },
+  {
+    "ns": "points",
     "dir": "hydraulic",
     "func": "hydraulic",
     "progName": "hydraulic",
@@ -3072,7 +3094,7 @@
     "hasInputTex": true,
     "mrt": false,
     "points": true,
-    "compute": false,
+    "compute": true,
     "staged": true,
     "hasDefault": false,
     "defaultProgram": null,
@@ -3166,6 +3188,24 @@
     "staged": true,
     "hasDefault": false,
     "defaultProgram": null,
+    "seed": false,
+    "have": false
+  },
+  {
+    "ns": "render",
+    "dir": "renderLandscape3d",
+    "func": "renderLandscape3d",
+    "progName": "renderLandscape3d",
+    "role": "generator",
+    "threeD": true,
+    "surfaceParams": [],
+    "hasInputTex": false,
+    "mrt": true,
+    "points": false,
+    "compute": true,
+    "staged": true,
+    "hasDefault": true,
+    "defaultProgram": "search synth, synth3d, render\n\nheightmap3d(heightTex: noise(scaleX: 90, scaleY: 90, colorMode: mono, speed: 0), tex: gradient(type: fourCorners, color1: #006e94, color2: #24e4ff, color3: #bcff46, color4: #efffff)).renderLandscape3d(panY: -0.18).write(o0)\nrender(o0)",
     "seed": false,
     "have": false
   },
@@ -3797,6 +3837,27 @@
     "staged": true,
     "hasDefault": false,
     "defaultProgram": null,
+    "seed": false,
+    "have": false
+  },
+  {
+    "ns": "synth3d",
+    "dir": "heightmap3d",
+    "func": "heightmap3d",
+    "progName": "heightmap3d",
+    "role": "mixer",
+    "threeD": true,
+    "surfaceParams": [
+      "heightTex",
+      "tex"
+    ],
+    "hasInputTex": false,
+    "mrt": true,
+    "points": false,
+    "compute": true,
+    "staged": true,
+    "hasDefault": true,
+    "defaultProgram": "search synth, synth3d, render\n\nheightmap3d(heightTex: noise(scaleX: 90, scaleY: 90, colorMode: mono, speed: 0), tex: gradient(type: fourCorners, color1: #006e94, color2: #24e4ff, color3: #bcff46, color4: #efffff)).renderLandscape3d(panY: -0.18).write(o0)\nrender(o0)",
     "seed": false,
     "have": false
   },
