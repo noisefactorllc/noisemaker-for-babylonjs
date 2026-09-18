@@ -1,8 +1,8 @@
 # Noisemaker for Babylon.js — status & parity
 
-*Last verified 2026-09-17 against the published engine at CDN build tag `6aacbe9b-ca8bf`
+*Last verified 2026-09-18 against the published engine at CDN build tag `6aacbe9b-ca8bf`
 (`noisemaker-shaders-core.esm.js`, 829631 bytes, re-fetched via `vendor/fetch.sh`) — source-side
-`noisefactorllc/noisemaker` @ `688c514655d3`: full sweep **325/325 PASS**, 3 documented
+`noisefactorllc/noisemaker` @ `ead42a5df110`: full sweep **325/325 PASS**, 3 documented
 external-input skips, every graded effect still byte-exact at max-abs-diff 0. The sources of truth
 are `parity/sweep.sh`, `parity/corpus/sweep.sh`, and `tools/catalog.mjs`.*
 
@@ -209,6 +209,16 @@ Source-side: `noisefactorllc/noisemaker` `246ff57f43cc..0ed489ec4684` (a tearoff
   parity/sweep.sh`, mints golden + candidate together per the documented discipline above) and every
   candidate re-rendered and re-graded — **325/325 non-corpus programs (roster + mode matrix + the 4 new
   fixtures) byte-identical**, 3 skipped (`media`/`text`/`roll`, unchanged policy).
+
+## Vendor sync (688c5146..ead42a5d)
+
+Source-side: `noisefactorllc/noisemaker` `688c514655d3..ead42a5df110` (tearoff `ports-sync` job #221).
+`bash vendor/fetch.sh` re-pulled in place:
+
+- **Manifest: 213 effects** (unchanged count, 0 added, 0 removed).
+- **Default program parity**: Upstream commits `f2506d21` and `ead42a5d` updated `defaultProgram` in `synth3d/heightmap3d` and `render/renderLandscape3d` to use separate chains with `write(o1)`/`write(o2)` and `read(o1)`/`read(o2)` instead of inline effect syntax, and updated parity attestations. Updated `parity/programs/heightmap3d_landscape.dsl` and `parity/catalog.json` to match.
+- **Language / transform audit**: Upstream commit `f2506d21` fixed `isStarterPosition` in `transform.js` to recognize flattened starter effects with no pipeline predecessor (`from === null/undefined`). `noisemaker-for-babylonjs` consumes `compileGraph` from the engine bundle and has no separate transformer implementation; the updated DSL compiles cleanly and verifies byte-identical at max-abs-diff 0.
+- **Verification**: All 27 unit and browser integration tests pass cleanly; `heightmap3d_landscape` verified byte-identical (max-abs-diff 0.000, SSIM 1.00000).
 
 ## Vendor sync (5a142567..688c5146)
 

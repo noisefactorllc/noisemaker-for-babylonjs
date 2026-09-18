@@ -2917,7 +2917,7 @@
     "hasDefault": true,
     "defaultProgram": "search synth, points, render\n\nperlin(scale: 35, colorMode: rgb)\n  .write(o1)\n\nperlin(scale: 22, octaves: 4, colorMode: mono)\n  .write(o2)\n\nsolid()\n  .pointsEmit(stateSize: x256)\n  .heightGrid(heightTex: read(o2), diffuseTex: read(o1), heightScale: 25)\n  .pointsBillboardRender(viewMode: perspective, rotateX: 0.55, posY: -12, posZ: 22, pointSize: 2, density: 100, intensity: 0, inputIntensity: 0, depositOpacity: 65, sizeDistance: 150, brightnessDistance: 180, aperture: 1.5, focalDistance: 65)\n  .write(o0)\n\nrender(o0)",
     "seed": false,
-    "have": false
+    "have": true
   },
   {
     "ns": "points",
@@ -3205,7 +3205,7 @@
     "compute": true,
     "staged": true,
     "hasDefault": true,
-    "defaultProgram": "search synth, synth3d, render\n\nheightmap3d(heightTex: noise(scaleX: 90, scaleY: 90, colorMode: mono, speed: 0), tex: gradient(type: fourCorners, color1: #006e94, color2: #24e4ff, color3: #bcff46, color4: #efffff)).renderLandscape3d(panY: -0.18).write(o0)\nrender(o0)",
+    "defaultProgram": "search synth, synth3d, render\n\nnoise(scaleX: 90, scaleY: 90, colorMode: mono, speed: 0).write(o1)\ngradient(type: fourCorners, color1: #006e94, color2: #24e4ff, color3: #bcff46, color4: #efffff).write(o2)\nheightmap3d(heightTex: read(o1), tex: read(o2)).renderLandscape3d(panY: -0.18).write(o0)\nrender(o0)",
     "seed": false,
     "have": false
   },
@@ -3857,7 +3857,7 @@
     "compute": true,
     "staged": true,
     "hasDefault": true,
-    "defaultProgram": "search synth, synth3d, render\n\nheightmap3d(heightTex: noise(scaleX: 90, scaleY: 90, colorMode: mono, speed: 0), tex: gradient(type: fourCorners, color1: #006e94, color2: #24e4ff, color3: #bcff46, color4: #efffff)).renderLandscape3d(panY: -0.18).write(o0)\nrender(o0)",
+    "defaultProgram": "search synth, synth3d, render\n\nnoise(scaleX: 90, scaleY: 90, colorMode: mono, speed: 0).write(o1)\ngradient(type: fourCorners, color1: #006e94, color2: #24e4ff, color3: #bcff46, color4: #efffff).write(o2)\nheightmap3d(heightTex: read(o1), tex: read(o2)).renderLandscape3d(panY: -0.18).write(o0)\nrender(o0)",
     "seed": false,
     "have": false
   },
