@@ -1,8 +1,8 @@
 # Noisemaker for Babylon.js — status & parity
 
-*Last verified 2026-09-15 against the published engine at CDN build tag `6aa8010f-ca81f`
-(`noisemaker-shaders-core.esm.js`, 829471 bytes, re-fetched via `vendor/fetch.sh`) — source-side
-`noisefactorllc/noisemaker` @ `0ed489ec4684`: full sweep **325/325 PASS**, 3 documented
+*Last verified 2026-09-17 against the published engine at CDN build tag `6aacbe9b-ca8bf`
+(`noisemaker-shaders-core.esm.js`, 829631 bytes, re-fetched via `vendor/fetch.sh`) — source-side
+`noisefactorllc/noisemaker` @ `688c514655d3`: full sweep **325/325 PASS**, 3 documented
 external-input skips, every graded effect still byte-exact at max-abs-diff 0. The sources of truth
 are `parity/sweep.sh`, `parity/corpus/sweep.sh`, and `tools/catalog.mjs`.*
 
@@ -209,6 +209,16 @@ Source-side: `noisefactorllc/noisemaker` `246ff57f43cc..0ed489ec4684` (a tearoff
   parity/sweep.sh`, mints golden + candidate together per the documented discipline above) and every
   candidate re-rendered and re-graded — **325/325 non-corpus programs (roster + mode matrix + the 4 new
   fixtures) byte-identical**, 3 skipped (`media`/`text`/`roll`, unchanged policy).
+
+## Vendor sync (5a142567..688c5146)
+
+Source-side: `noisefactorllc/noisemaker` `5a14256732b5..688c514655d3` (tearoff `ports-sync` job #204).
+`bash vendor/fetch.sh` re-pulled in place:
+
+- **Manifest: 213 effects** (unchanged count, 0 added, 0 removed).
+- **Engine core**: `noisemaker-shaders-core.esm.js` 829471 → 829631 bytes (CDN tag `6aacbe9b-ca8bf`).
+- **WebGPU frame-export audit**: Upstream commits `5ceb97ba` and `688c5146` inverted row orientation in the native WebGPU frame export shader (`sourceSize.y - 1 - position.y`) to match canvas presentation. In `noisemaker-for-babylonjs`, frame export runs via Babylon's WebGL2 engine (`src/runtime/babylonFrameExport.js`), which already applies `sourceSize.y - 1 - int(gl_FragCoord.y)` in `RESOLVE_FRAGMENT_SHADER`. No runtime changes required.
+- **Verification**: All 27 unit and Playwright/Chromium WebGL2 browser tests pass cleanly.
 
 ## Known limits
 
