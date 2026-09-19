@@ -1,8 +1,8 @@
 # Noisemaker for Babylon.js — status & parity
 
-*Last verified 2026-09-18 against the published engine at CDN build tag `6aacbe9b-ca8bf`
-(`noisemaker-shaders-core.esm.js`, 829631 bytes, re-fetched via `vendor/fetch.sh`) — source-side
-`noisefactorllc/noisemaker` @ `ead42a5df110`: full sweep **325/325 PASS**, 3 documented
+*Last verified 2026-09-19 against the published engine at CDN build tag `6aaecab1-caa0c`
+(`noisemaker-shaders-core.esm.js`, 829964 bytes, re-fetched via `vendor/fetch.sh`) — source-side
+`noisefactorllc/noisemaker` @ `f1d2b46a2773`: full sweep **325/325 PASS**, 3 documented
 external-input skips, every graded effect still byte-exact at max-abs-diff 0. The sources of truth
 are `parity/sweep.sh`, `parity/corpus/sweep.sh`, and `tools/catalog.mjs`.*
 
@@ -209,6 +209,16 @@ Source-side: `noisefactorllc/noisemaker` `246ff57f43cc..0ed489ec4684` (a tearoff
   parity/sweep.sh`, mints golden + candidate together per the documented discipline above) and every
   candidate re-rendered and re-graded — **325/325 non-corpus programs (roster + mode matrix + the 4 new
   fixtures) byte-identical**, 3 skipped (`media`/`text`/`roll`, unchanged policy).
+
+## Vendor sync (ead42a5d..f1d2b46a)
+
+Source-side: `noisefactorllc/noisemaker` `ead42a5df110..f1d2b46a2773` (tearoff `ports-sync` job #240).
+`bash vendor/fetch.sh` re-pulled in place:
+
+- **Manifest: 213 effects** (unchanged count, 0 added, 0 removed).
+- **Engine core**: `noisemaker-shaders-core.esm.js` 829631 → 829964 bytes (CDN tag `6aaecab1-caa0c`).
+- **Upstream changes audit**: Upstream range included release `v1.0.154` (`f1d2b46a`) which closed the compiler phase-2 harness exit-status gap (GAP-023: ensuring caught assertion failures exit nonzero and updating the chained variable test plan to expect the terminal `_write` step) and unified agent instructions/documentation. No changes to effect definitions or shader GLSL.
+- **Verification**: All 29 unit and browser integration tests pass cleanly; parity fixtures verified byte-identical (max-abs-diff 0.000).
 
 ## Vendor sync (688c5146..ead42a5d)
 
