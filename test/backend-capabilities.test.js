@@ -361,3 +361,110 @@ test('updateTextureFromSource recreates texture when dimensions change and appli
     else delete globalThis.OffscreenCanvas
   }
 })
+
+test('createTexture and destroyTexture track and dispose format-aware texture records', () => {
+  let disposedRtw = false
+  let disposedInternal = false
+  const backend = Object.create(BabylonBackend.prototype)
+  backend.textures = new Map()
+  backend._clearRtw = () => {}
+  const engine = {
+    createRenderTargetTexture: (size, options) => ({
+      texture: {
+        getEngine: () => engine,
+        dispose: () => { disposedInternal = true }
+      },
+      dispose: () => { disposedRtw = true }
+    })
+  }
+  backend.engine = engine
+
+  const rec = backend.createTexture('dyn_tex', { width: 128, height: 128, format: 'rgba32f' })
+  assert.equal(rec.width, 128)
+  assert.equal(rec.height, 128)
+  assert.equal(rec.format, 'rgba32f')
+  assert.equal(backend.textures.get('dyn_tex'), rec)
+
+  backend.destroyTexture('dyn_tex')
+  assert.equal(backend.textures.has('dyn_tex'), false)
+  assert.equal(disposedRtw, true)
+  assert.equal(disposedInternal, true)
+})
+
+test('Pipeline with BabylonBackend recreates surfaces and regular textures when formats change', async () => {
+  const { bootEngine } = await import('../vendor/engine.mjs')
+  const { Pipeline } = await bootEngine()
+
+  const backend = Object.create(BabylonBackend.prototype)
+  backend.textures = new Map()
+  backend._clearRtw = () => {}
+  const engine = {
+    createRenderTargetTexture: (size, options) => ({
+      texture: { getEngine: () => engine, dispose: () => {} },
+      dispose: () => {}
+    })
+  }
+  backend.engine = engine
+
+  // 1. Regular texture format change
+  const graph = {
+    passes: [],
+    textures: new Map([['node_0_state', { width: 'screen', height: 'screen', format: 'rgba32f' }]]),
+    surfaces: new Map()
+  }
+  const pipeline = new Pipeline(graph, backend)
+  pipeline.width = 256
+  pipeline.height = 256
+  pipeline.recreateTextures()
+
+  const regularBefore = backend.textures.get('node_0_state')
+  assert.equal(regularBefore.format, 'rgba32f')
+
+  // Change format to rgba16f
+  graph.textures.get('node_0_state').format = 'rgba16f'
+  pipeline.recreateTextures()
+
+  const regularAfter = backend.textures.get('node_0_state')
+  assert.equal(regularAfter.format, 'rgba16f')
+  assert.notEqual(regularAfter, regularBefore)
+
+  // Preserved when format and dimensions match
+  pipeline.recreateTextures()
+  assert.equal(backend.textures.get('node_0_state'), regularAfter)
+
+  // 2. Global surface format change
+  graph.textures.set('global_o0', { width: 'screen', height: 'screen', format: 'rgba32f', isGlobal: true })
+  pipeline.createSurfaces()
+
+  const surfaceBeforeRead = backend.textures.get('global_o0_read')
+  const surfaceBeforeWrite = backend.textures.get('global_o0_write')
+  assert.equal(surfaceBeforeRead.format, 'rgba32f')
+  assert.equal(surfaceBeforeWrite.format, 'rgba32f')
+
+  // Update surface format spec to rgba16f
+  graph.textures.get('global_o0').format = 'rgba16f'
+  pipeline.createSurfaces()
+
+  const surfaceAfterRead = backend.textures.get('global_o0_read')
+  const surfaceAfterWrite = backend.textures.get('global_o0_write')
+  assert.equal(surfaceAfterRead.format, 'rgba16f')
+  assert.equal(surfaceAfterWrite.format, 'rgba16f')
+  assert.notEqual(surfaceAfterRead, surfaceBeforeRead)
+  assert.notEqual(surfaceAfterWrite, surfaceBeforeWrite)
+
+  // Preserved when matching
+  pipeline.createSurfaces()
+  assert.equal(backend.textures.get('global_o0_read'), surfaceAfterRead)
+  assert.equal(backend.textures.get('global_o0_write'), surfaceAfterWrite)
+
+  // 3. Stale write-side format recreation in recreateTextures
+  surfaceAfterWrite.format = 'rgba32f'
+  pipeline.recreateTextures({})
+  const recreatedRead = backend.textures.get('global_o0_read')
+  const recreatedWrite = backend.textures.get('global_o0_write')
+  assert.notEqual(recreatedRead, surfaceAfterRead)
+  assert.notEqual(recreatedWrite, surfaceAfterWrite)
+  assert.equal(recreatedRead.format, 'rgba16f')
+  assert.equal(recreatedWrite.format, 'rgba16f')
+})
+

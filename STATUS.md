@@ -1,8 +1,8 @@
 # Noisemaker for Babylon.js — status & parity
 
-*Last verified 2026-09-19 against the published engine at CDN build tag `6aaf425c-caf25`
-(`noisemaker-shaders-core.esm.js`, 831269 bytes, re-fetched via `vendor/fetch.sh`) — source-side
-`noisefactorllc/noisemaker` @ `2df19feb6ce1`: full sweep **325/325 PASS**, 3 documented
+*Last verified 2026-09-20 against the published engine at CDN build tag `6aaf9422-cb1be`
+(`noisemaker-shaders-core.esm.js`, 831934 bytes, re-fetched via `vendor/fetch.sh`) — source-side
+`noisefactorllc/noisemaker` @ `6e0166ceea2b`: full sweep **325/325 PASS**, 3 documented
 external-input skips, every graded effect still byte-exact at max-abs-diff 0. The sources of truth
 are `parity/sweep.sh`, `parity/corpus/sweep.sh`, and `tools/catalog.mjs`.*
 
@@ -209,6 +209,17 @@ Source-side: `noisefactorllc/noisemaker` `246ff57f43cc..0ed489ec4684` (a tearoff
   parity/sweep.sh`, mints golden + candidate together per the documented discipline above) and every
   candidate re-rendered and re-graded — **325/325 non-corpus programs (roster + mode matrix + the 4 new
   fixtures) byte-identical**, 3 skipped (`media`/`text`/`roll`, unchanged policy).
+
+## Vendor sync (2df19feb..6e0166ce)
+
+Source-side: `noisefactorllc/noisemaker` `2df19feb6ce1..6e0166ceea2b` (tearoff `ports-sync` job #275).
+`bash vendor/fetch.sh` re-pulled in place:
+
+- **Manifest: 213 effects** (unchanged count, 0 added, 0 removed).
+- **Engine core**: `noisemaker-shaders-core.esm.js` 831269 → 831934 bytes (CDN tag `6aaf9422-cb1be`).
+- **Upstream changes audit**: Upstream commit `6e0166ce` (release `v1.0.157`) updated `Pipeline.createSurfaces` and `Pipeline.recreateTextures` to check and enforce matching texture formats alongside dimensions. Same-size surfaces and regular textures are now cleanly recreated when MRT format budgeting or graph recompile changes their format, avoiding stale allocation reuse, and stale write-side surface formats are rejected during texture recreation.
+- **BabylonBackend compatibility & unit test coverage**: `BabylonBackend` already tracks format on texture records (`rec.format`) and disposes texture resources on `destroyTexture`. Added unit test coverage verifying that `Pipeline` paired with `BabylonBackend` recreates global surfaces and regular textures upon format change, rejects stale write textures, and preserves textures when formats and dimensions match.
+- **Verification**: All 36 unit and browser integration tests pass cleanly; parity fixtures verified byte-identical (max-abs-diff 0.000).
 
 ## Vendor sync (f1d2b46a..2df19feb)
 
