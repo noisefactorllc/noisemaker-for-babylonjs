@@ -23,7 +23,15 @@ class BudgetWebGL2 {
       FRAMEBUFFER_COMPLETE: 0x8cd5,
       FRAMEBUFFER_UNSUPPORTED: 0x8cdd,
       INVALID_FRAMEBUFFER_OPERATION: 0x0506,
-      NO_ERROR: 0
+      NO_ERROR: 0,
+      TEXTURE_MIN_FILTER: 0x2801,
+      TEXTURE_MAG_FILTER: 0x2800,
+      TEXTURE_WRAP_S: 0x2802,
+      TEXTURE_WRAP_T: 0x2803,
+      LINEAR: 0x2601,
+      CLAMP_TO_EDGE: 0x812f,
+      UNPACK_FLIP_Y_WEBGL: 0x9240,
+      UNSIGNED_BYTE: 0x1401
     })
     this.maxDrawBuffers = maxDrawBuffers
     this.maxTextureSize = maxTextureSize
@@ -35,6 +43,8 @@ class BudgetWebGL2 {
     this._boundTexture = null
     this._boundDrawFramebuffer = null
     this._boundReadFramebuffer = null
+    this.texParameters = []
+    this.pixelStore = {}
   }
 
   _object (kind) { return { kind, id: this._nextId++ } }
@@ -55,7 +65,18 @@ class BudgetWebGL2 {
   }
 
   bindTexture (_target, texture) { this._boundTexture = texture }
-  texImage2D (_target, _level, internalFormat) { this._boundTexture.internalFormat = internalFormat }
+  texImage2D (_target, _level, internalFormat, _format, _type, source) {
+    if (this._boundTexture) {
+      this._boundTexture.internalFormat = internalFormat
+      this._boundTexture.uploadedSource = source
+    }
+  }
+  texParameteri (target, pname, param) {
+    this.texParameters.push({ target, pname, param })
+  }
+  pixelStorei (pname, param) {
+    this.pixelStore[pname] = param
+  }
   deleteTexture (texture) { this.liveTextures.delete(texture) }
 
   createFramebuffer () {
@@ -98,10 +119,27 @@ function makeBackend (gl) {
   const backend = Object.create(BabylonBackend.prototype)
   const engine = {
     _gl: gl,
-    createRawTexture () { return { getEngine: () => engine } },
+    createRawTexture (data, width, height, format, generateMipMaps, invertY, samplingMode, compression, type) {
+      if (width === 1 && height === 1) {
+        return { getEngine: () => engine }
+      }
+      const texture = gl?.createTexture()
+      const internal = {
+        width,
+        height,
+        format,
+        type,
+        _hardwareTexture: { underlyingResource: texture },
+        dispose () { if (texture) gl?.deleteTexture(texture) },
+        getEngine: () => engine
+      }
+      return internal
+    },
     wipeCaches (force) { wipeCalls.push(force) }
   }
   backend.engine = engine
+  backend.gl = gl
+  backend.textures = new Map()
   backend.capabilities = {
     isMobile: false,
     floatBlend: true,
@@ -163,4 +201,163 @@ test('MRT attachment probing restores existing draw and read framebuffer binding
 
   assert.equal(gl.getParameter(gl.DRAW_FRAMEBUFFER_BINDING), drawFramebuffer)
   assert.equal(gl.getParameter(gl.READ_FRAMEBUFFER_BINDING), readFramebuffer)
+})
+
+test('updateTextureFromSource returns zero dimensions when gl context is absent', () => {
+  const { backend } = makeBackend(null)
+  backend.gl = null
+  const res = backend.updateTextureFromSource('tex', { width: 100, height: 100 })
+  assert.deepEqual(res, { width: 0, height: 0 })
+})
+
+test('updateTextureFromSource rejects unknown, invalid, or zero-sized sources', () => {
+  const gl = new BudgetWebGL2({ maxDrawBuffers: 4, maxTextureSize: 8192, maxColorBytesPerSample: 32 })
+  const { backend } = makeBackend(gl)
+
+  const origWarn = console.warn
+  console.warn = () => {}
+  try {
+    // Unknown source type (not VideoFrame, not Canvas/Image)
+    const resUnknown = backend.updateTextureFromSource('tex1', {})
+    assert.deepEqual(resUnknown, { width: 0, height: 0 })
+
+    class MockCanvas {
+      constructor (w, h) { this.width = w; this.height = h }
+    }
+    const prevCanvas = globalThis.OffscreenCanvas
+    globalThis.OffscreenCanvas = MockCanvas
+    try {
+      // Zero-sized canvas/image source
+      const resZero = backend.updateTextureFromSource('tex2', new MockCanvas(0, 100))
+      assert.deepEqual(resZero, { width: 0, height: 0 })
+      const resZeroH = backend.updateTextureFromSource('tex3', new MockCanvas(100, 0))
+      assert.deepEqual(resZeroH, { width: 0, height: 0 })
+    } finally {
+      if (prevCanvas) globalThis.OffscreenCanvas = prevCanvas
+      else delete globalThis.OffscreenCanvas
+    }
+  } finally {
+    console.warn = origWarn
+  }
+})
+
+test('updateTextureFromSource handles mock VideoFrame dimensions, rotation, and anamorphic scaling rejection', () => {
+  const gl = new BudgetWebGL2({ maxDrawBuffers: 4, maxTextureSize: 8192, maxColorBytesPerSample: 32 })
+  const { backend } = makeBackend(gl)
+
+  class MockVideoFrame {
+    constructor ({ displayWidth, displayHeight, visibleRect, rotation = 0 }) {
+      this.displayWidth = displayWidth
+      this.displayHeight = displayHeight
+      this.visibleRect = visibleRect
+      this.rotation = rotation
+    }
+  }
+
+  const prevVF = globalThis.VideoFrame
+  globalThis.VideoFrame = MockVideoFrame
+
+  try {
+    // 1. Plain VideoFrame
+    const plain = new MockVideoFrame({
+      displayWidth: 1920,
+      displayHeight: 1080,
+      visibleRect: { width: 1920, height: 1080 },
+      rotation: 0
+    })
+    const resPlain = backend.updateTextureFromSource('vf_plain', plain)
+    assert.deepEqual(resPlain, { width: 1920, height: 1080 })
+    assert.equal(backend.textures.has('vf_plain'), true)
+    const rec = backend.textures.get('vf_plain')
+    assert.equal(rec.width, 1920)
+    assert.equal(rec.height, 1080)
+    assert.equal(rec.isExternal, true)
+
+    // 2. Rotated 90 deg: display dimensions match rotated visible rect
+    const rot90 = new MockVideoFrame({
+      displayWidth: 1080,
+      displayHeight: 1920,
+      visibleRect: { width: 1920, height: 1080 },
+      rotation: 90
+    })
+    const res90 = backend.updateTextureFromSource('vf_rot90', rot90)
+    assert.deepEqual(res90, { width: 1080, height: 1920 })
+
+    // 3. Rotated 270 deg: display dimensions match rotated visible rect
+    const rot270 = new MockVideoFrame({
+      displayWidth: 1080,
+      displayHeight: 1920,
+      visibleRect: { width: 1920, height: 1080 },
+      rotation: 270
+    })
+    const res270 = backend.updateTextureFromSource('vf_rot270', rot270)
+    assert.deepEqual(res270, { width: 1080, height: 1920 })
+
+    // 4. Anamorphic display scaling rejection: display dimensions != visible rect dimensions
+    const anamorphic = new MockVideoFrame({
+      displayWidth: 1920,
+      displayHeight: 1080,
+      visibleRect: { width: 1440, height: 1080 },
+      rotation: 0
+    })
+    const resAnamorphic = backend.updateTextureFromSource('vf_ana', anamorphic)
+    assert.deepEqual(resAnamorphic, { width: 0, height: 0 })
+
+    // 5. Missing visibleRect rejection
+    const noRect = new MockVideoFrame({
+      displayWidth: 1920,
+      displayHeight: 1080,
+      visibleRect: null,
+      rotation: 0
+    })
+    const resNoRect = backend.updateTextureFromSource('vf_norect', noRect)
+    assert.deepEqual(resNoRect, { width: 0, height: 0 })
+  } finally {
+    if (prevVF) globalThis.VideoFrame = prevVF
+    else delete globalThis.VideoFrame
+  }
+})
+
+test('updateTextureFromSource recreates texture when dimensions change and applies flipY', () => {
+  const gl = new BudgetWebGL2({ maxDrawBuffers: 4, maxTextureSize: 8192, maxColorBytesPerSample: 32 })
+  const { backend } = makeBackend(gl)
+
+  class MockCanvas {
+    constructor (w, h) { this.width = w; this.height = h }
+  }
+  const prevCanvas = globalThis.OffscreenCanvas
+  globalThis.OffscreenCanvas = MockCanvas
+
+  try {
+    const source1 = new MockCanvas(64, 32)
+    const res1 = backend.updateTextureFromSource('tex', source1, { flipY: true })
+    assert.deepEqual(res1, { width: 64, height: 32 })
+    const initialRec = backend.textures.get('tex')
+    assert.equal(initialRec.width, 64)
+    assert.equal(initialRec.height, 32)
+    assert.equal(gl.pixelStore[gl.UNPACK_FLIP_Y_WEBGL], false) // reset to false after upload
+
+    // Re-upload with same dimensions reuses texture record
+    const resSame = backend.updateTextureFromSource('tex', source1, { flipY: false })
+    assert.deepEqual(resSame, { width: 64, height: 32 })
+    assert.equal(backend.textures.get('tex'), initialRec)
+
+    // Upload with changed dimensions replaces texture record
+    const source2 = new MockCanvas(128, 64)
+    const res2 = backend.updateTextureFromSource('tex', source2)
+    assert.deepEqual(res2, { width: 128, height: 64 })
+    const newRec = backend.textures.get('tex')
+    assert.notEqual(newRec, initialRec)
+    assert.equal(newRec.width, 128)
+    assert.equal(newRec.height, 64)
+
+    // Sampler state checks
+    assert.ok(gl.texParameters.some(p => p.pname === gl.TEXTURE_MIN_FILTER && p.param === gl.LINEAR))
+    assert.ok(gl.texParameters.some(p => p.pname === gl.TEXTURE_MAG_FILTER && p.param === gl.LINEAR))
+    assert.ok(gl.texParameters.some(p => p.pname === gl.TEXTURE_WRAP_S && p.param === gl.CLAMP_TO_EDGE))
+    assert.ok(gl.texParameters.some(p => p.pname === gl.TEXTURE_WRAP_T && p.param === gl.CLAMP_TO_EDGE))
+  } finally {
+    if (prevCanvas) globalThis.OffscreenCanvas = prevCanvas
+    else delete globalThis.OffscreenCanvas
+  }
 })

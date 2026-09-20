@@ -1,8 +1,8 @@
 # Noisemaker for Babylon.js — status & parity
 
-*Last verified 2026-09-19 against the published engine at CDN build tag `6aaecab1-caa0c`
-(`noisemaker-shaders-core.esm.js`, 829964 bytes, re-fetched via `vendor/fetch.sh`) — source-side
-`noisefactorllc/noisemaker` @ `f1d2b46a2773`: full sweep **325/325 PASS**, 3 documented
+*Last verified 2026-09-19 against the published engine at CDN build tag `6aaf425c-caf25`
+(`noisemaker-shaders-core.esm.js`, 831269 bytes, re-fetched via `vendor/fetch.sh`) — source-side
+`noisefactorllc/noisemaker` @ `2df19feb6ce1`: full sweep **325/325 PASS**, 3 documented
 external-input skips, every graded effect still byte-exact at max-abs-diff 0. The sources of truth
 are `parity/sweep.sh`, `parity/corpus/sweep.sh`, and `tools/catalog.mjs`.*
 
@@ -209,6 +209,17 @@ Source-side: `noisefactorllc/noisemaker` `246ff57f43cc..0ed489ec4684` (a tearoff
   parity/sweep.sh`, mints golden + candidate together per the documented discipline above) and every
   candidate re-rendered and re-graded — **325/325 non-corpus programs (roster + mode matrix + the 4 new
   fixtures) byte-identical**, 3 skipped (`media`/`text`/`roll`, unchanged policy).
+
+## Vendor sync (f1d2b46a..2df19feb)
+
+Source-side: `noisefactorllc/noisemaker` `f1d2b46a2773..2df19feb6ce1` (tearoff `ports-sync` job #259).
+`bash vendor/fetch.sh` re-pulled in place:
+
+- **Manifest: 213 effects** (unchanged count, 0 added, 0 removed).
+- **Engine core**: `noisemaker-shaders-core.esm.js` 829964 → 831269 bytes (CDN tag `6aaf425c-caf25`).
+- **Upstream changes audit**: Upstream commit `2df19feb` added support for borrowed `VideoFrame` in `updateTextureFromSource` on WebGL2 and WebGPU backends, validating display dimensions against visible rect to reject anamorphic display scaling and allowing callers to synchronously close frames after submission.
+- **BabylonBackend implementation**: Added `updateTextureFromSource(id, source, options = {})` in `src/runtime/babylonBackend.js` supporting `VideoFrame`, `HTMLVideoElement`, `HTMLImageElement`, `HTMLCanvasElement`/`OffscreenCanvas`, and `ImageBitmap`. Implemented visible rect and rotation checks matching WebGL2 reference semantics, dynamic texture allocation with Babylon `createRawTexture` / `ThinTexture`, and synchronous upload via `gl.texImage2D`.
+- **Verification**: All 34 unit and browser integration tests pass cleanly; borrowed `VideoFrame` upload and immediate frame closure verified in real headless Chromium WebGL2 context.
 
 ## Vendor sync (ead42a5d..f1d2b46a)
 

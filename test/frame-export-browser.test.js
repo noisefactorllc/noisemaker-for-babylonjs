@@ -90,3 +90,30 @@ test('Babylon frame export applies alpha modes to odd-width RGBA8 pixels in real
     await browser.close()
   }
 })
+
+test('BabylonBackend uploads borrowed VideoFrame and caller can close immediately', async () => {
+  await ensureBundle(false)
+  const browser = await chromium.launch({ headless: true, args: ['--disable-gpu-sandbox', '--use-angle=metal'] })
+
+  try {
+    const page = await browser.newPage()
+    await page.goto(pathToFileURL(INDEX_HTML).href)
+    await page.waitForFunction(() => window.nmReady === true, { timeout: 30000 })
+    const result = await page.evaluate(async () => window.nmRunVideoFrameUpload())
+
+    assert.equal(result.uploadedWidth, 4)
+    assert.equal(result.uploadedHeight, 2)
+    assert.equal(result.hasTexture, true)
+    assert.equal(result.recWidth, 4)
+    assert.equal(result.recHeight, 2)
+    assert.equal(result.readbackLength, 4 * 2 * 4)
+    assert.ok(result.firstPixelR > 200, `Expected red channel > 200, got ${result.firstPixelR}`)
+    assert.ok(result.firstPixelG < 50, `Expected green channel < 50, got ${result.firstPixelG}`)
+    assert.equal(result.rejectedWidth, 0)
+    assert.equal(result.rejectedHeight, 0)
+    assert.equal(result.rotWidth, 2)
+    assert.equal(result.rotHeight, 4)
+  } finally {
+    await browser.close()
+  }
+})

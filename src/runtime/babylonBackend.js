@@ -253,9 +253,124 @@ export class BabylonBackend {
       rec = this.createTexture(id, { width, height, format: 'rgba32f' })
     }
     const glTex = this._glTexOf(rec)
-    gl.bindTexture(gl.TEXTURE_2D, glTex)
-    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, height, gl.RGBA, gl.FLOAT, data)
-    gl.bindTexture(gl.TEXTURE_2D, null)
+    try {
+      gl.bindTexture(gl.TEXTURE_2D, glTex)
+      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, height, gl.RGBA, gl.FLOAT, data)
+    } finally {
+      gl.bindTexture(gl.TEXTURE_2D, null)
+      this.engine.resetTextureCache?.()
+    }
+  }
+
+  // External media texture upload (webgl2.js `updateTextureFromSource`): used by media input
+  // effects (camera/video content, asyncInit updateTexture, VideoFrame).
+  // Supports VideoFrame, HTMLVideoElement, HTMLImageElement, HTMLCanvasElement/OffscreenCanvas, ImageBitmap.
+  // Borrowed VideoFrames are submitted synchronously; frames requiring display-size scaling are
+  // rejected because native WebGL uploads visible pixels without scaling.
+  updateTextureFromSource (id, source, options = {}) {
+    const gl = this.gl
+    if (!gl) return { width: 0, height: 0 }
+    let rec = this.textures.get(id)
+
+    const flipY = options.flipY !== false
+
+    // Get source dimensions
+    let width, height
+    try {
+      if (typeof VideoFrame === 'function' && source instanceof VideoFrame) {
+        width = source.displayWidth
+        height = source.displayHeight
+        const rect = source.visibleRect
+        const rotated = source.rotation === 90 || source.rotation === 270
+        if (!rect || width !== (rotated ? rect.height : rect.width) ||
+            height !== (rotated ? rect.width : rect.height)) {
+          return { width: 0, height: 0 }
+        }
+      } else if (typeof HTMLVideoElement !== 'undefined' && source instanceof HTMLVideoElement) {
+        width = source.videoWidth
+        height = source.videoHeight
+      } else if (typeof HTMLImageElement !== 'undefined' && source instanceof HTMLImageElement) {
+        width = source.naturalWidth || source.width
+        height = source.naturalHeight || source.height
+      } else if (
+        (typeof HTMLCanvasElement !== 'undefined' && source instanceof HTMLCanvasElement) ||
+        (typeof OffscreenCanvas !== 'undefined' && source instanceof OffscreenCanvas) ||
+        (typeof ImageBitmap !== 'undefined' && source instanceof ImageBitmap)
+      ) {
+        width = source.width
+        height = source.height
+      } else {
+        console.warn(`[BabylonBackend] Unknown source type for ${id}`)
+        return { width: 0, height: 0 }
+      }
+    } catch {
+      return { width: 0, height: 0 }
+    }
+
+    if (width === 0 || height === 0) {
+      return { width: 0, height: 0 }
+    }
+
+    // Create texture if it doesn't exist or if dimensions changed
+    let glTex
+    if (!rec || rec.width !== width || rec.height !== height) {
+      if (rec) {
+        this.destroyTexture(id)
+      }
+
+      const internal = this.engine.createRawTexture(
+        null, width, height, Constants.TEXTUREFORMAT_RGBA,
+        false, false, Constants.TEXTURE_BILINEAR_SAMPLINGMODE, null, Constants.TEXTURETYPE_UNSIGNED_BYTE
+      )
+      internal.wrapU = Constants.TEXTURE_CLAMP_ADDRESSMODE
+      internal.wrapV = Constants.TEXTURE_CLAMP_ADDRESSMODE
+      const thin = new ThinTexture(internal)
+
+      rec = {
+        internal,
+        thin,
+        width,
+        height,
+        format: 'rgba8',
+        handle: thin,
+        isExternal: true
+      }
+      this.textures.set(id, rec)
+
+      glTex = this._glTexOf(rec)
+      if (glTex) {
+        gl.bindTexture(gl.TEXTURE_2D, glTex)
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+      }
+    } else {
+      glTex = this._glTexOf(rec)
+      if (glTex) {
+        gl.bindTexture(gl.TEXTURE_2D, glTex)
+      }
+    }
+
+    if (!glTex) return { width: 0, height: 0 }
+
+    try {
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY)
+      gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,
+        gl.RGBA,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        source
+      )
+    } finally {
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
+      gl.bindTexture(gl.TEXTURE_2D, null)
+      this.engine.resetTextureCache?.()
+    }
+
+    return { width, height }
   }
 
   destroyTexture (id) {
@@ -263,6 +378,7 @@ export class BabylonBackend {
     if (!rec) return
     try { rec.thin?.dispose?.() } catch { /* noop */ }
     try { rec.rtw?.dispose?.() } catch { /* noop */ }
+    try { rec.internal?.dispose?.() } catch { /* noop */ }
     this.textures.delete(id)
   }
 

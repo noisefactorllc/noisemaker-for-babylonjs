@@ -444,4 +444,78 @@ window.nmRunCubemapViaRenderer = async function (fat, opts = {}) {
   return out
 }
 
+window.nmRunVideoFrameUpload = async function () {
+  if (typeof VideoFrame !== 'function') throw new Error('VideoFrame not supported in this environment')
+  const canvas = document.createElement('canvas')
+  canvas.width = 4
+  canvas.height = 4
+  document.body.appendChild(canvas)
+
+  const engine = new Engine(canvas, false, {
+    preserveDrawingBuffer: true,
+    premultipliedAlpha: false,
+    alpha: false,
+    stencil: false,
+    antialias: false,
+    powerPreference: 'high-performance'
+  }, false)
+  const backend = new BabylonBackend(engine)
+
+  try {
+    await backend.init()
+
+    // 1. Plain VideoFrame
+    const srcCanvas = document.createElement('canvas')
+    srcCanvas.width = 4
+    srcCanvas.height = 2
+    const ctx = srcCanvas.getContext('2d')
+    ctx.fillStyle = '#ff0000'
+    ctx.fillRect(0, 0, 4, 2)
+
+    const frame = new VideoFrame(srcCanvas, { timestamp: 0 })
+    const dims = backend.updateTextureFromSource('cam', frame, { flipY: true })
+    // Synchronous release: caller owns frame and can close it immediately
+    frame.close()
+
+    const rec = backend.textures.get('cam')
+    const readback = await backend.readPixels('cam')
+
+    // 2. Anamorphic display scaling rejection
+    const scaledFrame = new VideoFrame(srcCanvas, {
+      timestamp: 1000,
+      displayWidth: 8,
+      displayHeight: 2
+    })
+    const rejectedDims = backend.updateTextureFromSource('cam_scaled', scaledFrame)
+    scaledFrame.close()
+
+    // 3. Rotated VideoFrame (90 deg)
+    const rotFrame = new VideoFrame(srcCanvas, {
+      timestamp: 2000,
+      rotation: 90
+    })
+    const rotDims = backend.updateTextureFromSource('cam_rot', rotFrame)
+    rotFrame.close()
+
+    return {
+      uploadedWidth: dims.width,
+      uploadedHeight: dims.height,
+      hasTexture: !!rec,
+      recWidth: rec?.width,
+      recHeight: rec?.height,
+      readbackLength: readback.data.length,
+      firstPixelR: readback.data[0],
+      firstPixelG: readback.data[1],
+      rejectedWidth: rejectedDims.width,
+      rejectedHeight: rejectedDims.height,
+      rotWidth: rotDims.width,
+      rotHeight: rotDims.height
+    }
+  } finally {
+    try { backend.destroy() } catch { /* noop */ }
+    try { engine.dispose() } catch { /* noop */ }
+    try { canvas.remove() } catch { /* noop */ }
+  }
+}
+
 window.nmReady = true
