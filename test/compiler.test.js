@@ -33,3 +33,34 @@ render(o0)`
     assert.ok(typeof shaderSource === 'string' && shaderSource.length > 0, `Program ${id} missing non-empty shader text`)
   }
 })
+
+test('compiler validates legacy MIDI note mode channels as static integers 1-16', async () => {
+  const { bootEngine } = await import('../vendor/engine.mjs')
+  await bootEngine()
+  const { compile } = await import('../vendor/noisemaker/noisemaker-shaders-core.esm.js')
+
+  const modes = ['noteChange', 'gateNote', 'gateVelocity', 'triggerNote', 'velocity']
+  for (const mode of modes) {
+    for (const channel of ['0', '17', '1.5', 'true', '"1"', 'osc()']) {
+      const compiled = compile(
+        `search synth\nnoise(scaleX: midi(channel: ${channel}, mode: midiMode.${mode})).write(o0)`
+      )
+      assert.ok(
+        compiled.diagnostics.some(d => d.code === 'S001' || d.code === 'S002'),
+        `${mode} channel ${channel} should produce validation diagnostic`
+      )
+      assert.equal(
+        compiled.plans[0].chain[0].args.scaleX._invalid,
+        true,
+        `${mode} channel ${channel} should mark descriptor inert`
+      )
+    }
+    for (const channel of [1, 16]) {
+      const compiled = compile(
+        `search synth\nnoise(scaleX: midi(channel: ${channel}, mode: midiMode.${mode})).write(o0)`
+      )
+      assert.equal(compiled.diagnostics.length, 0, `${mode} channel ${channel} should have 0 diagnostics`)
+      assert.equal(compiled.plans[0].chain[0].args.scaleX.channel, channel)
+    }
+  }
+})

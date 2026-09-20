@@ -1,8 +1,8 @@
 # Noisemaker for Babylon.js — status & parity
 
-*Last verified 2026-09-20 against the published engine at CDN build tag `6aaf9422-cb1be`
-(`noisemaker-shaders-core.esm.js`, 831934 bytes, re-fetched via `vendor/fetch.sh`) — source-side
-`noisefactorllc/noisemaker` @ `6e0166ceea2b`: full sweep **325/325 PASS**, 3 documented
+*Last verified 2026-09-20 against the published engine at CDN build tag `beabda38`
+(`noisemaker-shaders-core.esm.js`, 831854 bytes, re-fetched via `vendor/fetch.sh`) — source-side
+`noisefactorllc/noisemaker` @ `beabda385253`: full sweep **325/325 PASS**, 3 documented
 external-input skips, every graded effect still byte-exact at max-abs-diff 0. The sources of truth
 are `parity/sweep.sh`, `parity/corpus/sweep.sh`, and `tools/catalog.mjs`.*
 
@@ -209,6 +209,17 @@ Source-side: `noisefactorllc/noisemaker` `246ff57f43cc..0ed489ec4684` (a tearoff
   parity/sweep.sh`, mints golden + candidate together per the documented discipline above) and every
   candidate re-rendered and re-graded — **325/325 non-corpus programs (roster + mode matrix + the 4 new
   fixtures) byte-identical**, 3 skipped (`media`/`text`/`roll`, unchanged policy).
+
+## Vendor sync (6e0166ce..beabda38)
+
+Source-side: `noisefactorllc/noisemaker` `6e0166ceea2b..beabda385253` (tearoff `ports-sync` job #288).
+`bash vendor/fetch.sh` re-pulled in place:
+
+- **Manifest: 213 effects** (unchanged count, 0 added, 0 removed).
+- **Engine core**: `noisemaker-shaders-core.esm.js` 831934 → 831854 bytes (Build `beabda38`).
+- **Upstream changes audit**: Upstream commit `beabda38` (release `v1.0.158`, GAP-031) updated `compileAutomationDescriptor` in `validator.js` to unconditionally require static integer channels 1..16 for all channel-based MIDI modes (including legacy note modes `0..4`), emitting `S001`/`S002` diagnostics and producing an inert `_invalid: true` descriptor instead of silently accepting channel 0 or non-integers and falling back to channel 1 at runtime.
+- **Unit test coverage**: Added unit test coverage in `test/compiler.test.js` asserting that `compile` rejects invalid channels (`0`, `17`, `1.5`, `true`, `"1"`, `osc()`) with validation diagnostics and marks the descriptor inert for all legacy note modes (`noteChange`, `gateNote`, `gateVelocity`, `triggerNote`, `velocity`), while valid boundary channels 1 and 16 compile with 0 diagnostics.
+- **Verification**: All 37 unit and browser integration tests pass cleanly; parity fixtures verified byte-identical (max-abs-diff 0.000).
 
 ## Vendor sync (2df19feb..6e0166ce)
 
