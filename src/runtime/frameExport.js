@@ -157,6 +157,11 @@ export class FrameExportQueue {
     record.context = undefined
   }
 
+  _drop (record) {
+    if (record.pending) this.stats.dropped++
+    this._release(record)
+  }
+
   _destroySlots () {
     let firstError
 
@@ -166,7 +171,7 @@ export class FrameExportQueue {
       const adapterSlot = record.adapterSlot
       record.created = false
       record.adapterSlot = null
-      this._release(record)
+      this._drop(record)
       try {
         this.adapter.destroySlot(adapterSlot)
       } catch (error) {
@@ -180,7 +185,7 @@ export class FrameExportQueue {
     for (const record of this._slots) {
       record.created = false
       record.adapterSlot = null
-      this._release(record)
+      this._drop(record)
     }
   }
 

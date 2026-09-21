@@ -80,6 +80,7 @@ test('FrameExportQueue reconfigures reusable slots and rolls back partial alloca
   assert.throws(() => rollbackQueue.configure(first), /create 1 failed/)
   assert.deepEqual(errors, ['destroy 0 failed'])
   assert.equal(rollbackQueue.available, false)
+  assert.equal(rollbackQueue.stats.dropped, 0)
   assert.equal(rollbackQueue._slots.every(record => !record.created && record.adapterSlot === null), true)
 })
 
@@ -139,6 +140,24 @@ test('FrameExportQueue isolates adapter and callback failures while later slots 
   assert.equal(queue.stats.failed, 3)
 })
 
+test('FrameExportQueue reconfiguration drops only pending accepted frames before replacing slots', () => {
+  const adapter = new FakeAdapter()
+  const queue = new FrameExportQueue(adapter, { slots: 2 })
+  queue.configure({ width: 4, height: 4 })
+  queue.enqueue('completed', 10, () => {})
+  queue.enqueue('canceled', 20, () => assert.fail('reconfigured queue delivered a canceled callback'))
+  adapter.complete(0, 'frame')
+  queue.poll()
+
+  queue.configure({ width: 8, height: 8 })
+
+  assert.deepEqual(queue.stats, { accepted: 2, dropped: 1, completed: 1, failed: 0 })
+  assert.equal(queue.stats.accepted,
+    queue.stats.completed + queue.stats.failed + queue.stats.dropped)
+  assert.equal(queue.available, true)
+  assert.equal(queue.enqueue('replacement', 30, () => {}), true)
+})
+
 test('FrameExportQueue close destroys every slot once and backendLost abandons GPU state', () => {
   const adapter = new FakeAdapter()
   const queue = new FrameExportQueue(adapter, { slots: 2 })
@@ -151,7 +170,11 @@ test('FrameExportQueue close destroys every slot once and backendLost abandons G
   assert.deepEqual(adapter.slots.map(slot => slot.destroys), [1, 1])
   assert.equal(queue.adapter, null)
   assert.equal(queue.available, false)
+  assert.deepEqual(queue.stats, { accepted: 1, dropped: 1, completed: 0, failed: 0 })
+  assert.equal(queue.stats.accepted,
+    queue.stats.completed + queue.stats.failed + queue.stats.dropped)
   assert.equal(queue.enqueue('later', 2, () => {}), false)
+  assert.deepEqual(queue.stats, { accepted: 1, dropped: 2, completed: 0, failed: 0 })
 
   const lostAdapter = new FakeAdapter()
   const lostQueue = new FrameExportQueue(lostAdapter, { slots: 2 })
@@ -160,5 +183,8 @@ test('FrameExportQueue close destroys every slot once and backendLost abandons G
   lostQueue.close({ backendLost: true })
   assert.deepEqual(lostAdapter.slots.map(slot => slot.destroys), [0, 0])
   assert.equal(lostQueue.adapter, null)
+  assert.deepEqual(lostQueue.stats, { accepted: 1, dropped: 1, completed: 0, failed: 0 })
+  assert.equal(lostQueue.stats.accepted,
+    lostQueue.stats.completed + lostQueue.stats.failed + lostQueue.stats.dropped)
   assert.equal(lostQueue._slots.every(record => !record.created && !record.pending && record.adapterSlot === null), true)
 })

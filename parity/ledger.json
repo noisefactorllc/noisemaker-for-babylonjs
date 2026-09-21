@@ -72,24 +72,6 @@
     }
   },
   {
-    "program": "bc",
-    "effect": "filter/bc",
-    "mode": "default",
-    "golden": "parity/out/bc.golden.png",
-    "candidate": "parity/out/bc.candidate.png",
-    "status": "PASS",
-    "max_abs_diff": 0.0,
-    "mean_abs_diff": 0.0,
-    "ssim": 1.0,
-    "passed": true,
-    "skipped": false,
-    "policy": {
-      "tolerance": 0.0,
-      "ssim_min": 0.999,
-      "reason": "strict byte-exact comparison passed"
-    }
-  },
-  {
     "program": "billboard_flow",
     "effect": null,
     "mode": "default",
@@ -833,24 +815,6 @@
     "mode": "default",
     "golden": "parity/out/colorReplace.golden.png",
     "candidate": "parity/out/colorReplace.candidate.png",
-    "status": "PASS",
-    "max_abs_diff": 0.0,
-    "mean_abs_diff": 0.0,
-    "ssim": 1.0,
-    "passed": true,
-    "skipped": false,
-    "policy": {
-      "tolerance": 0.0,
-      "ssim_min": 0.999,
-      "reason": "strict byte-exact comparison passed"
-    }
-  },
-  {
-    "program": "colorspace",
-    "effect": "filter/colorspace",
-    "mode": "default",
-    "golden": "parity/out/colorspace.golden.png",
-    "candidate": "parity/out/colorspace.candidate.png",
     "status": "PASS",
     "max_abs_diff": 0.0,
     "mean_abs_diff": 0.0,
@@ -2309,24 +2273,6 @@
     "mode": "default",
     "golden": "parity/out/historicPalette.golden.png",
     "candidate": "parity/out/historicPalette.candidate.png",
-    "status": "PASS",
-    "max_abs_diff": 0.0,
-    "mean_abs_diff": 0.0,
-    "ssim": 1.0,
-    "passed": true,
-    "skipped": false,
-    "policy": {
-      "tolerance": 0.0,
-      "ssim_min": 0.999,
-      "reason": "strict byte-exact comparison passed"
-    }
-  },
-  {
-    "program": "hs",
-    "effect": "filter/hs",
-    "mode": "default",
-    "golden": "parity/out/hs.golden.png",
-    "candidate": "parity/out/hs.candidate.png",
     "status": "PASS",
     "max_abs_diff": 0.0,
     "mean_abs_diff": 0.0,

@@ -1,8 +1,8 @@
 # Noisemaker for Babylon.js — status & parity
 
-*Last verified 2026-09-20 against the published engine at CDN build tag `beabda38`
-(`noisemaker-shaders-core.esm.js`, 831854 bytes, re-fetched via `vendor/fetch.sh`) — source-side
-`noisefactorllc/noisemaker` @ `beabda385253`: full sweep **325/325 PASS**, 3 documented
+*Last verified 2026-09-20 against the published engine at CDN build tag `2f855c9c`
+(`noisemaker-shaders-core.esm.js`, 831943 bytes, re-fetched via `vendor/fetch.sh`) — source-side
+`noisefactorllc/noisemaker` @ `2f855c9c93da`: full sweep **322/322 PASS**, 3 documented
 external-input skips, every graded effect still byte-exact at max-abs-diff 0. The sources of truth
 are `parity/sweep.sh`, `parity/corpus/sweep.sh`, and `tools/catalog.mjs`.*
 
@@ -11,8 +11,8 @@ see the [README](README.md).
 
 ## Coverage
 
-**213 catalogued effects** (`tools/catalog.mjs`) — up from 210. This round's `vendor/fetch.sh` pulled
-in upstream's landscape/heightfield release: **3 new effects** — `synth3d/heightmap3d` (a heightfield
+**210 catalogued effects** (`tools/catalog.mjs`) — down from 213 after consumer migration and retirement
+of expired deprecated effects `filter/bc`, `filter/hs`, and `filter/colorspace`. Upstream's previous landscape/heightfield release: **3 new effects** — `synth3d/heightmap3d` (a heightfield
 generator: separate height + diffuse 2D surfaces baked into the 64×4096 volume atlas), `render/renderLandscape3d`
 (isometric/perspective voxel raymarch with face lighting, the `heightmap3d` consumer), and
 `points/heightGrid` (arranges every `pointsEmit` slot into a deterministic XZ grid with height-mapped
@@ -209,6 +209,22 @@ Source-side: `noisefactorllc/noisemaker` `246ff57f43cc..0ed489ec4684` (a tearoff
   parity/sweep.sh`, mints golden + candidate together per the documented discipline above) and every
   candidate re-rendered and re-graded — **325/325 non-corpus programs (roster + mode matrix + the 4 new
   fixtures) byte-identical**, 3 skipped (`media`/`text`/`roll`, unchanged policy).
+
+## Vendor sync (beabda38..2f855c9c)
+
+Source-side: `noisefactorllc/noisemaker` `beabda385253..2f855c9c93da` (tearoff `ports-sync` job #295).
+`bash vendor/fetch.sh` re-pulled in place:
+
+- **Manifest: 210 effects** (down from 213; removed expired deprecated effects `filter/bc`, `filter/hs`, and `filter/colorspace` after consumer migration).
+- **Engine core**: `noisemaker-shaders-core.esm.js` 831854 → 831943 bytes (Build `2f855c9c`).
+- **Upstream changes audit**:
+  - Upstream commit `0139e958` (release `v1.0.159`, GAP-028) updated `FrameExportQueue` to count pending accepted frames as `dropped` when slots are destroyed or abandoned during reconfiguration or closure (`_drop(record)`).
+  - Upstream commit `2f855c9c` (release `v1.0.161`) removed expired `bc`, `hs`, and `colorspace` effects from the shader catalog, manifest, and localized strings.
+- **Babylon runtime & test coverage**:
+  - Updated `src/runtime/frameExport.js` with `_drop(record)` helper invoked in `_destroySlots()` and `_abandonSlots()` to account for dropped pending frames.
+  - Added unit test coverage in `test/frame-export-queue.test.js` verifying reconfiguration drops only pending accepted frames, and `close()` / `close({ backendLost: true })` record dropped pending frames.
+  - Retired `bc`, `hs`, and `colorspace` from `parity/catalog.json`, `parity/programs/`, `parity/out/`, and `parity/ledger.json`.
+- **Verification**: All 38 unit and browser integration tests pass cleanly; parity ledger verified at 325 total (322 PASS, 3 documented skips).
 
 ## Vendor sync (6e0166ce..beabda38)
 
