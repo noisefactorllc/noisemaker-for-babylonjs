@@ -15,6 +15,7 @@ import { pathToFileURL } from 'node:url'
 import { chromium } from 'playwright'
 import { exportFatGraph } from '../tools/export-fat-graph.mjs'
 import { ROOT, INDEX_HTML, encodePNG, ensureBundle } from './render-candidate.mjs'
+import { currentPrograms } from './current-programs.mjs'
 
 // Effects that need TIME EVOLUTION to a steady state rather than a pinned frame: continuous
 // solvers (Gray-Scott / Navier-Stokes). Run ~30s at the demo's natural rate (1/600 normalized
@@ -72,6 +73,7 @@ async function main () {
       .filter(f => f.endsWith('.dsl')).map(f => f.slice(0, -4))
       .filter(n => existsSync(join(ROOT, 'parity', 'out', `${n}.golden.png`)))
       .sort()
+    names = currentPrograms(names)
   }
 
   await ensureBundle(false)
@@ -85,8 +87,8 @@ async function main () {
 
     for (const name of names) {
       const dslPath = join(ROOT, 'parity', 'programs', `${name}.dsl`)
-      if (!existsSync(dslPath)) continue
       try {
+        if (!existsSync(dslPath)) throw new Error(`unknown parity fixture: ${name}`)
         const fat = await exportFatGraph(readFileSync(dslPath, 'utf8'))
         const ev = EVOLVE[name]
         const opts = { size: o.size, time: o.time, frames: ev ? ev.frames : o.frames, timestep: ev ? ev.timestep : (o.timestep || 0) }
@@ -104,6 +106,7 @@ async function main () {
     await browser.close()
   }
   process.stderr.write(`[batch] rendered ${ok}/${names.length}, errored ${err}${failed.length ? ' — ' + failed.join(' ') : ''}\n`)
+  if (err > 0) process.exitCode = 1
 }
 
 main().catch(e => { process.stderr.write('[render-batch] FAILED: ' + (e?.stack || e) + '\n'); process.exit(1) })

@@ -26,12 +26,18 @@ class SweepContractTests(unittest.TestCase):
         ledger_writer = REPO / "parity" / "write-ledger.py"
         if ledger_writer.exists():
             shutil.copy2(ledger_writer, self.root / "parity" / "write-ledger.py")
+        shutil.copy2(REPO / "parity" / "current-programs.mjs", self.root / "parity" / "current-programs.mjs")
+        manifest = self.root / "vendor" / "noisemaker" / "effects" / "manifest.json"
+        manifest.parent.mkdir(parents=True)
+        manifest.write_text('{"filter/adjust": {}}')
         self.test_ledger = self.root / "parity" / "ledger.test.json"
 
     def tearDown(self):
         self.tempdir.cleanup()
 
     def _write_executable(self, path, body):
+        if path.name == "node":
+            body = f'if [ "$1" = parity/current-programs.mjs ]; then exec "{shutil.which("node")}" "$@"; fi\n' + body
         path.write_text("#!/usr/bin/env bash\n" + body)
         path.chmod(0o755)
 
@@ -221,6 +227,25 @@ class SweepContractTests(unittest.TestCase):
         self.assertIn("no current golden", result.stdout.lower())
         ledger = json.loads((self.root / "parity" / "ledger.json").read_text())
         self.assertEqual(ledger[0]["program"], "missingGolden")
+        self.assertEqual(ledger[0]["status"], "FAIL")
+
+    def test_full_sweep_retires_removed_fixtures_without_fabricating_coverage(self):
+        programs = self.root / "parity" / "programs"
+        programs.mkdir()
+        for name in ("bc", "hs", "colorspace", "requiredUnknown"):
+            (programs / f"{name}.dsl").write_text("noise().write(o0)\n")
+        self._write_executable(self.root / "bin" / "node", 'printf "%s\\n" "$@" > renderer-args\nexit 1\n')
+        result = subprocess.run(
+            ["bash", str(self.root / "parity" / "sweep.sh")], cwd=self.root,
+            env={**os.environ, "PATH": f"{self.root / 'bin'}:{os.environ['PATH']}"},
+            capture_output=True, text=True,
+        )
+        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual((self.root / "renderer-args").read_text().splitlines(), ["parity/render-batch.mjs", "requiredUnknown"])
+        for name in ("bc", "hs", "colorspace"):
+            self.assertIn(f"[RETIRED] {name}:", result.stderr)
+        ledger = json.loads((self.root / "parity" / "ledger.json").read_text())
+        self.assertEqual([row["program"] for row in ledger], ["requiredUnknown"])
         self.assertEqual(ledger[0]["status"], "FAIL")
 
     def test_renderer_nonzero_with_a_current_candidate_cannot_pass(self):

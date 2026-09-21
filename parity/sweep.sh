@@ -55,7 +55,15 @@ if [[ $# -gt 0 ]]; then
   fi
 else
   NAMES=()
-  for dsl in parity/programs/*.dsl; do n="$(basename "$dsl" .dsl)"; [[ "$n" == corpus_* ]] && continue; NAMES+=("$n"); done
+  if ! roster=$(node parity/current-programs.mjs); then
+    echo "[FAIL] could not read the current engine fixture roster"
+    exit 1
+  fi
+  while IFS= read -r n; do [[ -n "$n" ]] && NAMES+=("$n"); done <<< "$roster"
+  if [[ ${#NAMES[@]} -eq 0 ]]; then
+    echo "[FAIL] no current parity fixtures found"
+    exit 1
+  fi
 fi
 
 # Render all candidates in ONE browser session. NM_DUAL=1 refreshes both the
