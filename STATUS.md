@@ -1,8 +1,8 @@
 # Noisemaker for Babylon.js — status & parity
 
-*Last verified 2026-09-20 against the published engine at CDN build tag `2f855c9c`
-(`noisemaker-shaders-core.esm.js`, 831943 bytes, re-fetched via `vendor/fetch.sh`) — source-side
-`noisefactorllc/noisemaker` @ `2f855c9c93da`: full sweep **322/322 PASS**, 3 documented
+*Last verified 2026-09-21 against the published engine at CDN build tag `50b8f909`
+(`noisemaker-shaders-core.esm.js`, 832252 bytes, re-fetched via `vendor/fetch.sh`) — source-side
+`noisefactorllc/noisemaker` @ `50b8f909ff59`: full sweep **322/322 PASS**, 3 documented
 external-input skips, every graded effect still byte-exact at max-abs-diff 0. The sources of truth
 are `parity/sweep.sh`, `parity/corpus/sweep.sh`, and `tools/catalog.mjs`.*
 
@@ -209,6 +209,20 @@ Source-side: `noisefactorllc/noisemaker` `246ff57f43cc..0ed489ec4684` (a tearoff
   parity/sweep.sh`, mints golden + candidate together per the documented discipline above) and every
   candidate re-rendered and re-graded — **325/325 non-corpus programs (roster + mode matrix + the 4 new
   fixtures) byte-identical**, 3 skipped (`media`/`text`/`roll`, unchanged policy).
+
+## Vendor sync (2f855c9c..50b8f909)
+
+Source-side: `noisefactorllc/noisemaker` `2f855c9c93da..50b8f909ff59` (tearoff `ports-sync` job #314).
+`bash vendor/fetch.sh` re-pulled in place:
+
+- **Manifest: 210 effects** (unchanged count, 0 added, 0 removed).
+- **Engine core**: `noisemaker-shaders-core.esm.js` 831943 → 832252 bytes (Build `50b8f909`).
+- **Upstream changes audit**:
+  - Upstream commit `50b8f909` (release `v1.0.164`) enforced DSL output surface reference range `o0-o7` in `shaders/src/lang/lexer.js`, rejecting references outside `o0-o7` in all DSL positions (render target, read source, write target) with a descriptive `SyntaxError`, while preserving member segment property accesses (e.g. `foo.o8`) and other reference families.
+  - Upstream commit `f61ac073` (release `v1.0.163`) added 32-channel discrete modulation and crosstalk isolation tests for audio routing.
+- **Babylon test coverage**:
+  - Added unit test coverage in `test/compiler.test.js` asserting that `compile` rejects out-of-range output surface references (`o8`, `o99`, `o10`) with `SyntaxError`, verifies boundary references `o0` and `o7`, and preserves member segment property accesses.
+- **Verification**: All 42 unit and integration tests pass cleanly; parity ledger verified at 325 total (322 PASS, 3 documented skips).
 
 ## Vendor sync (beabda38..2f855c9c)
 

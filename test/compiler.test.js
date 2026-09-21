@@ -64,3 +64,39 @@ test('compiler validates legacy MIDI note mode channels as static integers 1-16'
     }
   }
 })
+
+test('compiler enforces output surface reference range o0-o7', async () => {
+  const { bootEngine } = await import('../vendor/engine.mjs')
+  await bootEngine()
+  const { compile } = await import('../vendor/noisemaker/noisemaker-shaders-core.esm.js')
+
+  const outOfRangeCases = [
+    { name: 'render target', source: 'search synth\nrender(o8)' },
+    { name: 'read source', source: 'search synth\nread(o99).write(o0)' },
+    { name: 'write target', source: 'search synth\nread(o0).write(o10)' }
+  ]
+
+  for (const { name, source } of outOfRangeCases) {
+    assert.throws(
+      () => compile(source),
+      (err) => err instanceof SyntaxError && /Output surface reference 'o\d+' is out of range; expected o0-o7/.test(err.message),
+      `${name} should throw SyntaxError for out-of-range output surface`
+    )
+  }
+
+  const compiled = compile('search synth\nread(o0).write(o7)\nrender(o7)')
+  assert.deepEqual(compiled.plans[0].chain[0].args.tex, { kind: 'output', name: 'o0' })
+  assert.deepEqual(compiled.plans[0].write, { kind: 'output', name: 'o7' })
+  assert.equal(compiled.render, 'o7')
+
+  const memberCompiled = compile(`search synth
+let low = foo.o0
+let high = foo.o7
+let extended = foo.o8
+let many = foo.o99`)
+  assert.deepEqual(
+    memberCompiled.vars.map(({ expr }) => expr.path),
+    [['foo', 'o0'], ['foo', 'o7'], ['foo', 'o8'], ['foo', 'o99']]
+  )
+})
+
