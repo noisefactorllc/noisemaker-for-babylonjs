@@ -145,6 +145,8 @@ Two runnable demos (`node examples/build.mjs`, then open the HTML):
 
 Coverage table, parity numbers, and known limits: **[STATUS.md](STATUS.md)**.
 
+Current audit gaps: **[docs/COMPLETION_GAPS.md](docs/COMPLETION_GAPS.md)**.
+
 ## How it works
 
 Noisemaker turns a DSL program into a **render graph** — a normalized list of GPU passes. That graph
