@@ -1,8 +1,8 @@
 # Noisemaker for Babylon.js — status & parity
 
-*Last verified 2026-09-21 against the published engine at CDN build tag `50b8f909`
-(`noisemaker-shaders-core.esm.js`, 832252 bytes, re-fetched via `vendor/fetch.sh`) — source-side
-`noisefactorllc/noisemaker` @ `50b8f909ff59`: full sweep **322/322 PASS**, 3 documented
+*Last verified 2026-09-21 against the published engine at CDN build tag `68d37721`
+(`noisemaker-shaders-core.esm.js`, 832303 bytes, re-fetched via `vendor/fetch.sh`) — source-side
+`noisefactorllc/noisemaker` @ `68d37721091a`: full sweep **322/322 PASS**, 3 documented
 external-input skips, every graded effect still byte-exact at max-abs-diff 0. The sources of truth
 are `parity/sweep.sh`, `parity/corpus/sweep.sh`, and `tools/catalog.mjs`.*
 
@@ -209,6 +209,19 @@ Source-side: `noisefactorllc/noisemaker` `246ff57f43cc..0ed489ec4684` (a tearoff
   parity/sweep.sh`, mints golden + candidate together per the documented discipline above) and every
   candidate re-rendered and re-graded — **325/325 non-corpus programs (roster + mode matrix + the 4 new
   fixtures) byte-identical**, 3 skipped (`media`/`text`/`roll`, unchanged policy).
+
+## Vendor sync (50b8f909..68d37721)
+
+Source-side: `noisefactorllc/noisemaker` `50b8f909ff59..68d37721091a` (tearoff `ports-sync` job #332).
+`bash vendor/fetch.sh` re-pulled in place:
+
+- **Manifest: 210 effects** (unchanged count, 0 added, 0 removed).
+- **Engine core**: `noisemaker-shaders-core.esm.js` 832252 → 832303 bytes (Build `68d37721`).
+- **Upstream changes audit**:
+  - Upstream commit `68d37721` (release `v1.0.165`) updated `shaders/src/lang/transform.js` to exclude builtin steps from mutation introspection (`listSteps` skips `step.builtin`, and `findStepByIndex` ignores builtin steps so `replaceEffect` and `getCompatibleReplacements` fail with descriptive not-found errors when given a builtin step index).
+- **Babylon test coverage**:
+  - Added unit test coverage in `test/compiler.test.js` asserting that `listSteps` excludes builtin pipeline steps, and `replaceEffect` and `getCompatibleReplacements` reject builtin step indices with descriptive not-found errors.
+- **Verification**: All 43 unit and integration tests pass cleanly; parity ledger verified at 325 total (322 PASS, 3 documented skips).
 
 ## Vendor sync (2f855c9c..50b8f909)
 

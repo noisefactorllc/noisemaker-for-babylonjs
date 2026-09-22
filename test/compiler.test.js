@@ -100,3 +100,28 @@ let many = foo.o99`)
   )
 })
 
+test('mutation introspection excludes builtin pipeline steps', async () => {
+  const { bootEngine } = await import('../vendor/engine.mjs')
+  await bootEngine()
+  const { compile, listSteps, replaceEffect, getCompatibleReplacements } = await import('../vendor/noisemaker/noisemaker-shaders-core.esm.js')
+
+  const compiled = compile('search synth, filter\nnoise(10).bloom(0.5).write(o0)')
+  const steps = listSteps(compiled)
+
+  assert.equal(steps.length, 2, 'Should have 2 editable effect steps')
+  assert.equal(steps[0].effectName, 'synth.noise')
+  assert.equal(steps[0].stepIndex, 0)
+  assert.equal(steps[1].effectName, 'filter.bloom')
+  assert.equal(steps[1].stepIndex, 1)
+
+  const builtinStep = compiled.plans[0].chain.find(step => step.builtin)
+  assert.ok(builtinStep, 'Compiled plan should contain a builtin blit/write step')
+
+  const replaceResult = replaceEffect(compiled, builtinStep.temp, 'blur')
+  assert.equal(replaceResult.success, false)
+  assert.equal(replaceResult.error, `Step with index ${builtinStep.temp} not found`)
+
+  const compatResult = getCompatibleReplacements(compiled, builtinStep.temp)
+  assert.equal(compatResult.success, false)
+  assert.equal(compatResult.error, `Step with index ${builtinStep.temp} not found`)
+})
