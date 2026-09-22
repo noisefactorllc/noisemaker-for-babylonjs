@@ -144,3 +144,62 @@ test('DSL diagnostics preserve source columns across compiler positions', async 
   assert.deepEqual(inlineReadDiag.location, { line: 3, column: 13 })
 })
 
+test('structured DSL lexer diagnostics attach diagnostic metadata to thrown SyntaxError', async () => {
+  const { bootEngine } = await import('../vendor/engine.mjs')
+  await bootEngine()
+  const { compile, lex } = await import('../vendor/noisemaker/noisemaker-shaders-core.esm.js')
+
+  const cases = [
+    {
+      source: '@',
+      code: 'L001',
+      stage: 'lexer',
+      severity: 'error',
+      message: "Unexpected character '@' at line 1 col 1",
+      location: { line: 1, column: 1 },
+      span: { start: 0, end: 1 },
+    },
+    {
+      source: '"unterminated',
+      code: 'L002',
+      stage: 'lexer',
+      severity: 'error',
+      message: 'Unterminated string literal at line 1 col 1',
+      location: { line: 1, column: 1 },
+      span: { start: 0, end: 13 },
+    },
+    {
+      source: '/* unclosed',
+      code: 'L003',
+      stage: 'lexer',
+      severity: 'error',
+      message: 'Unterminated comment at line 1 col 1',
+      location: { line: 1, column: 1 },
+      span: { start: 0, end: 11 },
+    },
+    {
+      source: 'search synth\nrender(o99)',
+      code: 'L004',
+      stage: 'lexer',
+      severity: 'error',
+      message: "Output surface reference 'o99' is out of range; expected o0-o7 at line 2 col 8",
+      location: { line: 2, column: 8 },
+      span: { start: 20, end: 23 },
+    },
+  ]
+
+  for (const { source, code, stage, severity, message, location, span } of cases) {
+    for (const entryPoint of [lex, compile]) {
+      assert.throws(
+        () => entryPoint(source),
+        (err) => {
+          assert.equal(err.name, 'SyntaxError')
+          assert.equal(err.message, message)
+          assert.deepEqual(err.diagnostic, { code, stage, severity, message, location, span })
+          return true
+        }
+      )
+    }
+  }
+})
+

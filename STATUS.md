@@ -1,8 +1,8 @@
 # Noisemaker for Babylon.js — status & parity
 
-*Last verified 2026-09-22 against the published engine at CDN build tag `e5bd2013`
-(`noisemaker-shaders-core.esm.js`, 832319 bytes, re-fetched via `vendor/fetch.sh`) — source-side
-`noisefactorllc/noisemaker` @ `e5bd2013087e`: full sweep **322/322 PASS**, 3 documented
+*Last verified 2026-09-22 against the published engine at CDN build tag `643b2be1`
+(`noisemaker-shaders-core.esm.js`, 833120 bytes, re-fetched via `vendor/fetch.sh`) — source-side
+`noisefactorllc/noisemaker` @ `643b2be1e28b`: full sweep **322/322 PASS**, 3 documented
 external-input skips, every graded effect still byte-exact at max-abs-diff 0. The sources of truth
 are `parity/sweep.sh`, `parity/corpus/sweep.sh`, and `tools/catalog.mjs`.*
 
@@ -209,6 +209,19 @@ Source-side: `noisefactorllc/noisemaker` `246ff57f43cc..0ed489ec4684` (a tearoff
   parity/sweep.sh`, mints golden + candidate together per the documented discipline above) and every
   candidate re-rendered and re-graded — **325/325 non-corpus programs (roster + mode matrix + the 4 new
   fixtures) byte-identical**, 3 skipped (`media`/`text`/`roll`, unchanged policy).
+
+## Vendor sync (e5bd2013..643b2be1)
+
+Source-side: `noisefactorllc/noisemaker` `e5bd2013087e..643b2be1e28b` (tearoff `ports-sync` job #363).
+`bash vendor/fetch.sh` re-pulled in place:
+
+- **Manifest: 210 effects** (unchanged count, 0 added, 0 removed).
+- **Engine core**: `noisemaker-shaders-core.esm.js` 832319 → 833120 bytes (Build `643b2be1`).
+- **Upstream changes audit**:
+  - Upstream commit `643b2be1` (release `v1.0.167`) updated `shaders/src/lang/lexer.js` and `shaders/src/lang/diagnostics.js` to expose structured DSL lexer diagnostics (`L001` unexpected character, `L002` unterminated string literal, `L003` unterminated comment, `L004` output surface reference out of range) with exact `location` and `span` coordinates attached to thrown `SyntaxError.diagnostic`.
+- **Babylon test coverage**:
+  - Added unit test coverage in `test/compiler.test.js` asserting that lexer errors thrown by `lex` and `compile` attach structured `diagnostic` properties matching the `L001`–`L004` diagnostic specifications.
+- **Verification**: All 45 unit and integration tests pass cleanly; parity ledger verified at 325 total (322 PASS, 3 documented skips).
 
 ## Vendor sync (68d37721..e5bd2013)
 
