@@ -203,3 +203,61 @@ test('structured DSL lexer diagnostics attach diagnostic metadata to thrown Synt
   }
 })
 
+test('compiler specializes landscape isosurface define and preserves voxel default', async () => {
+  const cases = [
+    {
+      dsl: 'search synth, synth3d, render\nheightmap3d().renderLandscape3d().write(o0)\nrender(o0)',
+      expectedFiltering: 1,
+      expectedViewMode: 1
+    },
+    {
+      dsl: 'search synth, synth3d, render\nheightmap3d().renderLandscape3d(filtering: isosurface).write(o0)\nrender(o0)',
+      expectedFiltering: 0,
+      expectedViewMode: 1
+    },
+    {
+      dsl: 'search synth, synth3d, render\nheightmap3d().renderLandscape3d(filtering: voxel).write(o0)\nrender(o0)',
+      expectedFiltering: 1,
+      expectedViewMode: 1
+    },
+    {
+      dsl: 'search synth, synth3d, render\nheightmap3d().renderLandscape3d(filtering: isosurface, viewMode: perspective).write(o0)\nrender(o0)',
+      expectedFiltering: 0,
+      expectedViewMode: 2
+    }
+  ]
+
+  for (const { dsl, expectedFiltering, expectedViewMode } of cases) {
+    const fat = await exportFatGraph(dsl)
+    const landscapePass = fat.passes.find(p => p.effectFunc === 'renderLandscape3d')
+    assert.ok(landscapePass, 'Fat graph must contain renderLandscape3d pass')
+
+    const program = fat.programs[landscapePass.program]
+    assert.ok(program, `Program ${landscapePass.program} must exist`)
+    assert.equal(
+      program.defines.FILTERING,
+      expectedFiltering,
+      `FILTERING define must be specialized to ${expectedFiltering}`
+    )
+    assert.equal(
+      program.defines.VIEW_MODE,
+      expectedViewMode,
+      `VIEW_MODE define must be specialized to ${expectedViewMode}`
+    )
+    assert.ok(
+      !Object.keys(program.uniforms || {}).includes('filtering'),
+      'filtering must be a compile-time define, not a runtime uniform'
+    )
+
+    const shaderSource = program.fragment || program.glsl
+    assert.ok(
+      typeof shaderSource === 'string' && shaderSource.length > 0,
+      'Landscape program must have non-empty shader source'
+    )
+    assert.ok(
+      shaderSource.includes('traceIsosurface'),
+      'Landscape shader source must include traceIsosurface'
+    )
+  }
+})
+
