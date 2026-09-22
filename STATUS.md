@@ -1,8 +1,8 @@
 # Noisemaker for Babylon.js — status & parity
 
-*Last verified 2026-09-21 against the published engine at CDN build tag `68d37721`
-(`noisemaker-shaders-core.esm.js`, 832303 bytes, re-fetched via `vendor/fetch.sh`) — source-side
-`noisefactorllc/noisemaker` @ `68d37721091a`: full sweep **322/322 PASS**, 3 documented
+*Last verified 2026-09-22 against the published engine at CDN build tag `e5bd2013`
+(`noisemaker-shaders-core.esm.js`, 832319 bytes, re-fetched via `vendor/fetch.sh`) — source-side
+`noisefactorllc/noisemaker` @ `e5bd2013087e`: full sweep **322/322 PASS**, 3 documented
 external-input skips, every graded effect still byte-exact at max-abs-diff 0. The sources of truth
 are `parity/sweep.sh`, `parity/corpus/sweep.sh`, and `tools/catalog.mjs`.*
 
@@ -209,6 +209,19 @@ Source-side: `noisefactorllc/noisemaker` `246ff57f43cc..0ed489ec4684` (a tearoff
   parity/sweep.sh`, mints golden + candidate together per the documented discipline above) and every
   candidate re-rendered and re-graded — **325/325 non-corpus programs (roster + mode matrix + the 4 new
   fixtures) byte-identical**, 3 skipped (`media`/`text`/`roll`, unchanged policy).
+
+## Vendor sync (68d37721..e5bd2013)
+
+Source-side: `noisefactorllc/noisemaker` `68d37721091a..e5bd2013087e` (tearoff `ports-sync` job #349).
+`bash vendor/fetch.sh` re-pulled in place:
+
+- **Manifest: 210 effects** (unchanged count, 0 added, 0 removed).
+- **Engine core**: `noisemaker-shaders-core.esm.js` 832303 → 832319 bytes (Build `e5bd2013`).
+- **Upstream changes audit**:
+  - Upstream commit `e5bd2013` (release `v1.0.166`) updated `shaders/src/lang/validator.js` to preserve source column information in compilation diagnostics (`column: loc?.column ?? loc?.col`), ensuring diagnostic locations include accurate 1-indexed column offsets alongside line numbers.
+- **Babylon test coverage**:
+  - Added unit test coverage in `test/compiler.test.js` asserting that `compile` diagnostics preserve exact 1-indexed source column locations across diagnostic positions.
+- **Verification**: All 44 unit and integration tests pass cleanly; parity ledger verified at 325 total (322 PASS, 3 documented skips).
 
 ## Vendor sync (50b8f909..68d37721)
 

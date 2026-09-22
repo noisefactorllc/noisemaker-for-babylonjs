@@ -125,3 +125,22 @@ test('mutation introspection excludes builtin pipeline steps', async () => {
   assert.equal(compatResult.success, false)
   assert.equal(compatResult.error, `Step with index ${builtinStep.temp} not found`)
 })
+
+test('DSL diagnostics preserve source columns across compiler positions', async () => {
+  const { bootEngine } = await import('../vendor/engine.mjs')
+  await bootEngine()
+  const { compile } = await import('../vendor/noisemaker/noisemaker-shaders-core.esm.js')
+
+  const result = compile('search synth\n  read(123).write(o0)')
+  const diagSummary = result.diagnostics.map(({ code, location }) => ({ code, location }))
+  assert.deepEqual(diagSummary, [
+    { code: 'S001', location: { line: 2, column: 3 } },
+    { code: 'S005', location: { line: 2, column: 13 } },
+  ])
+
+  const inlineReadResult = compile('search synth\n\n    noise().read(o0).write(o1)')
+  const inlineReadDiag = inlineReadResult.diagnostics.find((d) => d.code === 'S001')
+  assert.ok(inlineReadDiag, 'inline read produces S001 diagnostic')
+  assert.deepEqual(inlineReadDiag.location, { line: 3, column: 13 })
+})
+
