@@ -3,7 +3,7 @@
 ## 1. Scope and source revisions
 
 Audit date: 2026-09-22 UTC. Run: `20260922-babylonjs-01`.
-The audit reached its checkpoint. Implementation and publication belong to a separate job.
+The audit reached its checkpoint. Implementation belongs to a separate job.
 The audit documents publish under standing authority. Operational state records the publication commit.
 
 | Source | Revision |
@@ -28,6 +28,14 @@ Source identities remained unchanged at the final check.
 [Historical status](../STATUS.md) retains previous evidence.
 Its local revision predates the reviewed remote revision.
 This register records the current audit without replacing that history.
+
+Review date: 2026-09-23. Reviewed current source: `ca518c2b884dfa0706716aba6d9ef3c6397032c1`.
+The tables below preserve audit-time evidence unless a dated review correction states otherwise.
+Current STATUS records authority `44bc4ed4ac729bddaa95b083d64bee942ade35da`.
+The published Babylon kit remains `0.1.4` at its older source.
+
+Live upstream at review: `532ed64775000635e43caac085e4451c06e71afc`. Published runtime: `1.0.169` at `44bc4ed4ac729bddaa95b083d64bee942ade35da`.
+The review does not qualify every upstream change after the recorded port authority.
 
 ## 2. Completion claims
 
@@ -101,11 +109,29 @@ Official references checked on 2026-09-22:
 - [npm package metadata documentation, v11](https://docs.npmjs.com/cli/v11/configuring-npm/package-json/), including package contents and exports.
 - [Apache License 2.0, section 4](https://www.apache.org/licenses/LICENSE-2.0), for bundled dependency notices and license copies.
 
+### Daily review evidence, 2026-09-23
+
+Review evidence resides in shared run `review-20260923-01/noisemaker-for-babylonjs`.
+The reviewer checked the original raw logs, source differences, distribution inventory, and all recorded log hashes.
+All 16 recorded log hashes match. The original 322-pass sweep remains historical evidence.
+The current source adds compiler tests and STATUS claims. It does not change package contents or runtime code.
+
+- `npm pack --ignore-scripts --json` and isolated installation exit 0.
+- Importing `noisemaker-for-babylonjs/compiler` exits 1 with `ERR_MODULE_NOT_FOUND` for the excluded compiler tool.
+- Isolated removal exits 0. `compiler-import.log` retains the reproduction.
+- The current kit inventory retains all 13 original hashes. A fresh compatibility-file download matches its hash.
+- Exact-source Actions and check queries return zero results for both audited and current source revisions.
+
+The review reconfirmed npm CLI 11 package-content rules from the official reference above.
+The Babylon documentation page returned no readable content. No new host-version qualification follows from that request.
+The reviewer did not repeat GPU sweeps, scene interaction, corpus tests, or cross-platform qualification.
+The original installation, scene, recovery, and kit evidence supports only its recorded versions and source boundaries.
+
 ## 4. Known gaps
 
 P1 means false completion, major correctness failure, unusable primary workflow, or invalid artifact.
 P2 means coverage or integration gaps. P3 means documentation inconsistency.
-All verification dates below are 2026-09-22.
+Original verification dates are 2026-09-22. Dated review notes identify subsequent checks.
 
 ### GAP-001: Compiler missing from packed distribution
 
@@ -114,11 +140,12 @@ All verification dates below are 2026-09-22.
 - Expected: every advertised package entry point loads after normal installation.
 - Observed: the compiler imports excluded `tools/export-fat-graph.mjs`. The package also omits `vendor/fetch.sh` and engine setup files.
 - Evidence: E2, `npm-pack.json`, `consumer-probe.log`. Root and runtime imports pass.
-- Next action: define the supported package installation path and include its required compiler dependencies.
+- Next action: correct `package.json` contents and compiler dependencies in the implementation job.
+- Review evidence: the installed compiler still fails at `ca518c2b884dfa0706716aba6d9ef3c6397032c1`.
 - Dependencies: separate implementation authority. Publishing needs separate publication authority.
 - Acceptance: a clean installed artifact compiles the documented program and produces a visible Babylon texture without repository-relative patches.
 - Required checks: pack, install, import all exports, first render, error recovery, and uninstall.
-- Last verification: 2026-09-22.
+- Last verification: 2026-09-23 for package and CI checks. Other runtime evidence remains dated 2026-09-22.
 
 ### GAP-002: Published kit lacks Babylon license text
 
@@ -203,7 +230,8 @@ All verification dates below are 2026-09-22.
 
 These actions belong to the separate authorized job. This audit does not implement or publish them.
 
-1. Resolve GAP-001 through the existing package files. Require a clean installed compiler and first visible result.
+1. Address GAP-001 in `package.json` and `src/compiler/index.js`. Run `npm pack --ignore-scripts --json` after the authorized correction.
+   Install the tarball in an empty project. Import every exported entry point. Require successful compilation and a visible material texture.
 2. Resolve GAP-002 through the existing kit configuration. Require complete dependency notices in the downloadable artifact.
 3. Resolve GAP-003 through existing authority configuration. Require repeated installations with identical engine hashes.
 4. Address GAP-004 with current manifests and existing harnesses. Require explicit coverage and retained exclusions for every completion claim.
@@ -218,6 +246,7 @@ Do not infer implementation, publication, or workflow authority from this list.
 | Date | Run and source | Document changes | Tested scope | Remaining limits |
 | --- | --- | --- | --- | --- |
 | 2026-09-22 | `20260922-babylonjs-01`, `d3446072d4c75f4d7e087ad48dfa06de5ec5dec9` | Created this register and added its README link. Publication uses standing authority. | 45 Node tests, 24 contract tests, 322 strict fixture passes, five differential probes, scene examples, package and kit checks. | Three sweep skips, external inputs, corpus, other hosts, packaging, dependency notices, and exact-SHA CI. |
+| 2026-09-23 | `review-20260923-01`, `ca518c2b884dfa0706716aba6d9ef3c6397032c1` | Corrected publication wording and bounded the package action. | Reproduced installed compiler failure. Checked raw evidence, source changes, current kit inventory, and exact-source CI absence. | Seven gaps remain. No closures or new host qualification. |
 
 No gap closed during this first audit. Successful checks do not establish whole-port completion or release approval.
 The worker stopped at the requested audit checkpoint. Publication of audit documents does not authorize implementation.
