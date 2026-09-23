@@ -1,8 +1,8 @@
 # Noisemaker for Babylon.js — status & parity
 
-*Last verified 2026-09-22 against the published engine at CDN build tag `ae4e3302`
-(`noisemaker-shaders-core.esm.js`, 833120 bytes, re-fetched via `vendor/fetch.sh`) — source-side
-`noisefactorllc/noisemaker` @ `ae4e3302e2d3`: full sweep **322/322 PASS**, 3 documented
+*Last verified 2026-09-22 against the published engine at CDN build tag `44bc4ed4`
+(`noisemaker-shaders-core.esm.js`, 833735 bytes, re-fetched via `vendor/fetch.sh`) — source-side
+`noisefactorllc/noisemaker` @ `44bc4ed4ac72`: full sweep **322/322 PASS**, 3 documented
 external-input skips, every graded effect still byte-exact at max-abs-diff 0. The sources of truth
 are `parity/sweep.sh`, `parity/corpus/sweep.sh`, and `tools/catalog.mjs`.*
 
@@ -209,6 +209,19 @@ Source-side: `noisefactorllc/noisemaker` `246ff57f43cc..0ed489ec4684` (a tearoff
   parity/sweep.sh`, mints golden + candidate together per the documented discipline above) and every
   candidate re-rendered and re-graded — **325/325 non-corpus programs (roster + mode matrix + the 4 new
   fixtures) byte-identical**, 3 skipped (`media`/`text`/`roll`, unchanged policy).
+
+## Vendor sync (ae4e3302..44bc4ed4)
+
+Source-side: `noisefactorllc/noisemaker` `ae4e3302e2d3..44bc4ed4ac72` (tearoff `ports-sync` job #397).
+`bash vendor/fetch.sh` re-pulled in place:
+
+- **Manifest: 210 effects** (unchanged count, 0 added, 0 removed).
+- **Engine core**: `noisemaker-shaders-core.esm.js` 833735 bytes (Build `44bc4ed4`).
+- **Upstream changes audit**:
+  - Upstream commit `44bc4ed4` (release `v1.0.169`) exposed structured parser expectation diagnostics (`P001` general expect syntax error, `P002` expected closing parenthesis `)`) attached to thrown `SyntaxError` objects via the non-enumerable `diagnostic` property, carrying `{ code, stage: 'parser', severity: 'error', message, location: { line, column }, span: null }`.
+- **Babylon test coverage**:
+  - Added unit test coverage in `test/compiler.test.js` verifying that `compile` and `lex` / parse failures for missing opening/closing parentheses and unexpected tokens attach structured `P001` and `P002` diagnostic metadata to thrown `SyntaxError`s.
+- **Verification**: All 47 unit and integration tests pass cleanly; parity ledger verified at 325 total (322 PASS, 3 documented skips).
 
 ## Vendor sync (643b2be1..ae4e3302)
 

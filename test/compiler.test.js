@@ -203,6 +203,71 @@ test('structured DSL lexer diagnostics attach diagnostic metadata to thrown Synt
   }
 })
 
+test('structured DSL parser diagnostics attach diagnostic metadata to thrown SyntaxError', async () => {
+  const { bootEngine } = await import('../vendor/engine.mjs')
+  await bootEngine()
+  const { compile, lex, parse } = await import('../vendor/noisemaker/noisemaker-shaders-core.esm.js')
+
+  const cases = [
+    {
+      source: 'search synth\nrender o0',
+      code: 'P001',
+      stage: 'parser',
+      severity: 'error',
+      message: "Expect '(' at line 2 col 8",
+      location: { line: 2, column: 8 },
+      span: null,
+    },
+    {
+      source: 'search synth\nrender(o0',
+      code: 'P002',
+      stage: 'parser',
+      severity: 'error',
+      message: "Expect ')' at line 2 col 10",
+      location: { line: 2, column: 10 },
+      span: null,
+    },
+    {
+      source: 'search synth\nlet = 1',
+      code: 'P001',
+      stage: 'parser',
+      severity: 'error',
+      message: 'Expected identifier at line 2 col 5',
+      location: { line: 2, column: 5 },
+      span: null,
+    },
+    {
+      source: 'search synth\nfoo(1',
+      code: 'P002',
+      stage: 'parser',
+      severity: 'error',
+      message: "Expect ')' at line 2 col 6",
+      location: { line: 2, column: 6 },
+      span: null,
+    },
+  ]
+
+  for (const { source, code, stage, severity, message, location, span } of cases) {
+    const entryPoints = [compile]
+    if (typeof parse === 'function') {
+      entryPoints.push((src) => parse(lex(src)))
+    }
+    for (const entryPoint of entryPoints) {
+      assert.throws(
+        () => entryPoint(source),
+        (err) => {
+          assert.equal(err.name, 'SyntaxError')
+          assert.equal(err.message, message)
+          assert.deepEqual(err.diagnostic, { code, stage, severity, message, location, span })
+          assert.equal(err.propertyIsEnumerable('diagnostic'), false)
+          assert.equal(JSON.stringify(err), '{}')
+          return true
+        }
+      )
+    }
+  }
+})
+
 test('compiler specializes landscape isosurface define and preserves voxel default', async () => {
   const cases = [
     {
