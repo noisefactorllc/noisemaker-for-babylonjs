@@ -245,6 +245,33 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       location: { line: 2, column: 6 },
       span: null,
     },
+    {
+      source: 'search synth\nlet x = midi()',
+      code: 'P003',
+      stage: 'parser',
+      severity: 'error',
+      message: "midi() requires 'channel' or 'zone' argument at line 2 col 9",
+      location: { line: 2, column: 9 },
+      span: null,
+    },
+    {
+      source: 'search synth\nlet x = audio()',
+      code: 'P003',
+      stage: 'parser',
+      severity: 'error',
+      message: "audio() requires 'band' argument at line 2 col 9",
+      location: { line: 2, column: 9 },
+      span: null,
+    },
+    {
+      source: 'search synth\nlet x = osc(type: oscKind.sine, bogus: 1)',
+      code: 'P003',
+      stage: 'parser',
+      severity: 'error',
+      message: "osc() unknown parameter 'bogus' at line 2 col 9. Valid: type, min, max, speed, offset, seed",
+      location: { line: 2, column: 9 },
+      span: null,
+    },
   ]
 
   for (const { source, code, stage, severity, message, location, span } of cases) {

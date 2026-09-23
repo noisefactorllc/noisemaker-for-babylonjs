@@ -1,8 +1,8 @@
 # Noisemaker for Babylon.js — status & parity
 
-*Last verified 2026-09-22 against the published engine at CDN build tag `44bc4ed4`
-(`noisemaker-shaders-core.esm.js`, 833735 bytes, re-fetched via `vendor/fetch.sh`) — source-side
-`noisefactorllc/noisemaker` @ `44bc4ed4ac72`: full sweep **322/322 PASS**, 3 documented
+*Last verified 2026-09-23 against the published engine at CDN build tag `e32a5a4a`
+(`noisemaker-shaders-core.esm.js`, 834196 bytes, re-fetched via `vendor/fetch.sh`) — source-side
+`noisefactorllc/noisemaker` @ `e32a5a4a2e1f`: full sweep **322/322 PASS**, 3 documented
 external-input skips, every graded effect still byte-exact at max-abs-diff 0. The sources of truth
 are `parity/sweep.sh`, `parity/corpus/sweep.sh`, and `tools/catalog.mjs`.*
 
@@ -209,6 +209,19 @@ Source-side: `noisefactorllc/noisemaker` `246ff57f43cc..0ed489ec4684` (a tearoff
   parity/sweep.sh`, mints golden + candidate together per the documented discipline above) and every
   candidate re-rendered and re-graded — **325/325 non-corpus programs (roster + mode matrix + the 4 new
   fixtures) byte-identical**, 3 skipped (`media`/`text`/`roll`, unchanged policy).
+
+## Vendor sync (44bc4ed4..e32a5a4a)
+
+Source-side: `noisefactorllc/noisemaker` `44bc4ed4ac72..e32a5a4a2e1f` (tearoff `ports-sync` job #404).
+`bash vendor/fetch.sh` re-pulled in place:
+
+- **Manifest: 210 effects** (unchanged count, 0 added, 0 removed).
+- **Engine core**: `noisemaker-shaders-core.esm.js` 834196 bytes (Build `e32a5a4a`).
+- **Upstream changes audit**:
+  - Upstream commit `e32a5a4a` (release `v1.0.170`) exposed structured automation argument diagnostics (`P003` invalid automation arguments) on thrown `SyntaxError`s when parsing `osc()`, `midi()`, and `audio()` invocations (e.g. unknown parameters, missing required arguments, mutually exclusive arguments, non-string identifiers), carrying non-enumerable `{ code: 'P003', stage: 'parser', severity: 'error', message, location: { line, column }, span: null }`.
+- **Babylon test coverage**:
+  - Added unit test coverage in `test/compiler.test.js` verifying that `compile` and `lex` / parse failures for invalid `osc()`, `midi()`, and `audio()` arguments attach structured `P003` diagnostic metadata to thrown `SyntaxError`s.
+- **Verification**: All 47 unit and integration tests pass cleanly; parity ledger verified at 325 total (322 PASS, 3 documented skips).
 
 ## Vendor sync (ae4e3302..44bc4ed4)
 
