@@ -5,6 +5,8 @@
 
 # Noisemaker for Babylon.js
 
+Current measured support: [compatibility report](docs/COMPATIBILITY.md).
+
 > Run **Noisemaker**'s procedural visuals in **Babylon.js**.
 
 > This package supports the "Export Shader Pipeline" feature in Noisedeck.app. The
