@@ -1,11 +1,11 @@
 # Noisemaker for Babylon.js — status & parity
 
-*Last verified 2026-09-23 against the published engine at CDN build tag `5b81e04f`
-(`noisemaker-shaders-core.esm.js`, 836256 bytes, re-fetched via `vendor/fetch.sh`) — source-side
-`noisefactorllc/noisemaker` @ `5b81e04f8a4b` (through `c9ee8a04`): full sweep **322/322 PASS**, 3 documented
+*Last verified 2026-09-24 against the published engine at CDN build tag `13fa8b54`
+(`noisemaker-shaders-core.esm.js`, 836408 bytes, re-fetched via `vendor/fetch.sh`) — source-side
+`noisefactorllc/noisemaker` @ `13fa8b540025`: full sweep **322/322 PASS**, 3 documented
 external-input skips, every graded effect still byte-exact at max-abs-diff 0. Exposes output sink
 deferral query `shouldDeferRender()` on `NoisemakerRenderer`, verifies structured parser diagnostics
-(P005), and incorporates upstream shader optimizations for zero-amount branches in `noise` and `glitch`.
+(P005 output operations, P006 subchains), and incorporates upstream shader optimizations for zero-amount branches in `noise` and `glitch`.
 The sources of truth are `parity/sweep.sh`, `parity/corpus/sweep.sh`, and `tools/catalog.mjs`.*
 
 This file holds the detailed coverage and parity numbers. For what the project is and how to use it,
@@ -211,6 +211,20 @@ Source-side: `noisefactorllc/noisemaker` `246ff57f43cc..0ed489ec4684` (a tearoff
   parity/sweep.sh`, mints golden + candidate together per the documented discipline above) and every
   candidate re-rendered and re-graded — **325/325 non-corpus programs (roster + mode matrix + the 4 new
   fixtures) byte-identical**, 3 skipped (`media`/`text`/`roll`, unchanged policy).
+
+## Vendor sync (5b81e04f..13fa8b54)
+
+Source-side: `noisefactorllc/noisemaker` `5b81e04f8a4b..13fa8b540025` (tearoff `ports-sync` job #463).
+`bash vendor/fetch.sh` re-pulled in place:
+
+- **Manifest: 210 effects** (unchanged count, 0 added, 0 removed).
+- **Engine core**: `noisemaker-shaders-core.esm.js` 836408 bytes (Build `13fa8b54`).
+- **Upstream changes audit**:
+  - Upstream commit `13fa8b54` (release `v1.0.177`) exposed structured subchain parser validation diagnostics (`P006` invalid subchain) on thrown `SyntaxError`s when parsing `subchain()` blocks (non-string arguments, missing '.' before chain element, empty body, etc.), carrying non-enumerable `{ code: 'P006', stage: 'parser', severity: 'error', message, location: { line, column }, span: null }`.
+- **Babylon test coverage**:
+  - Added unit test coverage in `test/compiler.test.js` verifying that `compile` and `parse(lex(...))` failures for invalid `subchain()` invocations attach structured `P006` diagnostic metadata to thrown `SyntaxError`s.
+  - Added unit test verifying `exportFatGraph` cleanly exports DSL programs containing subchains into valid multi-pass render graphs.
+- **Verification**: All 51 unit and integration tests pass cleanly; parity verified against golden standard.
 
 ## Vendor sync (e32a5a4a..e11f0767)
 

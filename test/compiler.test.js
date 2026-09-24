@@ -353,6 +353,60 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       location: { line: 2, column: 27 },
       span: null,
     },
+    {
+      source: 'search synth\nread(o0).subchain(name: 1) { .noise() }',
+      code: 'P006',
+      stage: 'parser',
+      severity: 'error',
+      message: 'Expected string value for subchain name at line 2 col 25',
+      location: { line: 2, column: 25 },
+      span: null,
+    },
+    {
+      source: 'search synth\nread(o0).subchain(name:',
+      code: 'P006',
+      stage: 'parser',
+      severity: 'error',
+      message: 'Expected string value for subchain name at line 2 col 24',
+      location: { line: 2, column: 24 },
+      span: null,
+    },
+    {
+      source: 'search synth\nread(o0).subchain() { noise() }',
+      code: 'P006',
+      stage: 'parser',
+      severity: 'error',
+      message: "Expected '.' before chain element in subchain body at line 2 col 23",
+      location: { line: 2, column: 23 },
+      span: null,
+    },
+    {
+      source: 'search synth\nread(o0).subchain() {',
+      code: 'P006',
+      stage: 'parser',
+      severity: 'error',
+      message: "Expected '.' before chain element in subchain body at line 2 col 22",
+      location: { line: 2, column: 22 },
+      span: null,
+    },
+    {
+      source: 'search synth\nread(o0).subchain() {}',
+      code: 'P006',
+      stage: 'parser',
+      severity: 'error',
+      message: 'Subchain body cannot be empty at line 2 col 10',
+      location: { line: 2, column: 10 },
+      span: null,
+    },
+    {
+      source: 'search synth\nread(o0).subchain() { /* empty */ }',
+      code: 'P006',
+      stage: 'parser',
+      severity: 'error',
+      message: 'Subchain body cannot be empty at line 2 col 10',
+      location: { line: 2, column: 10 },
+      span: null,
+    },
   ]
 
   for (const { source, code, stage, severity, message, location, span } of cases) {
@@ -373,6 +427,20 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
         }
       )
     }
+  }
+})
+
+test('compiler exportFatGraph handles subchains with scoped filters', async () => {
+  const dsl = `search synth, filter
+noise().write(o0)
+read(o0).subchain(name: "sub") { .invert() }.write(o1)
+render(o1)`
+  const fat = await exportFatGraph(dsl)
+  assert.equal(fat.renderSurface, 'o1')
+  assert.equal(fat.passes.length, 4)
+  for (const [id, program] of Object.entries(fat.programs)) {
+    const shaderSource = program.fragment || program.glsl
+    assert.ok(typeof shaderSource === 'string' && shaderSource.length > 0, `Program ${id} missing non-empty shader text`)
   }
 })
 
