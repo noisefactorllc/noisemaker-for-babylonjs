@@ -26,11 +26,16 @@ function installDomShim () {
   globalThis.HTMLElement = globalThis.HTMLElement || class {}
   globalThis.customElements = globalThis.customElements || { define () {}, get () {}, whenDefined () { return Promise.resolve() } }
   globalThis.window = globalThis.window || globalThis
+  if (!globalThis.window.addEventListener) globalThis.window.addEventListener = () => {}
+  if (!globalThis.window.removeEventListener) globalThis.window.removeEventListener = () => {}
   globalThis.document = globalThis.document || {
     createElement () { return { style: {}, getContext () { return null }, appendChild () {}, setAttribute () {} } },
     createElementNS () { return { style: {} } },
-    head: { appendChild () {} }, body: { appendChild () {} }
+    head: { appendChild () {} }, body: { appendChild () {} },
+    addEventListener () {}, removeEventListener () {}
   }
+  if (!globalThis.document.addEventListener) globalThis.document.addEventListener = () => {}
+  if (!globalThis.document.removeEventListener) globalThis.document.removeEventListener = () => {}
 }
 
 let _booted = null

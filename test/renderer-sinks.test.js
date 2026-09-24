@@ -162,6 +162,80 @@ test('renderer delegates sink and export registration to the active pipeline', (
   ])
 })
 
+test('renderer safely queries output sink deferral through active pipeline', () => {
+  const renderer = new NoisemakerRenderer({}, {})
+  assert.equal(renderer.shouldDeferRender(), false)
+
+  let deferResult = true
+  renderer.pipeline = {
+    shouldDeferRender () { return deferResult }
+  }
+
+  assert.equal(renderer.shouldDeferRender(), true)
+  deferResult = false
+  assert.equal(renderer.shouldDeferRender(), false)
+
+  renderer.pipeline = {}
+  assert.equal(renderer.shouldDeferRender(), false)
+})
+
+test('Pipeline delegates shouldDeferRender across active, deferring, and throwing sinks', async () => {
+  const { bootEngine } = await import('../vendor/engine.mjs')
+  const { Pipeline } = await bootEngine()
+
+  const backend = {
+    capabilities: { floatBlend: true },
+    init () {},
+    destroy () {}
+  }
+  const graph = {
+    passes: [],
+    programs: {},
+    textures: new Map(),
+    surfaces: new Map()
+  }
+  const pipeline = new Pipeline(graph, backend)
+  assert.equal(pipeline.shouldDeferRender(), false)
+
+  let shouldDefer = false
+  const activeSink = {
+    configure () {},
+    submit () {},
+    deferRender () { return shouldDefer },
+    close () {}
+  }
+  const unregisterActive = pipeline.addSink(activeSink)
+  assert.equal(pipeline.shouldDeferRender(), false)
+
+  shouldDefer = true
+  assert.equal(pipeline.shouldDeferRender(), true)
+
+  const nonDeferringSink = {
+    configure () {},
+    submit () {},
+    close () {}
+  }
+  const unregisterNonDeferring = pipeline.addSink(nonDeferringSink)
+  assert.equal(pipeline.shouldDeferRender(), true)
+
+  unregisterActive()
+  assert.equal(pipeline.shouldDeferRender(), false)
+
+  const throwingSink = {
+    configure () {},
+    submit () {},
+    deferRender () { throw new Error('sink deferral exploded') },
+    close () {}
+  }
+  pipeline.addSink(throwingSink)
+  assert.equal(pipeline.shouldDeferRender(), false)
+  assert.equal(pipeline.sinkManager.stats.get(throwingSink).failed, 1)
+
+  unregisterNonDeferring()
+  pipeline.dispose()
+  assert.equal(pipeline.shouldDeferRender(), false)
+})
+
 test('renderer disposal closes pipeline-owned sinks through Pipeline.dispose', () => {
   const renderer = new NoisemakerRenderer({}, {})
   const calls = []

@@ -213,6 +213,15 @@ export class NoisemakerRenderer {
     return this.pipeline.addSink(sink)
   }
 
+  /**
+   * Check if any registered output sink requests deferring the current render tick.
+   * Returns false when uninstantiated, disposed, or during context loss.
+   * @returns {boolean}
+   */
+  shouldDeferRender () {
+    return Boolean(this.pipeline?.shouldDeferRender?.())
+  }
+
   /** Create a non-blocking frame-export queue for the active Babylon backend. */
   createFrameExportQueue (options = {}) {
     if (!this.pipeline) {

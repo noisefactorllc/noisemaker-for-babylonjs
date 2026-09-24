@@ -1,10 +1,12 @@
 # Noisemaker for Babylon.js — status & parity
 
-*Last verified 2026-09-23 against the published engine at CDN build tag `e11f0767`
-(`noisemaker-shaders-core.esm.js`, 834404 bytes, re-fetched via `vendor/fetch.sh`) — source-side
-`noisefactorllc/noisemaker` @ `e11f0767993a`: full sweep **322/322 PASS**, 3 documented
-external-input skips, every graded effect still byte-exact at max-abs-diff 0. The sources of truth
-are `parity/sweep.sh`, `parity/corpus/sweep.sh`, and `tools/catalog.mjs`.*
+*Last verified 2026-09-23 against the published engine at CDN build tag `5b81e04f`
+(`noisemaker-shaders-core.esm.js`, 836256 bytes, re-fetched via `vendor/fetch.sh`) — source-side
+`noisefactorllc/noisemaker` @ `5b81e04f8a4b` (through `c9ee8a04`): full sweep **322/322 PASS**, 3 documented
+external-input skips, every graded effect still byte-exact at max-abs-diff 0. Exposes output sink
+deferral query `shouldDeferRender()` on `NoisemakerRenderer`, verifies structured parser diagnostics
+(P005), and incorporates upstream shader optimizations for zero-amount branches in `noise` and `glitch`.
+The sources of truth are `parity/sweep.sh`, `parity/corpus/sweep.sh`, and `tools/catalog.mjs`.*
 
 This file holds the detailed coverage and parity numbers. For what the project is and how to use it,
 see the [README](README.md).
