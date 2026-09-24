@@ -1,8 +1,8 @@
 # Noisemaker for Babylon.js — status & parity
 
-*Last verified 2026-09-23 against the published engine at CDN build tag `e32a5a4a`
-(`noisemaker-shaders-core.esm.js`, 834196 bytes, re-fetched via `vendor/fetch.sh`) — source-side
-`noisefactorllc/noisemaker` @ `e32a5a4a2e1f`: full sweep **322/322 PASS**, 3 documented
+*Last verified 2026-09-23 against the published engine at CDN build tag `e11f0767`
+(`noisemaker-shaders-core.esm.js`, 834404 bytes, re-fetched via `vendor/fetch.sh`) — source-side
+`noisefactorllc/noisemaker` @ `e11f0767993a`: full sweep **322/322 PASS**, 3 documented
 external-input skips, every graded effect still byte-exact at max-abs-diff 0. The sources of truth
 are `parity/sweep.sh`, `parity/corpus/sweep.sh`, and `tools/catalog.mjs`.*
 
@@ -209,6 +209,22 @@ Source-side: `noisefactorllc/noisemaker` `246ff57f43cc..0ed489ec4684` (a tearoff
   parity/sweep.sh`, mints golden + candidate together per the documented discipline above) and every
   candidate re-rendered and re-graded — **325/325 non-corpus programs (roster + mode matrix + the 4 new
   fixtures) byte-identical**, 3 skipped (`media`/`text`/`roll`, unchanged policy).
+
+## Vendor sync (e32a5a4a..e11f0767)
+
+Source-side: `noisefactorllc/noisemaker` `e32a5a4a2e1f..e11f0767993a` (tearoff `ports-sync` job #421).
+`bash vendor/fetch.sh` re-pulled in place:
+
+- **Manifest: 210 effects** (unchanged count, 0 added, 0 removed).
+- **Engine core**: `noisemaker-shaders-core.esm.js` 834404 bytes (Build `e11f0767`).
+- **Upstream changes audit**:
+  - Upstream commit `0766743e` (release `v1.0.171`) exposed structured search directive diagnostics (`P004` invalid or missing search directive) on thrown `SyntaxError`s when parsing `search` directives (missing directive, invalid namespace, misplaced directive, duplicate directive), carrying non-enumerable `{ code: 'P004', stage: 'parser', severity: 'error', message, location: { line, column }, span: null }`.
+  - Upstream commits `e2874c85` / `3a32b198` (release `v1.0.172`) resolved scoped texture sizing from collected pass uniforms overlaid with global uniforms during `Pipeline.setUniform`, preserving chain- and node-scoped atlases (e.g. `volumeSize_chain_N`, `stateSize_node_N`) when unrelated uniforms are modified.
+  - Upstream commits `fde2ea40` / `e11f0767` (release `v1.0.173`) optimized `classicNoisedeck/noise` by guarding refraction noise lookups and octave generation behind `refractAmt != 0.0` in both GLSL and WGSL, and attested WebGL2/WebGPU exact parity with refraction active.
+- **Babylon test coverage**:
+  - Added unit test coverage in `test/compiler.test.js` verifying that `compile` and `lex` / parse failures for missing or invalid `search` directives attach structured `P004` diagnostic metadata to thrown `SyntaxError`s.
+  - Added unit test coverage in `test/backend-capabilities.test.js` verifying that `Pipeline` preserves scoped texture dimensions (e.g. `volumeSize_chain_0`) and avoids recreating unchanged atlases when `setUniform` updates another parameter.
+- **Verification**: All 48 unit and integration tests pass cleanly; parity ledger verified at 325 total (322 PASS, 3 documented skips).
 
 ## Vendor sync (44bc4ed4..e32a5a4a)
 

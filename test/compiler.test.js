@@ -272,6 +272,42 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       location: { line: 2, column: 9 },
       span: null,
     },
+    {
+      source: 'search bogus\nrender(o0)',
+      code: 'P004',
+      stage: 'parser',
+      severity: 'error',
+      message: "Invalid namespace 'bogus' at line 1 col 8. Valid namespaces: io, classicNoisedeck, synth, mixer, filter, render, points, synth3d, filter3d, user",
+      location: { line: 1, column: 8 },
+      span: null,
+    },
+    {
+      source: 'search synth search filter\nrender(o0)',
+      code: 'P004',
+      stage: 'parser',
+      severity: 'error',
+      message: 'Only one search directive is allowed per program at line 1 col 14',
+      location: { line: 1, column: 14 },
+      span: null,
+    },
+    {
+      source: 'let x = 1\nsearch synth\nrender(o0)',
+      code: 'P004',
+      stage: 'parser',
+      severity: 'error',
+      message: "'search' directive must appear before other statements at line 2 col 1",
+      location: { line: 2, column: 1 },
+      span: null,
+    },
+    {
+      source: 'render(o0)',
+      code: 'P004',
+      stage: 'parser',
+      severity: 'error',
+      message: "Missing required 'search' directive. Every program must start with 'search <namespace>, ...' to specify namespace search order.",
+      location: { line: 1, column: 11 },
+      span: null,
+    },
   ]
 
   for (const { source, code, stage, severity, message, location, span } of cases) {

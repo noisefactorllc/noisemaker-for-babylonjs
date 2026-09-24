@@ -468,3 +468,62 @@ test('Pipeline with BabylonBackend recreates surfaces and regular textures when 
   assert.equal(recreatedWrite.format, 'rgba16f')
 })
 
+test('Pipeline with BabylonBackend preserves scoped texture dimensions when setUniform is called', async () => {
+  const { bootEngine } = await import('../vendor/engine.mjs')
+  const { Pipeline } = await bootEngine()
+
+  const backend = Object.create(BabylonBackend.prototype)
+  backend.textures = new Map()
+  backend._clearRtw = () => {}
+  const engine = {
+    createRenderTargetTexture: (size, options) => ({
+      texture: { getEngine: () => engine, dispose: () => {} },
+      dispose: () => {}
+    })
+  }
+  backend.engine = engine
+
+  const graph = {
+    passes: [
+      {
+        id: 'pass_0',
+        uniforms: {
+          volumeSize: 128,
+          volumeSize_chain_0: 128
+        }
+      },
+      {
+        id: 'pass_1',
+        uniforms: {
+          volumeSize: 64,
+          volumeSize_chain_1: 64
+        }
+      }
+    ],
+    textures: new Map([
+      ['node_0_volumeCache', { width: { param: 'volumeSize_chain_0' }, height: { param: 'volumeSize_chain_0', power: 2 }, format: 'rgba16f' }],
+      ['node_1_volumeCache', { width: { param: 'volumeSize_chain_1' }, height: { param: 'volumeSize_chain_1', power: 2 }, format: 'rgba16f' }]
+    ]),
+    surfaces: new Map()
+  }
+  const pipeline = new Pipeline(graph, backend)
+  pipeline.recreateTextures(pipeline.collectDefaultUniforms())
+
+  const atlasBeforeP0 = backend.textures.get('node_0_volumeCache')
+  const atlasBeforeP1 = backend.textures.get('node_1_volumeCache')
+  assert.equal(atlasBeforeP0.width, 128)
+  assert.equal(atlasBeforeP0.height, 16384)
+  assert.equal(atlasBeforeP1.width, 64)
+  assert.equal(atlasBeforeP1.height, 4096)
+
+  pipeline.setUniform('volumeSize_chain_1', 32)
+  const atlasAfterP0 = backend.textures.get('node_0_volumeCache')
+  const atlasAfterP1 = backend.textures.get('node_1_volumeCache')
+  assert.equal(atlasAfterP0, atlasBeforeP0)
+  assert.notEqual(atlasAfterP1, atlasBeforeP1)
+  assert.equal(atlasAfterP0.width, 128)
+  assert.equal(atlasAfterP0.height, 16384)
+  assert.equal(atlasAfterP1.width, 32)
+  assert.equal(atlasAfterP1.height, 1024)
+})
+
