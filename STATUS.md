@@ -280,6 +280,20 @@ a sub-range of it, and `fca611fd` itself was already consumed by the `4891b995..
   (`scripts/bundle.js`), disabling it by construction. `vendor/fetch.sh` remains the only engine
   source; the effect catalog and parity surface are unchanged, so no Babylon-side code, test, or
   fixture change follows from this range.
+  - **Post-audit CDN note (recorded during this job, not part of the audited range)**: after this
+    audit completed, the CDN `/1` artifact moved to the `v1.0.182` build (855031 bytes at
+    re-check) — upstream commits `a021a283` / `62eb56fa` / `2f47612c` (authorable mipmaps /
+    persistent / 3D filter texture policies, GAP-004, plus WebGL2 mip-chain allocation and a
+    global-surface double-allocation fix), all *after* `9d3474df` and outside this job's audited
+    range. The validator remains absent from that build too, so this audit's conclusion stands;
+    the mipmap/texture-policy work is flagged for the next `ports-sync` job (it touches texture
+    allocation/filtering, which the `BabylonBackend` creates — likely backend-relevant), and
+    re-minting the goldens against that build is part of that sync, per the repo's established
+    re-vendor-and-re-mint discipline.
+- **Re-derivation**: every claim in this section is machine-checkable via
+  `node tools/verify-sync-audit.mjs` (clones upstream at the pinned SHAs, or takes
+  `NM_UPSTREAM=<checkout>`; re-runs the ancestry, delta, release-tag, import-graph, bundler, and
+  bundle checks above and exits non-zero if any recorded claim breaks).
 - **Verification**: `npm test` (Node built-in runner, `node --test test/*.test.js`) — **55 tests,
   55 pass, 0 fail** on this tree. Because the engine artifact is unchanged (byte-identical to the
   `v1.0.181` release artifact, no published-surface delta), the committed goldens and the recorded
