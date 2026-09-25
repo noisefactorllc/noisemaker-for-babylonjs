@@ -4,6 +4,14 @@ Current compatibility matrix: [compatibility report](COMPATIBILITY.md).
 
 ## 1. Scope and source revisions
 
+Daily review: 2026-09-25. Current inspected source: [`8a39787a7c3564c4a331047e727a7b372d68c16b`](https://github.com/noisefactorllc/noisemaker-for-babylonjs/commit/8a39787a7c3564c4a331047e727a7b372d68c16b).
+Full rendered parity remains **unverified**. No release approval or new closure follows from this review.
+Current upstream discovery: `bbdeb56c4b75cf33379766c3e87b0f5a18bcbba8`. Published Noisemaker authority: `1.0.179`, source `fca611fd8f91424661d4e531d39313d24ea21134`, 210 effect IDs.
+The observations below retain their original source and authority identities; they do not qualify later updates.
+Current served kit: `0.1.5`, source `e6aa0732ff7962f4a3ce044384581dbc75b632a1`. [Retrieved inventory and hashes](/Users/alex/.codex/automations/noisemaker-port-completion-audit/review-20260925-053200/current-served-inventories.json). Artifact identity does not establish host qualification.
+
+### Earlier source observations
+
 Audit date: 2026-09-22 UTC. Run: `20260922-babylonjs-01`.
 The audit reached its checkpoint. Implementation belongs to a separate job.
 The audit documents publish under standing authority. Operational state records the publication commit.
@@ -54,6 +62,13 @@ The review does not qualify every upstream change after the recorded port author
 | CLAIM-009 | STATUS.md corpus section | 39 gradeable compositions match, one excluded | unverified | The isolated source lacks the local-only raw corpus. No corpus test ran. The excluded composition remains in the historical denominator. |
 
 ## 3. Methods and evidence
+
+Review CI boundary: No workflow run exists at the inspected source SHA. A passing export dispatch does not qualify rendered parity. Current complete-render enforcement remains an open verification requirement. [Exact-source responses and workflows](/Users/alex/.codex/automations/noisemaker-port-completion-audit/review-20260925-053200/noisemaker-for-babylonjs-remote-evidence.json).
+
+### Daily review, 2026-09-25
+
+53 unit tests pass, but importing the compiler from the packed distribution still fails with ERR_MODULE_NOT_FOUND for tools/export-fat-graph.mjs. The package contains 12 files. GAP-001 remains open. Current full rendered parity is stale and unverified. [Raw evidence](/Users/alex/.codex/automations/noisemaker-port-completion-audit/review-20260925-053200/babylon-installed-compiler.json).
+The review checked source changes, worker evidence, source-bound CI where present, and current served inventories. Full installed-host and platform qualification remains incomplete.
 
 Environment: Darwin arm64, Node 24.7.0, npm 11.5.1, Babylon 9.13.0, Chromium 149.0.7827.55, ANGLE Metal.
 The registry reports Babylon 9.27.1 as current. Browser qualification here covers 9.13.0 only.
@@ -230,6 +245,9 @@ Original verification dates are 2026-09-22. Dated review notes identify subseque
 
 ## 5. Ordered next actions
 
+Current first action: After the implementation job repairs GAP-001, run npm pack, install the tarball in an empty consumer, import the compiler, and render its compiled graph in Babylon. Require a successful import and a measured reference comparison before broader parity. Then check kit notices and the supported Babylon version range.
+Subsequent historical actions remain dependent on that evidence. No implementation is authorized by this audit.
+
 These actions belong to the separate authorized job. This audit does not implement or publish them.
 
 1. Address GAP-001 in `package.json` and `src/compiler/index.js`. Run `npm pack --ignore-scripts --json` after the authorized correction.
@@ -244,6 +262,8 @@ These actions belong to the separate authorized job. This audit does not impleme
 Do not infer implementation, publication, or workflow authority from this list.
 
 ## 6. Pass history
+
+2026-09-25 daily review at `8a39787a7c3564c4a331047e727a7b372d68c16b`: source freshness and bounded evidence reviewed; open qualification limits retained. [Retained review evidence](/Users/alex/.codex/automations/noisemaker-port-completion-audit/review-20260925-053200/babylon-installed-compiler.json). No new closure claimed.
 
 | Date | Run and source | Document changes | Tested scope | Remaining limits |
 | --- | --- | --- | --- | --- |
