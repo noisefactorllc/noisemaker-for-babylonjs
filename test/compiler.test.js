@@ -407,6 +407,141 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       location: { line: 2, column: 10 },
       span: null,
     },
+    {
+      source: 'search synth\nlet x = from(a: 1, b: 2)',
+      code: 'P007',
+      stage: 'parser',
+      severity: 'error',
+      message: "'from' does not support named arguments at line 2 col 9",
+      location: { line: 2, column: 9 },
+      span: null,
+    },
+    {
+      source: 'search synth\nlet x = from(synth)',
+      code: 'P007',
+      stage: 'parser',
+      severity: 'error',
+      message: "'from' requires exactly two arguments (namespace, call) at line 2 col 9",
+      location: { line: 2, column: 9 },
+      span: null,
+    },
+    {
+      source: 'search synth\nlet x = from(1, probe())',
+      code: 'P007',
+      stage: 'parser',
+      severity: 'error',
+      message: "'from' namespace argument must be an identifier at line 2 col 9",
+      location: { line: 2, column: 9 },
+      span: null,
+    },
+    {
+      source: 'search synth\nlet x = from(synth, 1)',
+      code: 'P007',
+      stage: 'parser',
+      severity: 'error',
+      message: "'from' second argument must be a call expression at line 2 col 9",
+      location: { line: 2, column: 9 },
+      span: null,
+    },
+    {
+      source: 'search synth\nnd.noise()',
+      code: 'P007',
+      stage: 'parser',
+      severity: 'error',
+      message: "Inline namespace syntax 'nd.noise()' is not allowed. Use 'search nd' at the start of the program instead, at line 2 col 1",
+      location: { line: 2, column: 1 },
+      span: null,
+    },
+    {
+      source: 'search synth\ndiagProbe(1, x: 2)',
+      code: 'P007',
+      stage: 'parser',
+      severity: 'error',
+      message: 'Cannot mix positional and keyword arguments at line 2 col 14',
+      location: { line: 2, column: 14 },
+      span: null,
+    },
+    {
+      source: 'search synth\ndiagProbe(x: 1, 2)',
+      code: 'P007',
+      stage: 'parser',
+      severity: 'error',
+      message: 'Cannot mix positional and keyword arguments at line 2 col 17',
+      location: { line: 2, column: 17 },
+      span: null,
+    },
+    {
+      source: '// 😀\r\nsearch synth\r\n\tdiagProbe(1, x: 2)',
+      code: 'P007',
+      stage: 'parser',
+      severity: 'error',
+      message: 'Cannot mix positional and keyword arguments at line 3 col 15',
+      location: { line: 3, column: 15 },
+      span: null,
+    },
+    {
+      source: 'search synth\nlet x = "😀"; nd.noise()',
+      code: 'P007',
+      stage: 'parser',
+      severity: 'error',
+      message: "Inline namespace syntax 'nd.noise()' is not allowed. Use 'search nd' at the start of the program instead, at line 2 col 15",
+      location: { line: 2, column: 15 },
+      span: null,
+    },
+    {
+      source: 'search synth\nlet x = ;',
+      code: 'P001',
+      stage: 'parser',
+      severity: 'error',
+      message: "Expected expression after '=' at line 2 col 9",
+      location: { line: 2, column: 9 },
+      span: null,
+    },
+    {
+      source: 'search synth\ndiagProbe(a: )',
+      code: 'P001',
+      stage: 'parser',
+      severity: 'error',
+      message: "Expected expression after '=' at line 2 col 14",
+      location: { line: 2, column: 14 },
+      span: null,
+    },
+    {
+      source: 'search synth\nlet x = [1 2]',
+      code: 'P001',
+      stage: 'parser',
+      severity: 'error',
+      message: "Expected ']' at line 2 col 12",
+      location: { line: 2, column: 12 },
+      span: null,
+    },
+    {
+      source: 'search synth\nlet x = foo.+',
+      code: 'P001',
+      stage: 'parser',
+      severity: 'error',
+      message: "Expected identifier after '.' at line 2 col 13",
+      location: { line: 2, column: 13 },
+      span: null,
+    },
+    {
+      source: 'search synth\ndiagProbe(; 1)',
+      code: 'P001',
+      stage: 'parser',
+      severity: 'error',
+      message: 'Unexpected token SEMICOLON at line 2 col 11',
+      location: { line: 2, column: 11 },
+      span: null,
+    },
+    {
+      source: 'search synth\nlet x = "😀"; let y = [1 2]',
+      code: 'P001',
+      stage: 'parser',
+      severity: 'error',
+      message: "Expected ']' at line 2 col 26",
+      location: { line: 2, column: 26 },
+      span: null,
+    },
   ]
 
   for (const { source, code, stage, severity, message, location, span } of cases) {
@@ -428,6 +563,59 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       )
     }
   }
+})
+
+test('number coercion diagnostics represent unavailable locations explicitly', async () => {
+  const { bootEngine } = await import('../vendor/engine.mjs')
+  await bootEngine()
+  const { compile, lex, parse } = await import('../vendor/noisemaker/noisemaker-shaders-core.esm.js')
+
+  for (const source of ['search synth\nlet x = 1 + o0', 'search synth\nlet x = diagProbe() + 1']) {
+    for (const entryPoint of [source => parse(lex(source)), compile]) {
+      assert.throws(
+        () => entryPoint(source),
+        (err) => {
+          assert.equal(err.name, 'SyntaxError')
+          assert.equal(err.message, 'Expected number')
+          assert.deepEqual(err.diagnostic, {
+            code: 'P001',
+            stage: 'parser',
+            severity: 'error',
+            message: 'Expected number',
+            location: null,
+            span: null,
+          })
+          assert.equal(err.propertyIsEnumerable('diagnostic'), false)
+          assert.equal(JSON.stringify(err), '{}')
+          return true
+        }
+      )
+    }
+  }
+})
+
+test('valid call forms retain from-override namespaces and mixed automation arguments', async () => {
+  const { bootEngine } = await import('../vendor/engine.mjs')
+  await bootEngine()
+  const { lex, parse } = await import('../vendor/noisemaker/noisemaker-shaders-core.esm.js')
+
+  const ast = parse(lex('search synth\nlet x = from(synth, probe())'))
+  assert.deepEqual(ast.vars[0].expr, {
+    type: 'Call',
+    name: 'probe',
+    args: [],
+    namespace: {
+      name: 'synth',
+      path: ['synth'],
+      explicit: true,
+      source: 'from',
+      resolved: 'synth',
+      searchOrder: ['synth'],
+      fromOverride: true,
+    },
+  })
+  const mixed = parse(lex('search synth\nlet a = midi(1, channel: 2)'))
+  assert.equal(mixed.vars[0].expr.channel.value, 2)
 })
 
 test('compiler exportFatGraph handles subchains with scoped filters', async () => {

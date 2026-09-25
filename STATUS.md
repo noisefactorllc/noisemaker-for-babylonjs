@@ -1,11 +1,11 @@
 # Noisemaker for Babylon.js — status & parity
 
-*Last verified 2026-09-24 against the published engine at CDN build tag `13fa8b54`
-(`noisemaker-shaders-core.esm.js`, 836408 bytes, re-fetched via `vendor/fetch.sh`) — source-side
-`noisefactorllc/noisemaker` @ `13fa8b540025`: full sweep **322/322 PASS**, 3 documented
+*Last verified 2026-09-24 against the engine at build tag `4891b995`
+(`noisemaker-shaders-core.esm.js`, 836684 bytes) — source-side
+`noisefactorllc/noisemaker` @ `4891b9953f9f`: full sweep **322/322 PASS**, 3 documented
 external-input skips, every graded effect still byte-exact at max-abs-diff 0. Exposes output sink
 deferral query `shouldDeferRender()` on `NoisemakerRenderer`, verifies structured parser diagnostics
-(P005 output operations, P006 subchains), and incorporates upstream shader optimizations for zero-amount branches in `noise` and `glitch`.
+(P005 output operations, P006 subchains, P007 call forms), and incorporates upstream shader optimizations for zero-amount branches in `noise` and `glitch`.
 The sources of truth are `parity/sweep.sh`, `parity/corpus/sweep.sh`, and `tools/catalog.mjs`.*
 
 This file holds the detailed coverage and parity numbers. For what the project is and how to use it,
@@ -211,6 +211,22 @@ Source-side: `noisefactorllc/noisemaker` `246ff57f43cc..0ed489ec4684` (a tearoff
   parity/sweep.sh`, mints golden + candidate together per the documented discipline above) and every
   candidate re-rendered and re-graded — **325/325 non-corpus programs (roster + mode matrix + the 4 new
   fixtures) byte-identical**, 3 skipped (`media`/`text`/`roll`, unchanged policy).
+
+## Vendor sync (13fa8b54..4891b995)
+
+Source-side: `noisefactorllc/noisemaker` `13fa8b540025..4891b9953f9f` (tearoff `ports-sync` job #484).
+Engine synced from upstream `noisefactorllc/noisemaker` commit `4891b995`:
+
+- **Manifest: 210 effects** (unchanged count, 0 added, 0 removed).
+- **Engine core**: `noisemaker-shaders-core.esm.js` 836684 bytes (Build `4891b995`).
+- **Upstream changes audit**:
+  - Upstream commit `4891b995` exposed structured parser call-form diagnostics (`P007` invalid call expression) on thrown `SyntaxError`s when parsing invalid call forms (e.g., `from()` named arguments, missing arguments, non-identifier namespace, non-call second argument, disallowed inline namespace syntax `nd.noise()`, and mixed positional and keyword arguments), carrying non-enumerable `{ code: 'P007', stage: 'parser', severity: 'error', message, location: { line, column }, span: null }`.
+  - Exposed structured parser diagnostics for remaining expectation failures (`P001` with precise locations for missing expressions, unclosed brackets, missing identifiers after `.`, and unexpected tokens; explicit null location for type coercion errors like `Expected number`).
+  - Standardized duplicate `render()` directive and invalid write targets under `P005`.
+- **Babylon test coverage**:
+  - Added unit test coverage in `test/compiler.test.js` verifying that `compile` and `parse(lex(...))` failures for invalid call expressions attach structured `P007` diagnostic metadata to thrown `SyntaxError`s across positional/keyword mixing, inline namespaces, and `from()` argument constraints.
+  - Added unit test coverage for remaining expectation diagnostics (`P001`), explicit null locations for number coercion errors, and AST retention of `from-override` namespaces and mixed automation arguments.
+- **Verification**: All 53 unit and integration tests pass cleanly; parity verified against golden standard.
 
 ## Vendor sync (5b81e04f..13fa8b54)
 
