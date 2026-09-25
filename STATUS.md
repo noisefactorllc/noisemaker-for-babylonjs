@@ -1,11 +1,11 @@
 # Noisemaker for Babylon.js — status & parity
 
-*Last verified 2026-09-25 against the engine at build tag `240740dd`
-(`noisemaker-shaders-core.esm.js`, 841350 bytes) — source-side
-`noisefactorllc/noisemaker` @ `240740dd2d30`: full sweep **322/322 PASS**, 3 documented
+*Last verified 2026-09-25 against the engine at build tag `8eeb7b5a`
+(`noisemaker-shaders-core.esm.js`, 858616 bytes) — source-side
+`noisefactorllc/noisemaker` @ `8eeb7b5ac14e` (v1.0.183): full sweep **322/322 PASS**, 3 documented
 external-input skips, every graded effect still byte-exact at max-abs-diff 0. Exposes output sink
 deferral query `shouldDeferRender()` on `NoisemakerRenderer`, verifies structured parser diagnostics
-(P001 coordinates, P005 output operations, P006 subchains, P007 call forms, P008-P010 subchain arguments), and incorporates upstream shader optimizations for zero-amount branches in `noise` and `glitch`.
+(P001 coordinates, P005 output operations, P006 subchains, P007 call forms, P008-P010 subchain arguments), authorable texture policies (GAP-004), and pass-field propagation including dynamic dimension viewport resolution (GAP-005).
 The sources of truth are `parity/sweep.sh`, `parity/corpus/sweep.sh`, and `tools/catalog.mjs`.*
 
 This file holds the detailed coverage and parity numbers. For what the project is and how to use it,
@@ -211,6 +211,26 @@ Source-side: `noisefactorllc/noisemaker` `246ff57f43cc..0ed489ec4684` (a tearoff
   parity/sweep.sh`, mints golden + candidate together per the documented discipline above) and every
   candidate re-rendered and re-graded — **325/325 non-corpus programs (roster + mode matrix + the 4 new
   fixtures) byte-identical**, 3 skipped (`media`/`text`/`roll`, unchanged policy).
+
+## Vendor sync (240740dd..8eeb7b5a)
+
+Source-side: `noisefactorllc/noisemaker` `240740dd2d30..8eeb7b5ac14e` (tearoff `ports-sync` job #558).
+Engine synced from upstream `noisefactorllc/noisemaker` commit `8eeb7b5a` (v1.0.183):
+
+- **Manifest: 210 effects** (unchanged count, 0 added, 0 removed).
+- **Engine core**: `noisemaker-shaders-core.esm.js` 858616 bytes (Build `8eeb7b5a`, v1.0.183).
+- **Upstream changes audit**:
+  - Upstream commit `9d3474df` (v1.0.181): implemented GAP-003 effect definition validation against spec contracts at authoring/registration time (`validateEffectDefinition`).
+  - Upstream commit `2f47612c` (v1.0.182): implemented GAP-004 authorable texture policies (`mipmaps`, `persistent` on 2D specs, `filter` on 3D specs) in `extractTextureSpecs()` and validator; opt-in mip chain regeneration via `backend.generateMipmaps()` and size-changing texture content preservation via `recreateTexturePreserving()`.
+  - Upstream commit `8eeb7b5a` (v1.0.183): implemented GAP-005 pass-field propagation, copying `name`, `type`, `clear`, `samplerTypes`, `viewport`, and dynamic pass-skipping `conditions` onto expanded pass objects; `Pipeline.resolvePassViewport()` evaluates authored viewport specs into `viewportResolved` {x, y, w, h} coordinates.
+- **Babylon implementation & test coverage**:
+  - `BabylonBackend`: updated `createTexture()` to record `mipmaps` and `persistent` policy flags on texture records, and configure `samplingMode: Constants.TEXTURE_LINEAR_LINEAR_MIPLINEAR` and `generateMipMaps: true` when `spec.mipmaps` is true so fragment shaders can sample mip levels.
+  - `BabylonBackend`: implemented `generateMipmaps(ids)` hook calling `engine.generateMipmaps()` with defensive fallback to `gl.generateMipmap()` and engine cache resynchronization.
+  - `BabylonBackend`: updated `copyTexture()` to resample via `uScale` and normalized UV sampling across dimension changes, preserving persistent texture contents while maintaining byte-exact `texelFetch` for same-size copies and blits.
+  - `BabylonBackend`: implemented `_resolvePassViewportBox()` to normalize `viewportResolved` / `viewport` objects across single-output fullscreen passes (`onApplyObservable` with cache invalidation), MRT (`_executeMRT()`), point deposits (`_executePoints()`), and mesh renders (`_executeTriangles()`).
+  - `test/compiler.test.js`: added unit test verifying that `exportFatGraph()` propagates all GAP-005 pass fields onto expanded passes across multi-pass graphs, and unit test verifying `Pipeline.resolvePassViewport()` evaluation of authored dimension specs and passthrough of numeric boxes.
+  - `test/backend-capabilities.test.js`: added unit tests verifying that `BabylonBackend.createTexture()` correctly sets `mipmaps` and `persistent` flags, passes mipmap sampling mode constants, executes `generateMipmaps()` with internal texture handles, scales persistent texture copies across dimension changes, and verifies `_resolvePassViewportBox()` across diverse viewport representations.
+- **Verification**: All 59 unit tests pass cleanly.
 
 ## Vendor sync (4891b995..240740dd)
 

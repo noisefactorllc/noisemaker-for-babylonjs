@@ -809,3 +809,60 @@ test('compiler specializes landscape isosurface define and preserves voxel defau
   }
 })
 
+test('compiler exportFatGraph propagates GAP-005 pass fields onto expanded passes', async () => {
+  const fat = await exportFatGraph(`
+    search synth, synth3d, render
+    heightmap3d().renderLandscape3d().write(o0)
+    render(o0)
+  `)
+
+  // Verify precompute pass from heightmap3d has name, type, and viewport
+  const precomputePass = fat.passes.find(p => p.effectFunc === 'heightmap3d')
+  assert.ok(precomputePass, 'Fat graph must contain heightmap3d pass')
+  assert.equal(precomputePass.name, 'precompute')
+  assert.equal(precomputePass.type, 'compute')
+  assert.deepEqual(precomputePass.viewport, {
+    width: { param: 'volumeSize', default: 64 },
+    height: { param: 'volumeSize', power: 2, default: 4096 }
+  })
+
+  // Verify all expanded effect passes contain the GAP-005 contract fields
+  for (const pass of fat.passes) {
+    if (pass.program === 'blit') continue
+    assert.ok('name' in pass, `Pass ${pass.id} must have name property`)
+    assert.ok('type' in pass, `Pass ${pass.id} must have type property`)
+    assert.ok('clear' in pass, `Pass ${pass.id} must have clear property`)
+    assert.ok('viewport' in pass, `Pass ${pass.id} must have viewport property`)
+    assert.ok('samplerTypes' in pass, `Pass ${pass.id} must have samplerTypes property`)
+    assert.ok('conditions' in pass, `Pass ${pass.id} must have conditions property`)
+  }
+})
+
+test('Pipeline resolves authored pass viewport into numeric viewportResolved coordinates', async () => {
+  const { bootEngine } = await import('../vendor/engine.mjs')
+  const { Pipeline } = await bootEngine()
+
+  const pass = {
+    viewport: { x: 0, y: 0, width: { param: 'volumeSize', default: 64 }, height: { param: 'volumeSize', power: 2, default: 4096 } },
+    uniforms: { volumeSize: 64 }
+  }
+  const pipeline = Object.create(Pipeline.prototype)
+  pipeline.width = 1280
+  pipeline.height = 720
+  pipeline.resolvePassViewport(pass)
+
+  assert.ok(pass.viewportResolved, 'pass must have viewportResolved populated')
+  assert.equal(pass.viewportResolved.w, 64)
+  assert.equal(pass.viewportResolved.h, 4096)
+  assert.equal(typeof pass.viewportResolved.x, 'number')
+  assert.equal(typeof pass.viewportResolved.y, 'number')
+
+  // Numeric box passes through untouched
+  const numericPass = {
+    viewport: { x: 10, y: 20, w: 300, h: 400 },
+    uniforms: {}
+  }
+  pipeline.resolvePassViewport(numericPass)
+  assert.deepEqual(numericPass.viewportResolved, { x: 10, y: 20, w: 300, h: 400 })
+})
+

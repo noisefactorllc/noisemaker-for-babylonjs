@@ -210,24 +210,62 @@ export class BabylonBackend {
     // Every graph texture is a renderable, NEAREST/CLAMP, linear half-float-by-default RGBA
     // target (surfaces, node intermediates, temps). We always make it a render target so it
     // can be both written and sampled.
+    const samplingMode = spec.mipmaps
+      ? Constants.TEXTURE_LINEAR_LINEAR_MIPLINEAR
+      : Constants.TEXTURE_NEAREST_SAMPLINGMODE
     const rtw = this.engine.createRenderTargetTexture({ width, height }, {
-      generateMipMaps: false,
+      generateMipMaps: !!spec.mipmaps,
       generateDepthBuffer: false,
       generateStencilBuffer: false,
       type: fmt.type,
       format: fmt.format,
-      samplingMode: Constants.TEXTURE_NEAREST_SAMPLINGMODE,
+      samplingMode,
       noColorAttachment: false
     })
     const internal = rtw.texture
     internal.wrapU = Constants.TEXTURE_CLAMP_ADDRESSMODE
     internal.wrapV = Constants.TEXTURE_CLAMP_ADDRESSMODE
     const thin = new ThinTexture(internal)
-    const rec = { internal, thin, rtw, width, height, format: spec.format, handle: thin }
+    const rec = {
+      internal,
+      thin,
+      rtw,
+      width,
+      height,
+      format: spec.format,
+      handle: thin,
+      mipmaps: !!spec.mipmaps,
+      persistent: !!spec.persistent
+    }
     this.textures.set(id, rec)
     // Initialize to transparent black (webgl2 clears new render FBOs).
     this._clearRtw(rtw, width, height)
     return rec
+  }
+
+  generateMipmaps (ids) {
+    // Opt-in mip chain regeneration (GAP-004): called by the Pipeline after each frame
+    // for textures authored with `mipmaps: true`.
+    if (!ids || !ids.length) return
+    for (const id of ids) {
+      const rec = this.textures.get(id)
+      if (!rec || !rec.mipmaps || rec.is3D) continue
+      try {
+        if (typeof this.engine.generateMipmaps === 'function') {
+          this.engine.generateMipmaps(rec.internal)
+        } else if (typeof this.engine.generateMipMaps === 'function') {
+          this.engine.generateMipMaps(rec.internal)
+        } else if (this.gl && typeof this.gl.generateMipmap === 'function') {
+          const tex = this._glTexOf(rec)
+          if (tex) {
+            this.gl.bindTexture(this.gl.TEXTURE_2D, tex)
+            this.gl.generateMipmap(this.gl.TEXTURE_2D)
+            this.gl.bindTexture(this.gl.TEXTURE_2D, null)
+            if (typeof this.engine.wipeCaches === 'function') this.engine.wipeCaches(true)
+          }
+        }
+      } catch (_) {}
+    }
   }
 
   createTexture3D (id, spec) {
@@ -398,16 +436,20 @@ export class BabylonBackend {
     const src = this.textures.get(srcId)
     const dst = this.textures.get(dstId)
     if (!src || !dst) return
-    this._bindPass = { __copySrc: src.thin }
+    const sameSize = src.width === dst.width && src.height === dst.height
+    this._bindPass = {
+      __copySrc: src.thin,
+      __copyScale: sameSize ? [1, 1] : [dst.width / src.width, dst.height / src.height]
+    }
     this.engine.setAlphaMode(Constants.ALPHA_DISABLE)
     this.effectRenderer.render(this._copyWrapper, dst.rtw)
     this._bindPass = null
   }
 
   _buildCopyWrapper () {
-    // gl_FragCoord/texelFetch same-size copy (parity-equivalent to the reference blit, but
-    // independent of any vertex varying). MUST carry `#version 300 es` or Babylon runs its
-    // ES1->ES3 migration and the effect never compiles.
+    // gl_FragCoord/texelFetch same-size copy (parity-equivalent to the reference blit),
+    // or v_texCoord texture sampling when resizing persistent textures.
+    // MUST carry `#version 300 es` or Babylon runs its ES1->ES3 migration and the effect never compiles.
     const w = new EffectWrapper({
       engine: this.engine,
       name: 'nm_copy',
@@ -417,11 +459,15 @@ export class BabylonBackend {
       shaderLanguage: ShaderLanguage.GLSL,
       vertexShader: FULLSCREEN_VS,
       samplerNames: ['src'],
-      uniformNames: [],
-      fragmentShader: '#version 300 es\nprecision highp float;\nuniform sampler2D src;\nout vec4 fragColor;\nvoid main(){ fragColor = texelFetch(src, ivec2(gl_FragCoord.xy), 0); }\n'
+      uniformNames: ['uScale'],
+      fragmentShader: '#version 300 es\nprecision highp float;\nuniform sampler2D src;\nin vec2 v_texCoord;\nuniform vec2 uScale;\nout vec4 fragColor;\nvoid main(){\n  if (uScale.x == 1.0 && uScale.y == 1.0) {\n    fragColor = texelFetch(src, ivec2(gl_FragCoord.xy), 0);\n  } else {\n    fragColor = texture(src, v_texCoord);\n  }\n}\n'
     })
     w.onApplyObservable.add(() => {
-      if (this._bindPass && this._bindPass.__copySrc) w.effect.setTexture('src', this._bindPass.__copySrc)
+      if (this._bindPass) {
+        if (this._bindPass.__copySrc) w.effect.setTexture('src', this._bindPass.__copySrc)
+        const scale = this._bindPass.__copyScale || [1, 1]
+        w.effect.setFloat2('uScale', scale[0], scale[1])
+      }
     })
     return w
   }
@@ -480,6 +526,8 @@ export class BabylonBackend {
       this._bindInputs(this._bindPass, rec, wrapper.effect, this._bindState)
       this._bindUniforms(this._bindPass, rec, wrapper.effect, this._bindState)
       this._bindUniformBlocks(this._bindPass, rec, this._bindState)
+      const vp = this._resolvePassViewportBox(this._bindPass)
+      if (vp && this.gl) this.gl.viewport(vp.x, vp.y, vp.w, vp.h)
     })
 
     await this._whenReady(wrapper)
@@ -502,6 +550,20 @@ export class BabylonBackend {
       }
       tick()
     })
+  }
+
+  _resolvePassViewportBox (pass) {
+    if (!pass) return null
+    const vp = pass.viewportResolved || pass.viewport
+    if (!vp) return null
+    const x = vp.x ?? 0
+    const y = vp.y ?? 0
+    const w = vp.w ?? vp.width
+    const h = vp.h ?? vp.height
+    if (Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(w) && Number.isFinite(h)) {
+      return { x, y, w, h }
+    }
+    return null
   }
 
   // ---- pass execution --------------------------------------------------------
@@ -536,12 +598,16 @@ export class BabylonBackend {
     const outputId = this._resolveOutputId(effectivePass.outputs?.color ?? Object.values(effectivePass.outputs || {})[0], state)
     const outRec = this.textures.get(outputId)
     if (!outRec) { console.warn(`[BabylonBackend] output texture not found: ${outputId} (pass ${effectivePass.id})`); return }
+    const hasCustomViewport = !!this._resolvePassViewportBox(effectivePass)
     this.engine.setAlphaMode(this._resolveAlphaMode(effectivePass.blend))
     this._bindPass = effectivePass
     this._bindState = state
     this.effectRenderer.render(prog.wrapper, outRec.rtw)
     this._bindPass = null
     this._bindState = null
+    if (hasCustomViewport && typeof this.engine.wipeCaches === 'function') {
+      this.engine.wipeCaches(true)
+    }
     this.engine.setAlphaMode(Constants.ALPHA_DISABLE)
   }
 
@@ -585,7 +651,12 @@ export class BabylonBackend {
       for (let i = 0; i < texes.length; i++) { gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, texes[i], 0); bufs.push(gl.COLOR_ATTACHMENT0 + i) }
       gl.drawBuffers(bufs)
     }
-    gl.viewport(0, 0, viewportRec.width, viewportRec.height)
+    const vp = this._resolvePassViewportBox(pass)
+    if (vp && gl) {
+      gl.viewport(vp.x, vp.y, vp.w, vp.h)
+    } else if (viewportRec && gl) {
+      gl.viewport(0, 0, viewportRec.width, viewportRec.height)
+    }
     this.engine.setAlphaMode(this._resolveAlphaMode(pass.blend))
     this._drawFullscreenInto(prog, pass, state)
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
@@ -614,6 +685,10 @@ export class BabylonBackend {
     const count = this._pointCount(pass, state)
     if (!count) return
     this.engine.bindFramebuffer(outRec.rtw) // bind FBO + viewport; deposit accumulates (no clear)
+    const vp = this._resolvePassViewportBox(pass)
+    if (vp && gl) {
+      gl.viewport(vp.x, vp.y, vp.w, vp.h)
+    }
     const effect = prog.wrapper.effect
     this.engine.enableEffect(prog.wrapper.drawWrapper)
     this._bindInputs(pass, prog, effect, state)
@@ -686,6 +761,8 @@ export class BabylonBackend {
     if (!outRec) { console.warn(`[BabylonBackend] triangles ${pass.id}: no output ${outputId}`); return }
     const count = this._triCount(pass, state)
     this.engine.bindFramebuffer(outRec.rtw) // bind FBO + viewport
+    const vp = this._resolvePassViewportBox(pass)
+    if (vp && gl) gl.viewport(vp.x, vp.y, vp.w, vp.h)
     this._ensureDepthBuffer(outRec) // attach a DEPTH_COMPONENT24 renderbuffer to the bound FBO
     gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LESS); gl.depthMask(true)
     gl.enable(gl.CULL_FACE); gl.frontFace(gl.CCW); gl.cullFace(gl.BACK)
@@ -747,7 +824,7 @@ export class BabylonBackend {
     const dst = this.textures.get(outputId)
     if (!dst) return
     const srcThin = this._resolveInput(pass.inputs?.src, state)
-    this._bindPass = { __copySrc: srcThin }
+    this._bindPass = { __copySrc: srcThin, __copyScale: [1, 1] }
     this.engine.setAlphaMode(Constants.ALPHA_DISABLE)
     this.effectRenderer.render(this._copyWrapper, dst.rtw)
     this._bindPass = null

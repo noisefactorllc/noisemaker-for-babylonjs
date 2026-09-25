@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import { BabylonBackend } from '../src/runtime/babylonBackend.js'
+import { Constants } from '@babylonjs/core'
 
 class BudgetWebGL2 {
   constructor ({ maxDrawBuffers, maxTextureSize, maxColorBytesPerSample }) {
@@ -527,3 +528,91 @@ test('Pipeline with BabylonBackend preserves scoped texture dimensions when setU
   assert.equal(atlasAfterP1.height, 1024)
 })
 
+test('BabylonBackend createTexture tracks mipmaps and persistent flags and generateMipmaps runs safely', () => {
+  const backend = Object.create(BabylonBackend.prototype)
+  backend.textures = new Map()
+  backend._clearRtw = () => {}
+  let lastRtwOptions = null
+  let generatedInternal = null
+  const engine = {
+    createRenderTargetTexture: (size, options) => {
+      lastRtwOptions = options
+      return {
+        texture: { getEngine: () => engine, dispose: () => {} },
+        dispose: () => {}
+      }
+    },
+    generateMipmaps: (tex) => {
+      generatedInternal = tex
+    },
+    setAlphaMode: () => {}
+  }
+  backend.engine = engine
+
+  const plain = backend.createTexture('plain_tex', { width: 64, height: 64, format: 'rgba16f' })
+  assert.equal(plain.mipmaps, false)
+  assert.equal(plain.persistent, false)
+  assert.equal(lastRtwOptions.generateMipMaps, false)
+  assert.equal(lastRtwOptions.samplingMode, Constants.TEXTURE_NEAREST_SAMPLINGMODE)
+
+  const mipped = backend.createTexture('mipped_tex', { width: 64, height: 64, format: 'rgba16f', mipmaps: true, persistent: true })
+  assert.equal(mipped.mipmaps, true)
+  assert.equal(mipped.persistent, true)
+  assert.equal(lastRtwOptions.generateMipMaps, true)
+  assert.equal(lastRtwOptions.samplingMode, Constants.TEXTURE_LINEAR_LINEAR_MIPLINEAR)
+
+  // generateMipmaps safely handles empty, non-existent, and plain ids without generating
+  assert.doesNotThrow(() => backend.generateMipmaps([]))
+  assert.doesNotThrow(() => backend.generateMipmaps(['nonexistent']))
+  assert.doesNotThrow(() => backend.generateMipmaps(['plain_tex']))
+  assert.equal(generatedInternal, null)
+
+  // generateMipmaps actually calls engine.generateMipmaps with the internal texture
+  backend.generateMipmaps(['mipped_tex'])
+  assert.equal(generatedInternal, mipped.internal)
+
+  // copyTexture sets __copyScale: [1, 1] for same-size, and [dst.w/src.w, dst.h/src.h] for resize
+  let renderedWrapper = null
+  backend._copyWrapper = { name: 'copy' }
+  backend.effectRenderer = {
+    render: (wrapper, rtw) => {
+      renderedWrapper = wrapper
+      assert.ok(backend._bindPass)
+    }
+  }
+
+  // Same-size copy
+  const dstSame = backend.createTexture('dst_same', { width: 64, height: 64, format: 'rgba16f' })
+  backend.copyTexture('plain_tex', 'dst_same')
+  assert.equal(renderedWrapper, backend._copyWrapper)
+
+  // Different-size copy (persistent texture resize)
+  const dstDiff = backend.createTexture('dst_diff', { width: 128, height: 256, format: 'rgba16f' })
+  let recordedBindPass = null
+  backend.effectRenderer.render = (wrapper, rtw) => {
+    recordedBindPass = { ...backend._bindPass }
+  }
+  backend.copyTexture('plain_tex', 'dst_diff')
+  assert.deepEqual(recordedBindPass.__copyScale, [2, 4])
+
+  // _executeBlit passes __copyScale: [1, 1]
+  backend._resolveInput = () => ({ id: 'srcThin' })
+  backend._executeBlit({ inputs: { src: 'plain_tex' }, outputs: { color: 'dst_same' } }, {})
+  assert.deepEqual(recordedBindPass.__copyScale, [1, 1])
+})
+
+test('BabylonBackend _resolvePassViewportBox resolves dynamic and numeric viewport specifications', () => {
+  const backend = Object.create(BabylonBackend.prototype)
+  assert.equal(backend._resolvePassViewportBox(null), null)
+  assert.equal(backend._resolvePassViewportBox({}), null)
+  assert.equal(backend._resolvePassViewportBox({ viewport: 'invalid' }), null)
+
+  // Direct viewportResolved { x, y, w, h }
+  assert.deepEqual(backend._resolvePassViewportBox({ viewportResolved: { x: 10, y: 20, w: 100, h: 200 } }), { x: 10, y: 20, w: 100, h: 200 })
+
+  // Authored viewport { width, height } defaulting x, y to 0
+  assert.deepEqual(backend._resolvePassViewportBox({ viewport: { width: 320, height: 240 } }), { x: 0, y: 0, w: 320, h: 240 })
+
+  // Authored viewport with x, y, width, height
+  assert.deepEqual(backend._resolvePassViewportBox({ viewport: { x: 5, y: 15, width: 64, height: 64 } }), { x: 5, y: 15, w: 64, h: 64 })
+})
