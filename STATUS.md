@@ -244,9 +244,11 @@ a sub-range of it, and `fca611fd` itself was already consumed by the `4891b995..
 - **Manifest: 210 effects** (unchanged count, 0 added, 0 removed).
 - **Range verification** (force-push flag resolved with direct evidence in a local upstream
   checkout, current `HEAD` `fa4b2f02`): `git merge-base --is-ancestor` confirms `fca611fd` is a
-  direct ancestor of `9d3474df` (the flagged range is contiguous) and `240740dd` (already synced
-  above) is an ancestor of `fca611fd`; the observed `0bd09d00..9d3474df` is a sub-range of
-  `fca611fd..9d3474df`. The release tag `v1.0.181` points exactly at `9d3474df` (tagged
+  direct ancestor of `9d3474df` (the flagged range is contiguous), the observed `0bd09d00..9d3474df`
+  is a sub-range of `fca611fd..9d3474df`, and `fca611fd` is an ancestor of the already-synced
+  `240740dd` (single-child first-parent chain: `fca611fd` → `8a21c9ca` → … → `66b2c721` → … →
+  `240740dd`) — so the incremental, not-yet-synced shader-tree delta is exactly `240740dd..9d3474df`.
+  The release tag `v1.0.181` points exactly at `9d3474df` (tagged
   2026-09-25T15:35:36Z — the CDN artifact's Last-Modified 15:35:28Z, seconds earlier, is consistent
   with that release publish), so
   the re-pull above picked up this range's release build.

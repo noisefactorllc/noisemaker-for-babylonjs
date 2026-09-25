@@ -1,0 +1,99 @@
+name: Tests
+
+# Machine-verifies the two criteria every tearoff ports-sync review asks for
+# and this repo's docs record in STATUS.md's "Vendor sync" entries:
+#
+#   1. test — the repo's own suite (`npm test`, the Node built-in runner) passes.
+#      The engine is fetched by vendor/fetch.sh (gitignored, like node_modules)
+#      and the browser-based tests run under Playwright's bundled Chromium.
+#
+#   2. sync-audit — re-derives the current recorded upstream sync audit
+#      (STATUS.md "Vendor sync (240740dd..9d3474df)", tearoff job #523) from
+#      source, so the "port impact: none" conclusion is executable evidence
+#      rather than prose: upstream ancestry, the exact shaders/ delta (only the
+#      dev/test-only effect-validator module and its test), the release-tag
+#      correlation, and the published bundle's exclusion of the validator.
+#      Update this job together with each new STATUS.md sync entry.
+#
+# Runs on pushes to main and on demand. It ships no artifacts and holds no
+# credentials (see export-kit.yml for the publish path, which this does not
+# touch).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: npm test (Node built-in runner)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm ci
+      - name: Fetch the published engine (shaders.noisedeck.app)
+        run: bash vendor/fetch.sh
+      - name: Install Chromium for the browser tests
+        run: npx playwright install --with-deps chromium
+      - name: Run the test suite
+        run: npm test
+
+  sync-audit:
+    name: Upstream sync audit (240740dd..9d3474df)
+    runs-on: ubuntu-latest
+    env:
+      UPSTREAM: https://github.com/noisefactorllc/noisemaker.git
+      START: 240740dd2d30cbd0984b179834ab24abe71c8fb2
+      FCA: fca611fd8f91424661d4e531d39313d24ea21134
+      END: 9d3474dfdc6cb737ebb7b2f3598b16d940af1544
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Clone upstream and verify range ancestry and release tag
+        run: |
+          git clone --quiet "$UPSTREAM" upstream
+          cd upstream
+          git merge-base --is-ancestor "$FCA" "$END" \
+            || { echo "FAIL: fca611fd is not an ancestor of 9d3474df"; exit 1; }
+          git merge-base --is-ancestor "$FCA" "$START" \
+            || { echo "FAIL: fca611fd is not an ancestor of 240740dd"; exit 1; }
+          test "$(git rev-parse 'v1.0.181^{commit}')" = "$END" \
+            || { echo "FAIL: v1.0.181 does not point at 9d3474df"; exit 1; }
+      - name: Verify the exact shaders/ delta of the audited range
+        run: |
+          cd upstream
+          numstat="$(git diff --numstat "$START".."$END" -- shaders/)"
+          expected="$(printf '1097\t18\tshaders/src/runtime/effect-validator.js\n457\t0\tshaders/tests/test_effect_definition_validation.js')"
+          test "$numstat" = "$expected" \
+            || { echo "FAIL: unexpected shaders/ delta:"; echo "$numstat"; exit 1; }
+          names="$(git diff --name-only "$START".."$END" -- shaders/ | sort)"
+          expected_names="$(printf 'shaders/src/runtime/effect-validator.js\nshaders/tests/test_effect_definition_validation.js')"
+          test "$names" = "$expected_names" \
+            || { echo "FAIL: unexpected shaders/ file list:"; echo "$names"; exit 1; }
+      - name: Verify the validator is outside the published engine surface
+        run: |
+          cd upstream
+          # 1. No engine source module other than the validator itself references it at v1.0.181.
+          if git grep -q "effect-validator" "$END" -- 'shaders/src' ':!shaders/src/runtime/effect-validator.js'; then
+            echo "FAIL: a runtime source module references effect-validator.js"; exit 1
+          fi
+          # 2. The browser bundler disables effect validation by construction.
+          grep -q "NOISEMAKER_DISABLE_EFFECT_VALIDATION" scripts/bundle.js \
+            || { echo "FAIL: bundler define missing"; exit 1; }
+          # 3. The published core bundle contains no validator symbols and matches the recorded build.
+          curl -fsSL --max-time 60 https://shaders.noisedeck.app/1/noisemaker-shaders-core.esm.js -o /tmp/core.esm.js
+          test "$(wc -c < /tmp/core.esm.js)" = 841350 \
+            || { echo "FAIL: core bundle size drifted from the recorded 841350 bytes"; exit 1; }
+          if grep -q "validateEffectDefinition" /tmp/core.esm.js; then
+            echo "FAIL: validator present in the published bundle"; exit 1
+          fi
