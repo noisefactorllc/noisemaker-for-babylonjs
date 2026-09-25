@@ -230,6 +230,40 @@ Engine synced from upstream `noisefactorllc/noisemaker` commit `240740dd` (v1.0.
   - Added unit test coverage for subchain argument validation reporting P008, P009, and P010 diagnostics in standard compilation and throwing `SyntaxError` with diagnostic metadata under `subchainArguments: 'strict'`.
 - **Verification**: All 55 unit and integration tests pass cleanly; parity verified against golden standard.
 
+## Vendor sync (240740dd..9d3474df)
+
+Source-side: `noisefactorllc/noisemaker` `fca611fd8f91..9d3474dfdc6c` (tearoff `ports-sync` job #523,
+flagged for a force-push / non-contiguous delivery — audited directly in a local checkout:
+`fca611fd` is a direct ancestor of `9d3474df` (contiguous), the observed `0bd09d00..9d3474df` range is
+a sub-range of it, and `fca611fd` itself was already consumed by the `4891b995..240740dd` sync above).
+`bash vendor/fetch.sh` re-pulled `/1` in place after the last upstream commit in this range:
+
+- **Engine core unchanged**: `noisemaker-shaders-core.esm.js` 841350 bytes (ETag `6ab694c0-cd686`,
+  Last-Modified Fri, 25 Sep 2026 15:35:28 GMT) — the same size recorded for the `240740dd` sync, and
+  it contains none of the new code (verified by string search — see Port impact below).
+- **Manifest: 210 effects** (unchanged count, 0 added, 0 removed); no effect-definition file changed
+  upstream in this range, so no mini-bundle content change follows.
+- **Upstream changes audit** (`240740dd..9d3474df`, the only shader-tree delta after the
+  already-synced `240740dd` — exactly two commits):
+  - Upstream commit `ba87ffae` (GAP-003) implemented the runtime effect-definition validator
+    `shaders/src/runtime/effect-validator.js` — a deterministic, side-effect-free structure check of
+    the definition grammar consumed by `effect.js`/`expander.js`/`compiler.js`/uniform packing/the UI
+    layer (returns error strings, `[]` for valid) — plus its contract suite
+    `shaders/tests/test_effect_definition_validation.js` (upstream corpus gate: 210/210 effect
+    definitions valid).
+  - Upstream commit `9d3474df` completed the validator contract (semantic xyzw component ordering,
+    vector min/max form agreement and default containment, byte-layout duplicate/overlap conflict
+    detection; accepts `string` globals with string choices, `ui.multiline`, `enabledBy` `gte`/`lte`,
+    dimension `inputOverride`) and wired the suite into `scripts/run-js-tests.js` /
+    `test:shaders:runtime`.
+- **Port impact: none.** The validator is a source-tree module exercised only by upstream's own test
+  wiring — it is **not part of the published engine surface this port consumes**: the vendored core
+  ESM contains neither `validateEffectDefinition` nor the module's header text, and no effect
+  definition, GLSL/WGSL source, manifest entry, or parameter contract changed in the range (upstream's
+  own corpus gate re-validated all 210 definitions clean). `vendor/fetch.sh` remains the only engine
+  source; the effect catalog and parity surface are unchanged, so no Babylon-side code, test, or
+  fixture change follows from this range.
+
 ## Vendor sync (13fa8b54..4891b995)
 
 Source-side: `noisefactorllc/noisemaker` `13fa8b540025..4891b9953f9f` (tearoff `ports-sync` job #484).
