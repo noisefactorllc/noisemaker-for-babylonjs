@@ -238,31 +238,54 @@ flagged for a force-push / non-contiguous delivery — audited directly in a loc
 a sub-range of it, and `fca611fd` itself was already consumed by the `4891b995..240740dd` sync above).
 `bash vendor/fetch.sh` re-pulled `/1` in place after the last upstream commit in this range:
 
-- **Engine core unchanged**: `noisemaker-shaders-core.esm.js` 841350 bytes (ETag `6ab694c0-cd686`,
-  Last-Modified Fri, 25 Sep 2026 15:35:28 GMT) — the same size recorded for the `240740dd` sync, and
-  it contains none of the new code (verified by string search — see Port impact below).
-- **Manifest: 210 effects** (unchanged count, 0 added, 0 removed); no effect-definition file changed
-  upstream in this range, so no mini-bundle content change follows.
-- **Upstream changes audit** (`240740dd..9d3474df`, the only shader-tree delta after the
-  already-synced `240740dd` — exactly two commits):
-  - Upstream commit `ba87ffae` (GAP-003) implemented the runtime effect-definition validator
-    `shaders/src/runtime/effect-validator.js` — a deterministic, side-effect-free structure check of
-    the definition grammar consumed by `effect.js`/`expander.js`/`compiler.js`/uniform packing/the UI
-    layer (returns error strings, `[]` for valid) — plus its contract suite
-    `shaders/tests/test_effect_definition_validation.js` (upstream corpus gate: 210/210 effect
-    definitions valid).
-  - Upstream commit `9d3474df` completed the validator contract (semantic xyzw component ordering,
-    vector min/max form agreement and default containment, byte-layout duplicate/overlap conflict
-    detection; accepts `string` globals with string choices, `ui.multiline`, `enabledBy` `gte`/`lte`,
+- **Engine core**: `noisemaker-shaders-core.esm.js` 841350 bytes (ETag `6ab694c0-cd686`,
+  Last-Modified Fri, 25 Sep 2026 15:35:28 GMT), verified **byte-identical (`cmp`) to the live CDN
+  artifact re-fetched after the last upstream commit in this range**.
+- **Manifest: 210 effects** (unchanged count, 0 added, 0 removed).
+- **Range verification** (force-push flag resolved with direct evidence in a local upstream
+  checkout, current `HEAD` `fa4b2f02`): `git merge-base --is-ancestor` confirms `fca611fd` is a
+  direct ancestor of `9d3474df` (the flagged range is contiguous) and `240740dd` (already synced
+  above) is an ancestor of `fca611fd`; the observed `0bd09d00..9d3474df` is a sub-range of
+  `fca611fd..9d3474df`. The release tag `v1.0.181` points exactly at `9d3474df` (tagged
+  2026-09-25T15:35:36Z — the CDN artifact's Last-Modified 15:35:28Z, seconds earlier, is consistent
+  with that release publish), so
+  the re-pull above picked up this range's release build.
+- **Upstream changes audit** (`240740dd..9d3474df -- shaders/`, exactly two commits, exact
+  per-file delta): `ba87ffae` + `9d3474df` →
+  `shaders/src/runtime/effect-validator.js` (+1097/−18) and
+  `shaders/tests/test_effect_definition_validation.js` (+457, new file).
+  - `ba87ffae` (GAP-003) implemented the runtime effect-definition validator — a deterministic,
+    side-effect-free structure check of the definition grammar consumed by
+    `effect.js`/`expander.js`/`compiler.js`/uniform packing/the UI layer (returns error strings,
+    `[]` for valid) — plus its contract suite (upstream corpus gate: 210/210 effect definitions
+    valid).
+  - `9d3474df` completed the validator contract (semantic xyzw component ordering, vector min/max
+    form agreement and default containment, byte-layout duplicate/overlap conflict detection;
+    accepts `string` globals with string choices, `ui.multiline`, `enabledBy` `gte`/`lte`,
     dimension `inputOverride`) and wired the suite into `scripts/run-js-tests.js` /
     `test:shaders:runtime`.
-- **Port impact: none.** The validator is a source-tree module exercised only by upstream's own test
-  wiring — it is **not part of the published engine surface this port consumes**: the vendored core
-  ESM contains neither `validateEffectDefinition` nor the module's header text, and no effect
-  definition, GLSL/WGSL source, manifest entry, or parameter contract changed in the range (upstream's
-  own corpus gate re-validated all 210 definitions clean). `vendor/fetch.sh` remains the only engine
+  - No other file changed under `shaders/` in the range; the only non-shader files in
+    `fca611fd..9d3474df` are docs/ledger text (`LEDGER.md`, `llms-full.txt`,
+    `docs/plans/active-framework-gap.md`, `docs/shaders/language.rst`) and the test wiring
+    (`package.json`, `scripts/run-js-tests.js`). **No effect definition, GLSL/WGSL source, manifest
+    entry, or parameter contract changed.**
+- **Port impact: none.** The validator is a dev/test-only module that is not part of the published
+  engine surface this port consumes — verified three ways: (1) at `v1.0.181` no module under
+  `shaders/src` imports `effect-validator.js` (`git grep`), so it is outside the browser bundle's
+  import graph; (2) the vendored core ESM contains neither `validateEffectDefinition` nor the
+  module's header text (string search); (3) upstream's own bundler defines
+  `__NOISEMAKER_DISABLE_EFFECT_VALIDATION__: 'true'` for the browser bundle
+  (`scripts/bundle.js`), disabling it by construction. `vendor/fetch.sh` remains the only engine
   source; the effect catalog and parity surface are unchanged, so no Babylon-side code, test, or
   fixture change follows from this range.
+- **Verification**: `npm test` (Node built-in runner, `node --test test/*.test.js`) — **55 tests,
+  55 pass, 0 fail** on this tree. Because the engine artifact is unchanged (byte-identical to the
+  `v1.0.181` release artifact, no published-surface delta), the committed goldens and the recorded
+  parity results above remain valid without re-minting. Spot check on this container's software GL
+  (SwiftShader — not the goldens' Metal minting driver): `bash parity/run.sh noise` graded **PASS**
+  at the harness's documented tolerance (max-abs-diff 1.0, ssim 1.00000, tol 2.001); the byte-exact
+  0-diff sweep is only demonstrable on the same driver the goldens were minted on (see README /
+  PORTING-GUIDE), which this container does not provide.
 
 ## Vendor sync (13fa8b54..4891b995)
 
