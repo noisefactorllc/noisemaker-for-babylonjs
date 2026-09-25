@@ -1,11 +1,11 @@
 # Noisemaker for Babylon.js — status & parity
 
-*Last verified 2026-09-24 against the engine at build tag `4891b995`
-(`noisemaker-shaders-core.esm.js`, 836684 bytes) — source-side
-`noisefactorllc/noisemaker` @ `4891b9953f9f`: full sweep **322/322 PASS**, 3 documented
+*Last verified 2026-09-25 against the engine at build tag `240740dd`
+(`noisemaker-shaders-core.esm.js`, 841350 bytes) — source-side
+`noisefactorllc/noisemaker` @ `240740dd2d30`: full sweep **322/322 PASS**, 3 documented
 external-input skips, every graded effect still byte-exact at max-abs-diff 0. Exposes output sink
 deferral query `shouldDeferRender()` on `NoisemakerRenderer`, verifies structured parser diagnostics
-(P005 output operations, P006 subchains, P007 call forms), and incorporates upstream shader optimizations for zero-amount branches in `noise` and `glitch`.
+(P001 coordinates, P005 output operations, P006 subchains, P007 call forms, P008-P010 subchain arguments), and incorporates upstream shader optimizations for zero-amount branches in `noise` and `glitch`.
 The sources of truth are `parity/sweep.sh`, `parity/corpus/sweep.sh`, and `tools/catalog.mjs`.*
 
 This file holds the detailed coverage and parity numbers. For what the project is and how to use it,
@@ -211,6 +211,24 @@ Source-side: `noisefactorllc/noisemaker` `246ff57f43cc..0ed489ec4684` (a tearoff
   parity/sweep.sh`, mints golden + candidate together per the documented discipline above) and every
   candidate re-rendered and re-graded — **325/325 non-corpus programs (roster + mode matrix + the 4 new
   fixtures) byte-identical**, 3 skipped (`media`/`text`/`roll`, unchanged policy).
+
+## Vendor sync (4891b995..240740dd)
+
+Source-side: `noisefactorllc/noisemaker` `4891b9953f9f..240740dd2d30` (tearoff `ports-sync` job #503).
+Engine synced from upstream `noisefactorllc/noisemaker` commit `240740dd` (v1.0.180):
+
+- **Manifest: 210 effects** (unchanged count, 0 added, 0 removed).
+- **Engine core**: `noisemaker-shaders-core.esm.js` 841350 bytes (Build `240740dd`).
+- **Upstream changes audit**:
+  - Upstream commit `9fa1a221`: derived parser diagnostic coordinates and spans from source token positions across P001, P002, P003, P004, P005, P006, and P007 diagnostics on thrown `SyntaxError`s.
+  - Upstream commit `fca611fd`: derived numeric-coercion diagnostic coordinates and spans from array literal positions (e.g., `let y = [1] + 1`).
+  - Upstream commit `66b2c721`: implemented GAP-027 subchain argument validation contract, exposing diagnostics P008 (unknown/discarded subchain arguments), P009 (duplicate subchain arguments), and P010 (missing argument separator) in permissive compile diagnostics and strict parse/compile validation (`subchainArguments: 'strict'`).
+  - Upstream commit `240740dd`: registered committed subchain differential gate vs recorded baseline.
+- **Babylon test coverage**:
+  - Updated unit test coverage in `test/compiler.test.js` verifying that parser diagnostics derive token positions and spans `sourcePosition(source, line, column)` across all 37 parser diagnostic error cases, while preserving null spans for caller-supplied tokens lacking source coordinates.
+  - Added unit test coverage for array literal numeric coercion diagnostics retaining source coordinates and spans.
+  - Added unit test coverage for subchain argument validation reporting P008, P009, and P010 diagnostics in standard compilation and throwing `SyntaxError` with diagnostic metadata under `subchainArguments: 'strict'`.
+- **Verification**: All 55 unit and integration tests pass cleanly; parity verified against golden standard.
 
 ## Vendor sync (13fa8b54..4891b995)
 

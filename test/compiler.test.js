@@ -3,6 +3,12 @@ import test from 'node:test'
 
 import { exportFatGraph } from '../src/compiler/index.js'
 
+const sourcePosition = (lex, source, line, column) => {
+  const matches = lex(source).filter(token => token.position && token.position.line === line && token.position.column === column)
+  assert.equal(matches.length, 1, `expected 1 token match for (${line}, ${column}) in source: ${source}`)
+  return { start: matches[0].position.start, end: matches[0].position.end }
+}
+
 test('compiler exportFatGraph produces fat graph with passes, programs, and valid shaders', async () => {
   const fat = await exportFatGraph('search synth\nnoise().write(o0)\nrender(o0)')
   assert.equal(fat.renderSurface, 'o0')
@@ -216,7 +222,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: "Expect '(' at line 2 col 8",
       location: { line: 2, column: 8 },
-      span: null,
     },
     {
       source: 'search synth\nrender(o0',
@@ -225,7 +230,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: "Expect ')' at line 2 col 10",
       location: { line: 2, column: 10 },
-      span: null,
     },
     {
       source: 'search synth\nlet = 1',
@@ -234,7 +238,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: 'Expected identifier at line 2 col 5',
       location: { line: 2, column: 5 },
-      span: null,
     },
     {
       source: 'search synth\nfoo(1',
@@ -243,7 +246,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: "Expect ')' at line 2 col 6",
       location: { line: 2, column: 6 },
-      span: null,
     },
     {
       source: 'search synth\nlet x = midi()',
@@ -252,7 +254,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: "midi() requires 'channel' or 'zone' argument at line 2 col 9",
       location: { line: 2, column: 9 },
-      span: null,
     },
     {
       source: 'search synth\nlet x = audio()',
@@ -261,7 +262,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: "audio() requires 'band' argument at line 2 col 9",
       location: { line: 2, column: 9 },
-      span: null,
     },
     {
       source: 'search synth\nlet x = osc(type: oscKind.sine, bogus: 1)',
@@ -270,7 +270,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: "osc() unknown parameter 'bogus' at line 2 col 9. Valid: type, min, max, speed, offset, seed",
       location: { line: 2, column: 9 },
-      span: null,
     },
     {
       source: 'search bogus\nrender(o0)',
@@ -279,7 +278,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: "Invalid namespace 'bogus' at line 1 col 8. Valid namespaces: io, classicNoisedeck, synth, mixer, filter, render, points, synth3d, filter3d, user",
       location: { line: 1, column: 8 },
-      span: null,
     },
     {
       source: 'search synth search filter\nrender(o0)',
@@ -288,7 +286,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: 'Only one search directive is allowed per program at line 1 col 14',
       location: { line: 1, column: 14 },
-      span: null,
     },
     {
       source: 'let x = 1\nsearch synth\nrender(o0)',
@@ -297,7 +294,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: "'search' directive must appear before other statements at line 2 col 1",
       location: { line: 2, column: 1 },
-      span: null,
     },
     {
       source: 'render(o0)',
@@ -306,7 +302,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: "Missing required 'search' directive. Every program must start with 'search <namespace>, ...' to specify namespace search order.",
       location: { line: 1, column: 11 },
-      span: null,
     },
     {
       source: 'search synth\nrender(1)',
@@ -315,7 +310,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: 'Expected output reference in render()',
       location: { line: 2, column: 8 },
-      span: null,
     },
     {
       source: 'search synth\nlet x = diagProbe().write(o0)',
@@ -324,7 +318,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: "'.write()' is only allowed in statement context at line 2 col 21",
       location: { line: 2, column: 21 },
-      span: null,
     },
     {
       source: 'search synth\ndiagProbe().write()',
@@ -333,7 +326,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: 'write() requires an explicit surface reference (e.g., o0, o1, xyz0, vel0, rgba0, mesh0, none) at line 2 col 19',
       location: { line: 2, column: 19 },
-      span: null,
     },
     {
       source: 'search synth\ndiagProbe().write3d(1, geo0)',
@@ -342,7 +334,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: 'Expected tex3d reference in write3d() at line 2 col 21',
       location: { line: 2, column: 21 },
-      span: null,
     },
     {
       source: 'search synth\ndiagProbe().write3d(vol0, 1)',
@@ -351,7 +342,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: 'Expected geo reference in write3d() at line 2 col 27',
       location: { line: 2, column: 27 },
-      span: null,
     },
     {
       source: 'search synth\nread(o0).subchain(name: 1) { .noise() }',
@@ -360,7 +350,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: 'Expected string value for subchain name at line 2 col 25',
       location: { line: 2, column: 25 },
-      span: null,
     },
     {
       source: 'search synth\nread(o0).subchain(name:',
@@ -369,7 +358,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: 'Expected string value for subchain name at line 2 col 24',
       location: { line: 2, column: 24 },
-      span: null,
     },
     {
       source: 'search synth\nread(o0).subchain() { noise() }',
@@ -378,7 +366,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: "Expected '.' before chain element in subchain body at line 2 col 23",
       location: { line: 2, column: 23 },
-      span: null,
     },
     {
       source: 'search synth\nread(o0).subchain() {',
@@ -387,7 +374,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: "Expected '.' before chain element in subchain body at line 2 col 22",
       location: { line: 2, column: 22 },
-      span: null,
     },
     {
       source: 'search synth\nread(o0).subchain() {}',
@@ -396,7 +382,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: 'Subchain body cannot be empty at line 2 col 10',
       location: { line: 2, column: 10 },
-      span: null,
     },
     {
       source: 'search synth\nread(o0).subchain() { /* empty */ }',
@@ -405,7 +390,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: 'Subchain body cannot be empty at line 2 col 10',
       location: { line: 2, column: 10 },
-      span: null,
     },
     {
       source: 'search synth\nlet x = from(a: 1, b: 2)',
@@ -414,7 +398,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: "'from' does not support named arguments at line 2 col 9",
       location: { line: 2, column: 9 },
-      span: null,
     },
     {
       source: 'search synth\nlet x = from(synth)',
@@ -423,7 +406,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: "'from' requires exactly two arguments (namespace, call) at line 2 col 9",
       location: { line: 2, column: 9 },
-      span: null,
     },
     {
       source: 'search synth\nlet x = from(1, probe())',
@@ -432,7 +414,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: "'from' namespace argument must be an identifier at line 2 col 9",
       location: { line: 2, column: 9 },
-      span: null,
     },
     {
       source: 'search synth\nlet x = from(synth, 1)',
@@ -441,7 +422,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: "'from' second argument must be a call expression at line 2 col 9",
       location: { line: 2, column: 9 },
-      span: null,
     },
     {
       source: 'search synth\nnd.noise()',
@@ -450,7 +430,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: "Inline namespace syntax 'nd.noise()' is not allowed. Use 'search nd' at the start of the program instead, at line 2 col 1",
       location: { line: 2, column: 1 },
-      span: null,
     },
     {
       source: 'search synth\ndiagProbe(1, x: 2)',
@@ -459,7 +438,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: 'Cannot mix positional and keyword arguments at line 2 col 14',
       location: { line: 2, column: 14 },
-      span: null,
     },
     {
       source: 'search synth\ndiagProbe(x: 1, 2)',
@@ -468,7 +446,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: 'Cannot mix positional and keyword arguments at line 2 col 17',
       location: { line: 2, column: 17 },
-      span: null,
     },
     {
       source: '// 😀\r\nsearch synth\r\n\tdiagProbe(1, x: 2)',
@@ -477,7 +454,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: 'Cannot mix positional and keyword arguments at line 3 col 15',
       location: { line: 3, column: 15 },
-      span: null,
     },
     {
       source: 'search synth\nlet x = "😀"; nd.noise()',
@@ -486,7 +462,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: "Inline namespace syntax 'nd.noise()' is not allowed. Use 'search nd' at the start of the program instead, at line 2 col 15",
       location: { line: 2, column: 15 },
-      span: null,
     },
     {
       source: 'search synth\nlet x = ;',
@@ -495,7 +470,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: "Expected expression after '=' at line 2 col 9",
       location: { line: 2, column: 9 },
-      span: null,
     },
     {
       source: 'search synth\ndiagProbe(a: )',
@@ -504,7 +478,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: "Expected expression after '=' at line 2 col 14",
       location: { line: 2, column: 14 },
-      span: null,
     },
     {
       source: 'search synth\nlet x = [1 2]',
@@ -513,7 +486,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: "Expected ']' at line 2 col 12",
       location: { line: 2, column: 12 },
-      span: null,
     },
     {
       source: 'search synth\nlet x = foo.+',
@@ -522,7 +494,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: "Expected identifier after '.' at line 2 col 13",
       location: { line: 2, column: 13 },
-      span: null,
     },
     {
       source: 'search synth\ndiagProbe(; 1)',
@@ -531,7 +502,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: 'Unexpected token SEMICOLON at line 2 col 11',
       location: { line: 2, column: 11 },
-      span: null,
     },
     {
       source: 'search synth\nlet x = "😀"; let y = [1 2]',
@@ -540,7 +510,6 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
       severity: 'error',
       message: "Expected ']' at line 2 col 26",
       location: { line: 2, column: 26 },
-      span: null,
     },
   ]
 
@@ -549,13 +518,163 @@ test('structured DSL parser diagnostics attach diagnostic metadata to thrown Syn
     if (typeof parse === 'function') {
       entryPoints.push((src) => parse(lex(src)))
     }
+    const expectedSpan = span !== undefined ? span : (location ? sourcePosition(lex, source, location.line, location.column) : null)
     for (const entryPoint of entryPoints) {
       assert.throws(
         () => entryPoint(source),
         (err) => {
           assert.equal(err.name, 'SyntaxError')
           assert.equal(err.message, message)
-          assert.deepEqual(err.diagnostic, { code, stage, severity, message, location, span })
+          assert.deepEqual(err.diagnostic, { code, stage, severity, message, location, span: expectedSpan })
+          assert.equal(err.propertyIsEnumerable('diagnostic'), false)
+          assert.equal(JSON.stringify(err), '{}')
+          return true
+        }
+      )
+    }
+  }
+
+  const tokensWithoutPositions = lex('search synth\nrender o0').map(({ type, lexeme }) => ({ type, lexeme, line: 2, col: 8 }))
+  assert.throws(
+    () => parse(tokensWithoutPositions),
+    (err) => {
+      assert.equal(err.message, "Expect '(' at line 2 col 8")
+      assert.deepEqual(err.diagnostic, {
+        code: 'P001',
+        stage: 'parser',
+        severity: 'error',
+        message: err.message,
+        location: { line: 2, column: 8 },
+        span: null,
+      })
+      return true
+    }
+  )
+})
+
+test('array literal numeric coercion diagnostics attach source coordinates and span', async () => {
+  const { bootEngine } = await import('../vendor/engine.mjs')
+  await bootEngine()
+  const { compile, lex, parse } = await import('../vendor/noisemaker/noisemaker-shaders-core.esm.js')
+
+  const failures = [
+    ['search synth\nlet y = [1] + 1', 2, 9],
+    ['search synth\nlet y = 1 * [1]', 2, 13],
+    ['search synth\nlet y = -[1]', 2, 10],
+  ]
+
+  for (const [source, line, column] of failures) {
+    for (const entryPoint of [source => parse(lex(source)), compile]) {
+      assert.throws(
+        () => entryPoint(source),
+        (err) => {
+          assert.equal(err.name, 'SyntaxError')
+          assert.equal(err.message, 'Expected number')
+          assert.deepEqual(err.diagnostic, {
+            code: 'P001',
+            stage: 'parser',
+            severity: 'error',
+            message: 'Expected number',
+            location: { line, column },
+            span: sourcePosition(lex, source, line, column),
+          })
+          assert.equal(err.propertyIsEnumerable('diagnostic'), false)
+          assert.equal(JSON.stringify(err), '{}')
+          return true
+        }
+      )
+    }
+  }
+})
+
+test('subchain argument validation contract exposes P008, P009, P010 diagnostics', async () => {
+  const { bootEngine } = await import('../vendor/engine.mjs')
+  await bootEngine()
+  const { compile, lex, parse } = await import('../vendor/noisemaker/noisemaker-shaders-core.esm.js')
+
+  // P008 unknown key: warning reported, value discarded
+  const unknownRes = compile('search synth, filter\nread(o0).subchain(nme: "typo", name: "ok") { .invert() }.write(o1)')
+  assert.equal(unknownRes.diagnostics.length, 1)
+  assert.deepEqual(unknownRes.diagnostics[0], {
+    code: 'P008',
+    message: "Unknown subchain argument 'nme' at line 2 col 19. Valid keys: name, id. The value is discarded.",
+    severity: 'warning',
+    nodeId: null,
+    location: { line: 2, column: 19 },
+  })
+
+  // P009 duplicate key: warning reported, last value wins in AST
+  const dupRes = compile('search synth, filter\nread(o0).subchain(name: "a", name: "b") { .invert() }.write(o1)')
+  assert.equal(dupRes.diagnostics.length, 1)
+  assert.deepEqual(dupRes.diagnostics[0], {
+    code: 'P009',
+    message: "Duplicate subchain argument 'name' at line 2 col 30. The last value wins.",
+    severity: 'warning',
+    nodeId: null,
+    location: { line: 2, column: 30 },
+  })
+  const subchainBegin = dupRes.plans[0].chain.find((s) => s.op === '_subchain_begin')
+  assert.equal(subchainBegin.args.name, 'b')
+
+  // P010 missing separator: warning reported
+  const sepRes = compile('search synth, filter\nread(o0).subchain(name: "a" id: "b") { .invert() }.write(o1)')
+  assert.equal(sepRes.diagnostics.length, 1)
+  assert.deepEqual(sepRes.diagnostics[0], {
+    code: 'P010',
+    message: "Missing ',' between subchain arguments at line 2 col 29",
+    severity: 'warning',
+    nodeId: 'b',
+    location: { line: 2, column: 29 },
+  })
+
+  // Strict opt-in throws SyntaxError across compile and parse entrypoints with non-enumerable diagnostic metadata
+  const strictCases = [
+    {
+      source: 'search synth, filter\nread(o0).subchain(nme: "typo") { .invert() }.write(o1)',
+      diagnostic: {
+        code: 'P008',
+        stage: 'parser',
+        severity: 'error',
+        message: "Unknown subchain argument 'nme' at line 2 col 19. Valid keys: name, id. The value is discarded.",
+        location: { line: 2, column: 19 },
+        span: { start: 39, end: 42 },
+      },
+    },
+    {
+      source: 'search synth, filter\nread(o0).subchain(name: "a", name: "b") { .invert() }.write(o1)',
+      diagnostic: {
+        code: 'P009',
+        stage: 'parser',
+        severity: 'error',
+        message: "Duplicate subchain argument 'name' at line 2 col 30. The last value wins.",
+        location: { line: 2, column: 30 },
+        span: { start: 50, end: 54 },
+      },
+    },
+    {
+      source: 'search synth, filter\nread(o0).subchain(name: "a" id: "b") { .invert() }.write(o1)',
+      diagnostic: {
+        code: 'P010',
+        stage: 'parser',
+        severity: 'error',
+        message: "Missing ',' between subchain arguments at line 2 col 29",
+        location: { line: 2, column: 29 },
+        span: { start: 49, end: 51 },
+      },
+    },
+  ]
+
+  for (const { source, diagnostic } of strictCases) {
+    for (const entryPoint of [
+      (s) => compile(s, { subchainArguments: 'strict' }),
+      (s) => parse(lex(s), { subchainArguments: 'strict' }),
+    ]) {
+      assert.throws(
+        () => entryPoint(source),
+        (err) => {
+          assert.equal(err.name, 'SyntaxError')
+          assert.equal(err.message, diagnostic.message)
+          assert.deepEqual(err.diagnostic, diagnostic)
           assert.equal(err.propertyIsEnumerable('diagnostic'), false)
           assert.equal(JSON.stringify(err), '{}')
           return true
