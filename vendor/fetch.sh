@@ -32,13 +32,17 @@ curl -fsSL --max-time 30 "$BASE/effects/manifest.json" -o "$EFFECTS/manifest.jso
 
 # 3. Per-effect mini-bundles (definition + GLSL/WGSL inline; self-contained ESM, Node-loadable).
 codes=$(node -e 'const m=require(process.argv[1]); console.log(Object.keys(m).join("\n"))' "$EFFECTS/manifest.json")
-n=0; ok=0
+n=0; ok=0; miss=0
 for id in $codes; do
   n=$((n+1))
   ns="${id%%/*}"; eff="${id##*/}"
   mkdir -p "$EFFECTS/$ns"
-  if curl -fsSL --max-time 30 "$BASE/effects/$ns/$eff.js" -o "$EFFECTS/$ns/$eff.js"; then ok=$((ok+1)); else echo "[vendor]   MISS $id"; fi
+  if curl -fsSL --max-time 30 "$BASE/effects/$ns/$eff.js" -o "$EFFECTS/$ns/$eff.js"; then ok=$((ok+1)); else echo "[vendor]   MISS $id"; miss=$((miss+1)); fi
 done
+if [[ $miss -ne 0 ]]; then
+  echo "[vendor] FAILED: $miss/$n mini-bundle download(s) missing — refusing to write an integrity record for an incomplete fetch" >&2
+  exit 1
+fi
 
 # 4. Integrity record: exact version metadata + sha256 of every fetched artifact, so any
 #    installation can be compared byte-for-byte against the documented revision.
@@ -59,11 +63,12 @@ const walk = d => {
   }
 }
 walk(join(out, 'effects'))
+const sortedHashes = Object.fromEntries(Object.entries(hashes).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0))
 writeFileSync(join(out, 'engine-meta.json'), JSON.stringify({
   version, coreBuild, coreBytes: statSync(join(out, 'noisemaker-shaders-core.esm.js')).size,
-  effectCount: Object.keys(hashes).length - 2, manifestBytes: statSync(join(out, 'effects/manifest.json')).size, fetchedFrom: `https://shaders.noisedeck.app/${version}`
+  effectCount: Object.keys(sortedHashes).length - 2, manifestBytes: statSync(join(out, 'effects/manifest.json')).size, fetchedFrom: `https://shaders.noisedeck.app/${version}`
 }, null, 2) + '\n')
-writeFileSync(join(out, 'engine-hashes.json'), JSON.stringify(hashes, null, 2) + '\n')
+writeFileSync(join(out, 'engine-hashes.json'), JSON.stringify(sortedHashes, null, 2) + '\n')
 NODE
 
 echo "$VERSION" > "$OUT/VERSION"

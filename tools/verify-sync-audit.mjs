@@ -21,9 +21,10 @@
 //      2f47612c, tag v1.0.182 points exactly at 2f47612c, the shaders/ delta
 //      is exactly the texture-policy runtime changes + their new test, and no
 //      effect definition changed (catalog parity);
-//   6. the published core bundle (shaders.noisedeck.app/1) is the recorded
-//      855031-byte v1.0.182 build and carries the texture-policy runtime
-//      symbols but no validator symbols.
+//   6. the published core bundle at the pinned documented revision
+//      (shaders.noisedeck.app/1.0.183, same pin as vendor/fetch.sh) is the
+//      recorded 858616-byte 8eeb7b5a build and carries the texture-policy
+//      runtime symbols but no validator symbols.
 //
 // Exit 0 = every recorded claim holds; exit 1 = a claim is broken (the record
 // must then be corrected — do not loosen a check).
@@ -43,8 +44,8 @@ const VALIDATOR_DELTA = '1097\t18\tshaders/src/runtime/effect-validator.js\n457\
 const VALIDATOR_FILES = 'shaders/src/runtime/effect-validator.js\nshaders/tests/test_effect_definition_validation.js'
 const MIP_DELTA = '106\t15\tshaders/src/runtime/backends/webgl2.js\n273\t10\tshaders/src/runtime/backends/webgpu.js\n17\t0\tshaders/src/runtime/compiler.js\n26\t1\tshaders/src/runtime/effect-validator.js\n100\t19\tshaders/src/runtime/pipeline.js\n466\t0\tshaders/tests/test_mip_controls.js'
 const PASS_DELTA = '9\t3\tshaders/src/runtime/backends/webgl2.js\n6\t2\tshaders/src/runtime/backends/webgpu.js\n12\t0\tshaders/src/runtime/expander.js\n64\t0\tshaders/src/runtime/pipeline.js\n323\t0\tshaders/tests/test_pass_fields.js'
-const BUNDLE_URL = 'https://shaders.noisedeck.app/1/noisemaker-shaders-core.esm.js'
-const BUNDLE_BYTES = 858616 // current published build (8eeb7b5a tip)
+const BUNDLE_URL = 'https://shaders.noisedeck.app/1.0.183/noisemaker-shaders-core.esm.js' // pinned documented revision (see vendor/fetch.sh), not the rolling /1 alias
+const BUNDLE_BYTES = 858616 // documented published build (8eeb7b5a tip, v1.0.183)
 
 let repo = process.env.NM_UPSTREAM || ''
 let cleaned = ''
@@ -117,13 +118,13 @@ try {
 } catch { /* no changes → git exits 0 with empty output */ }
 check('no effect definition changed in 2f47612c..8eeb7b5a (catalog parity)', effectChanges3 === '')
 
-// 6. Published bundle (current build). A validator symbol remains a FAIL; a size
-//    move past the recorded build is a WARN pointing at a new ports-sync.
+// 6. Published bundle (pinned documented revision). A validator symbol remains a FAIL;
+//    a size move past the recorded build is a WARN pointing at a new ports-sync.
 const bundle = Buffer.from(await (await fetch(BUNDLE_URL)).arrayBuffer())
 if (bundle.length === BUNDLE_BYTES) {
-  check(`published core bundle is the recorded ${BUNDLE_BYTES}-byte build (8eeb7b5a tip)`, true)
+  check(`published core bundle at the pinned documented revision is the recorded ${BUNDLE_BYTES}-byte build (8eeb7b5a tip)`, true)
 } else {
-  check(`published core bundle size moved past the recorded build (got ${bundle.length} bytes, recorded ${BUNDLE_BYTES}) — WARN only: the recorded byte-identity claim refers to the artifact verified during the audit; run a new ports-sync for the newer release`, true)
+  check(`published core bundle at the pinned revision no longer matches the recorded build (got ${bundle.length} bytes, recorded ${BUNDLE_BYTES}) — WARN only: the recorded byte-identity claim refers to the artifact verified during the audit; run a new ports-sync for the newer release`, true)
 }
 check('published bundle carries the texture-policy + pass-field runtime symbols',
   bundle.includes('recreateTexturePreserving') && bundle.includes('refreshMipTargets') &&
