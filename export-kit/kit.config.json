@@ -16,8 +16,8 @@
   ],
   "licenses": [
     { "from": "LICENSE", "to": "LICENSES/noisemaker-for-babylonjs-LICENSE.txt" },
-    { "from": "node_modules/@babylonjs/core/license.md", "to": "LICENSES/babylonjs-core-license.txt" },
-    { "from": "node_modules/@babylonjs/core/NOTICE.md", "to": "LICENSES/babylonjs-core-NOTICE.txt" }
+    { "from": "export-kit/licenses/babylonjs-core-license.txt", "to": "LICENSES/babylonjs-core-license.txt" },
+    { "from": "export-kit/licenses/babylonjs-core-NOTICE.txt", "to": "LICENSES/babylonjs-core-NOTICE.txt" }
   ],
   "overlays": [
     {
