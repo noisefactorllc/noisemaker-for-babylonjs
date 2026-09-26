@@ -599,8 +599,9 @@ export class BabylonBackend {
       this._bindInputs(this._bindPass, rec, wrapper.effect, this._bindState)
       this._bindUniforms(this._bindPass, rec, wrapper.effect, this._bindState)
       this._bindUniformBlocks(this._bindPass, rec, this._bindState)
-      const vp = this._resolvePassViewportBox(this._bindPass)
-      if (vp && this.gl) this.gl.viewport(vp.x, vp.y, vp.w, vp.h)
+      // webgl2.js viewport precedence (viewportTex branch): a pass rendering into a texture
+      // target uses the TARGET's full size — an authored/resolved viewport is inert here.
+      // Babylon's EffectRenderer already sets the RT's full-size viewport; no raw override.
     })
 
     await this._whenReady(wrapper)
@@ -671,16 +672,12 @@ export class BabylonBackend {
     const outputId = this._resolveOutputId(effectivePass.outputs?.color ?? Object.values(effectivePass.outputs || {})[0], state)
     const outRec = this.textures.get(outputId)
     if (!outRec) { console.warn(`[BabylonBackend] output texture not found: ${outputId} (pass ${effectivePass.id})`); return }
-    const hasCustomViewport = !!this._resolvePassViewportBox(effectivePass)
     this.engine.setAlphaMode(this._resolveAlphaMode(effectivePass.blend))
     this._bindPass = effectivePass
     this._bindState = state
     this.effectRenderer.render(prog.wrapper, outRec.rtw)
     this._bindPass = null
     this._bindState = null
-    if (hasCustomViewport && typeof this.engine.wipeCaches === 'function') {
-      this.engine.wipeCaches(true)
-    }
     this.engine.setAlphaMode(Constants.ALPHA_DISABLE)
   }
 
@@ -724,12 +721,10 @@ export class BabylonBackend {
       for (let i = 0; i < texes.length; i++) { gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, texes[i], 0); bufs.push(gl.COLOR_ATTACHMENT0 + i) }
       gl.drawBuffers(bufs)
     }
-    const vp = this._resolvePassViewportBox(pass)
-    if (vp && gl) {
-      gl.viewport(vp.x, vp.y, vp.w, vp.h)
-    } else if (viewportRec && gl) {
-      gl.viewport(0, 0, viewportRec.width, viewportRec.height)
-    }
+    // webgl2.js viewportTex precedence: texture targets render at the TARGET's full size;
+    // authored/resolved viewports are inert for texture passes (viewport overrides removed —
+    // they rendered the ca3d volume simulate pass inset and broke pixel parity).
+    gl.viewport(0, 0, viewportRec.width, viewportRec.height)
     this.engine.setAlphaMode(this._resolveAlphaMode(pass.blend))
     this._drawFullscreenInto(prog, pass, state)
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
@@ -757,11 +752,7 @@ export class BabylonBackend {
     if (!outRec) { console.warn(`[BabylonBackend] points ${pass.id}: no output ${outputId}`); return }
     const count = this._pointCount(pass, state)
     if (!count) return
-    this.engine.bindFramebuffer(outRec.rtw) // bind FBO + viewport; deposit accumulates (no clear)
-    const vp = this._resolvePassViewportBox(pass)
-    if (vp && gl) {
-      gl.viewport(vp.x, vp.y, vp.w, vp.h)
-    }
+    this.engine.bindFramebuffer(outRec.rtw) // bind FBO + viewport (full target size)
     const effect = prog.wrapper.effect
     this.engine.enableEffect(prog.wrapper.drawWrapper)
     this._bindInputs(pass, prog, effect, state)
@@ -833,9 +824,7 @@ export class BabylonBackend {
     const outRec = this.textures.get(outputId)
     if (!outRec) { console.warn(`[BabylonBackend] triangles ${pass.id}: no output ${outputId}`); return }
     const count = this._triCount(pass, state)
-    this.engine.bindFramebuffer(outRec.rtw) // bind FBO + viewport
-    const vp = this._resolvePassViewportBox(pass)
-    if (vp && gl) gl.viewport(vp.x, vp.y, vp.w, vp.h)
+    this.engine.bindFramebuffer(outRec.rtw) // bind FBO + viewport (full target size)
     this._ensureDepthBuffer(outRec) // attach a DEPTH_COMPONENT24 renderbuffer to the bound FBO
     gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LESS); gl.depthMask(true)
     gl.enable(gl.CULL_FACE); gl.frontFace(gl.CCW); gl.cullFace(gl.BACK)
