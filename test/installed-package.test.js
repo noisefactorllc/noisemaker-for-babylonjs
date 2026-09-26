@@ -12,10 +12,11 @@ import test from 'node:test'
 // observe the recoverable missing-engine error -> recover the engine -> compile the
 // documented program through the INSTALLED compiler -> render it visibly in a real browser
 // (no repository-relative patches) -> uninstall. Uses the dev dependencies the existing
-// browser tests already require (esbuild, playwright, locally fetched vendored engine).
+// browser tests already require (esbuild, playwright); the engine recovery fetches the
+// published engine from the CDN exactly as a consumer would.
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
-const DOCUMENTED_PROGRAM = 'search synth\nnoise().write(o0)\nrender(o0)'
+const DOCUMENTED_PROGRAM = 'search synth, filter\nnoise(scaleX: 60).bloom().write(o0)\nrender(o0)'
 const execFileP = promisify(execFile)
 
 test('packed artifact: pack, install, import exports, error recovery, first render, uninstall', { timeout: 240000 }, async t => {
@@ -64,17 +65,20 @@ test('packed artifact: pack, install, import exports, error recovery, first rend
   assert.equal(fetchScript, join(installed, 'vendor', 'fetch.sh'))
   assert.equal(existsSync(fetchScript), true, 'recovery instruction must point at an existing script')
 
-  // 5. Recover the engine (the fetch script downloads it from the CDN; when the repo already
-  //    holds a locally fetched copy, reuse it so the check stays hermetic), then compile the
-  //    documented program through the INSTALLED compiler.
-  const vendoredHere = join(ROOT, 'vendor', 'noisemaker')
-  if (existsSync(vendoredHere)) cpSync(vendoredHere, join(installed, 'vendor', 'noisemaker'), { recursive: true })
-  else await execFileP('bash', [fetchScript], { cwd: installed })
+  // 5. Recover the engine the documented way: run the installed fetch script, which
+  //    downloads the published engine from the CDN into the installed package — the same
+  //    recovery a consumer performs. Then compile the documented program through the
+  //    INSTALLED compiler.
+  await execFileP('bash', [fetchScript], { cwd: installed, timeout: 120000 })
   writeFileSync(join(consumer, 'fatgraph.json'), JSON.stringify(await compileDocumentedProgram(consumer)))
   const compiled = JSON.parse(readFileSync(join(consumer, 'fatgraph.json'), 'utf8'))
   assert.equal(compiled.renderSurface, 'o0')
-  assert.equal(compiled.passes.length, 2)
-  assert.equal(Object.keys(compiled.programs).length, 2)
+  assert.ok(compiled.passes.length >= 2, `documented program must compile to passes (got ${compiled.passes.length})`)
+  assert.equal(compiled.passes.length, Object.keys(compiled.programs).length)
+  for (const program of Object.values(compiled.programs)) {
+    assert.ok(typeof (program.fragment || program.glsl) === 'string' && (program.fragment || program.glsl).length > 0,
+      'every compiled program must carry non-empty shader text')
+  }
 
   // 6. First render: the compiled program drives NoisemakerRenderer (installed package +
   //    recovered engine + consumer-provided Babylon) to a visible, non-uniform texture.
