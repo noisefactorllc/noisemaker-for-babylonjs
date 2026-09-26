@@ -132,14 +132,13 @@ test('persistent textures preserve contents across recreation; plain textures do
   assert.ok(backend.textures.has('probe_scratch'), 'plain texture must exist after recreation')
 })
 
-test('copyTexture uses the texelFetch copy same-size and the scaled copy when sizes differ', async () => {
+test('copyTexture carries the blit-equivalent uScale mapping (1:1 same-size, src/dst ratio on resize)', () => {
   const backend = Object.create(BabylonBackend.prototype)
-  const rendered = []
+  const bindPasses = []
   backend.textures = new Map()
-  backend._copyWrapper = { name: 'same' }
-  backend._copyScaledWrapper = { name: 'scaled' }
+  backend._copyWrapper = { name: 'copy' }
   backend.engine = { setAlphaMode: () => {} }
-  backend.effectRenderer = { render: (w) => rendered.push(w.name) }
+  backend.effectRenderer = { render: () => bindPasses.push({ ...backend._bindPass }) }
   const src = { thin: {}, width: 64, height: 64 }
   const dstSame = { thin: {}, rtw: {}, width: 64, height: 64 }
   const dstBig = { thin: {}, rtw: {}, width: 128, height: 128 }
@@ -149,7 +148,8 @@ test('copyTexture uses the texelFetch copy same-size and the scaled copy when si
 
   backend.copyTexture('a', 'same')
   backend.copyTexture('a', 'big')
-  assert.deepEqual(rendered, ['same', 'scaled'])
+  assert.deepEqual(bindPasses[0].__copyScale, [1, 1], 'same-size copy must use the 1:1 texelFetch branch')
+  assert.deepEqual(bindPasses[1].__copyScale, [2, 2], 'size-changing copy must carry the src/dst ratio')
   assert.equal(backend._bindPass, null, 'bind pass scratch must be cleared')
 })
 

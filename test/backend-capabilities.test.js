@@ -533,43 +533,68 @@ test('BabylonBackend createTexture tracks mipmaps and persistent flags and gener
   backend.textures = new Map()
   backend._clearRtw = () => {}
   let lastRtwOptions = null
-  let generatedInternal = null
+  // Stub the raw-GL collaborators the mip-chain allocation and blit-chain regeneration use
+  // (upstream webgl2.js semantics: up-front level allocation + NEAREST blit chain; Babylon's
+  // own gl.generateMipmap() is never invoked — it is invalid for non-filterable float formats).
+  const GL = {
+    TEXTURE_2D: 0x0de1, RGBA: 0x1908, HALF_FLOAT: 0x140b, RGBA16F: 0x881b,
+    READ_FRAMEBUFFER: 0x8ca8, DRAW_FRAMEBUFFER: 0x8ca9,
+    READ_FRAMEBUFFER_BINDING: 0x8caa, DRAW_FRAMEBUFFER_BINDING: 0x8ca6,
+    COLOR_ATTACHMENT0: 0x8ce0, COLOR_BUFFER_BIT: 0x4000, NEAREST: 0x2600
+  }
+  const prevRead = { binding: 'engine-read' }
+  const prevDraw = { binding: 'engine-draw' }
+  const gl = Object.assign({
+    getParameter: (p) => (p === GL.READ_FRAMEBUFFER_BINDING ? prevRead : prevDraw),
+    bindTexture: () => {},
+    texImage2D: () => {},
+    createFramebuffer: () => ({ fbo: true }),
+    bindFramebuffer: () => {},
+    framebufferTexture2D: () => {},
+    blitFramebuffer: () => {}
+  }, GL)
+  const samplingCalls = []
   const engine = {
     createRenderTargetTexture: (size, options) => {
-      lastRtwOptions = options
+      lastRttOptions = options
       return {
-        texture: { getEngine: () => engine, dispose: () => {} },
+        texture: { getEngine: () => engine, _hardwareTexture: { underlyingResource: { tex: true } }, dispose: () => {} },
         dispose: () => {}
       }
     },
-    generateMipmaps: (tex) => {
-      generatedInternal = tex
-    },
+    _getRGBABufferInternalSizedFormat: (type, format) => (type === GL.HALF_FLOAT ? GL.RGBA16F : GL.RGBA16F),
+    _getWebGLTextureType: (type) => (type === GL.HALF_FLOAT ? GL.HALF_FLOAT : type),
+    updateTextureSamplingMode: (mode, tex, genMips) => samplingCalls.push([mode, genMips]),
+    resetTextureCache: () => {},
     setAlphaMode: () => {}
   }
+  let lastRttOptions = null
   backend.engine = engine
+  backend.gl = gl
 
   const plain = backend.createTexture('plain_tex', { width: 64, height: 64, format: 'rgba16f' })
   assert.equal(plain.mipmaps, false)
   assert.equal(plain.persistent, false)
-  assert.equal(lastRtwOptions.generateMipMaps, false)
-  assert.equal(lastRtwOptions.samplingMode, Constants.TEXTURE_NEAREST_SAMPLINGMODE)
+  assert.equal(plain.mipLevels, 1)
+  assert.equal(lastRttOptions.generateMipMaps, false)
+  assert.equal(lastRttOptions.samplingMode, Constants.TEXTURE_NEAREST_SAMPLINGMODE)
 
   const mipped = backend.createTexture('mipped_tex', { width: 64, height: 64, format: 'rgba16f', mipmaps: true, persistent: true })
   assert.equal(mipped.mipmaps, true)
+  assert.equal(mipped.mipLevels, 7)
   assert.equal(mipped.persistent, true)
-  assert.equal(lastRtwOptions.generateMipMaps, true)
-  assert.equal(lastRtwOptions.samplingMode, Constants.TEXTURE_LINEAR_LINEAR_MIPLINEAR)
+  // Creation stays level-0-only (generateMipMaps:false, NEAREST); the chain is allocated on the
+  // internal GL texture and the sampler is then moved to mag NEAREST / min LINEAR_MIPMAP_LINEAR
+  // (=TEXTURE_NEAREST_LINEAR_MIPLINEAR) WITHOUT gl.generateMipmap().
+  assert.equal(lastRttOptions.generateMipMaps, false)
+  assert.equal(lastRttOptions.samplingMode, Constants.TEXTURE_NEAREST_SAMPLINGMODE)
+  assert.equal(mipped.internal.generateMipMaps, true)
+  assert.deepEqual(samplingCalls, [[Constants.TEXTURE_NEAREST_LINEAR_MIPLINEAR, false]])
 
   // generateMipmaps safely handles empty, non-existent, and plain ids without generating
   assert.doesNotThrow(() => backend.generateMipmaps([]))
   assert.doesNotThrow(() => backend.generateMipmaps(['nonexistent']))
   assert.doesNotThrow(() => backend.generateMipmaps(['plain_tex']))
-  assert.equal(generatedInternal, null)
-
-  // generateMipmaps actually calls engine.generateMipmaps with the internal texture
-  backend.generateMipmaps(['mipped_tex'])
-  assert.equal(generatedInternal, mipped.internal)
 
   // copyTexture sets __copyScale: [1, 1] for same-size, and [dst.w/src.w, dst.h/src.h] for resize
   let renderedWrapper = null

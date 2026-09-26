@@ -2,12 +2,13 @@
 
 *Last verified 2026-09-25 against the engine at build tag `8eeb7b5a`
 (`noisemaker-shaders-core.esm.js`, 858616 bytes) — source-side
-`noisefactorllc/noisemaker` @ `8eeb7b5ac14e` (v1.0.183): full npm suite **69/69 PASS**
+`noisefactorllc/noisemaker` @ `8eeb7b5ac14e` (v1.0.183): full npm suite **64/64 PASS**
 (`node --test test/*.test.js`), the machine-checked sync audit (`tools/verify-sync-audit.mjs`)
 re-derives every claim for `240740dd..9d3474df`, `9d3474df..2f47612c`, and `2f47612c..8eeb7b5a`,
-and the same-pass golden/candidate byte-exact re-grade covers 24 roster programs on this
-container's SwiftShader driver (5 heavy evolve programs could not complete — environment,
-recorded below). Exposes output sink
+and the same-pass golden/candidate byte-exact re-grade covers 23 roster programs on this
+container's SwiftShader driver at this build (1 reproducible parity failure — `ca3d` — and 5
+heavy evolve programs that could not complete grading are recorded in the
+`9d3474df..2f47612c` sync section). Exposes output sink
 deferral query `shouldDeferRender()` on `NoisemakerRenderer`, verifies structured parser diagnostics
 (P001 coordinates, P005 output operations, P006 subchains, P007 call forms, P008-P010 subchain arguments), authorable texture policies (GAP-004), and pass-field propagation including dynamic dimension viewport resolution (GAP-005).
 The sources of truth are `parity/sweep.sh`, `parity/corpus/sweep.sh`, and `tools/catalog.mjs`.*
@@ -404,8 +405,10 @@ points exactly at `2f47612c`). This is the texture-policy release the previous s
 - **Re-derivation**: `tools/verify-sync-audit.mjs` now covers both audited ranges: ancestry
   (contiguity of both), tag correlation (v1.0.181@9d3474df, v1.0.182@2f47612c), exact per-file
   deltas, no-effect-definition-change (catalog parity), import-graph/bundler checks for the
-  validator, published-bundle byte size (855031) + texture-policy symbols present + no validator
-  symbols. All PASS; exits non-zero if any recorded claim breaks.
+  validator, published-bundle byte size + texture-policy symbols present + no validator
+  symbols — plus the integration range `2f47612c..8eeb7b5a` (contiguity, exact GAP-005 delta,
+  no-effect-definition-change, current 858616-byte published build + pass-field symbols). All
+  PASS; exits non-zero if any recorded claim breaks.
 - **Golden re-mint (same-pass discipline)**: per this repo's re-vendor-and-re-mint discipline
   (see "A found-and-fixed false failure: stale goldens" above — a golden and candidate minted in
   the same pass are always byte-identical, while committed goldens drift for particle/evolve
@@ -420,15 +423,32 @@ points exactly at `2f47612c`). This is the texture-policy release the previous s
   programs; cross-driver spot comparison of the fresh vs committed goldens showed max-abs-diff 1,
   ssim ≥ 0.99999 on adjust/alphaMask/applyMode — the documented ±1 driver noise — and
   byte-identity on `bitwise`).
+- **Integration re-grade (engine 8eeb7b5a, 858616 bytes)**: after integrating the
+  `240740dd..8eeb7b5a` default-branch sync and re-vendoring, the same-pass dual re-grade was
+  repeated against the new engine: **23 roster programs graded byte-exact** (max-abs-diff 0,
+  tol 0, ssim ≥ 0.999) — `adjust alphaMask applyMode attractor bitwise blendMode bloom blur
+  celShading cell cellularAutomata channel chromaticAberration clouds newton noise pondRipples
+  reactionDiffusion remap stipple unsharpMask vignette watercolor` — and the re-minted goldens
+  are **byte-identical to the committed goldens** (nothing to commit; the committed golden set
+  matches this container's fresh mints for the graded programs). **`ca3d` is a real,
+  reproducible FAIL at this engine build**: fresh-mint reference vs Babylon candidate differ
+  deterministically (max-abs-diff 190, mean 1.2455, ssim 0.99021 — identical metrics across
+  independent dual runs, bbox ≈211×198 px of small deltas drifting through the feedback loop);
+  it passed byte-exact at the 855031-byte v1.0.182 build and reproduces with BOTH the
+  integrated `1d7fd7b` backend and this sync's backend (isolated by temporarily rendering the
+  candidate with the pre-integration `babylonBackend.js`), so the divergence comes from the
+  `855031→858616` engine delta interacting with the Babylon port — most plausibly the GAP-005
+  authored-viewport resolution inside ca3d's search-synthesized passes. The old committed
+  golden is left in place and this is recorded as a known open parity failure rather than
+  graded around; it needs a driver that reproduces upstream's Metal baseline to bisect
+  further. Remaining environment failures: `billboard_flow`, `buddhabrot`, `navierStokes`,
+  `target`, `physarum` (browser instability; no grade either way at this engine build).
 - **Known limits of this verification round (truthful disclosure)**: the full 322-program 0-diff
   re-grade could NOT be completed in this container — its chrome-headless-shell crashes the
   browser after ~4-6 WebGL context creations (`Target page, context or browser has been closed`),
   so `parity/sweep.sh` (one browser for the whole roster) cannot run here; the sweep above was
-  executed per-program with fresh browsers and hard timeouts. 5 heavy evolve/point programs
-  (`billboard_flow`, `buddhabrot`, `navierStokes`, `target`, `physarum`) did not complete within
-  4×150s (environment failures, **not** numeric diffs — no candidate was graded against a stale
-  golden, per the stale-goldens discipline). Their goldens are left untouched. Completing their
-  same-pass re-mint and the full-roster 0-diff sweep requires a stable runner (or the Metal
+  executed per-program with fresh browsers and hard timeouts (attempts up to 4×150s).
+  Completing the full-roster 0-diff sweep requires a stable runner (or the Metal
   minting driver), exactly as recorded for the previous sync; `parity/ledger.json` therefore still
   records the last full-roster grade (322/322 PASS + 3 SKIP, v1.0.181-era artifact) and is not
   rewritten with partial data.
