@@ -270,20 +270,24 @@ Engine synced from upstream `noisefactorllc/noisemaker` commit `6a0af04d` (v1.0.
     the GAP-007 diagnostic union — `compileProgram()`'s missing-source throw and the
     `_whenReady()` Babylon compilation-error/`init()` copy-wrapper paths now surface one
     structured `ShaderDiagnostic` (real `Error` with `code: 'ERR_SHADER_MISSING'` /
-    `'ERR_SHADER_COMPILE'`, `backend: 'babylon'`, `stage`, `program`, byte-identical legacy
-    `detail`, parsed compiler `messages`, offending `source`), with a port of
-    `parseGLSLInfoLog()` for the `ERROR: 0:LINE:` info-log shape. The legacy thrown surface
-    (`detail`/`message`) is byte-identical, so `err.detail || err.message` consumers keep
-    working; compile **timeouts** intentionally stay plain `Error`s (upstream has no timeout
-    surface).
+    `'ERR_SHADER_COMPILE'`, `backend: 'babylon'`, `stage`, `program`, `detail`, parsed
+    compiler `messages`, offending `source`), with a port of
+    `parseGLSLInfoLog()` for the `ERROR: 0:LINE:` info-log shape. Detail fidelity differs by
+    stage, mirroring upstream f83a427e: missing-source keeps its previous message
+    byte-identical, while a Babylon compile failure previously threw
+    `Shader compile failed (${name}): ${log}` and now carries the RAW compiler info-log as
+    `detail`/`message` (prefix dropped, matching the reference backends' compile diagnostics —
+    an intentional observable change; no repo consumer matched on the prefixed text, and
+    `err.detail || err.message` fallbacks still yield the full failure text). Compile
+    **timeouts** intentionally stay plain `Error`s (upstream has no timeout surface).
   - `NoisemakerRenderer.loadGraph()`: forwards load options into the `Pipeline` constructor
     (minus the renderer's own `Pipeline` key), enabling host-side `texturePooling: true` —
     the engine Pipeline consumes the plan through `backend.textures`, which the Babylon
     backend already exposes.
   - `test/backend-diagnostics.test.js` (new): missing-source and Babylon compilation-error
-    failures surface a structured `ShaderDiagnostic` with the legacy detail byte-identical,
-    `parseGLSLInfoLog()` ERROR/WARNING/prose parsing, legacy-field serialization, and plain
-    Error compile timeouts.
+    failures surface a structured `ShaderDiagnostic` (missing-source detail byte-identical;
+    compile detail = the raw info-log), `parseGLSLInfoLog()` ERROR/WARNING/prose parsing,
+    legacy-field serialization, and plain Error compile timeouts.
   - `test/resource-pooling.test.js` (new): mirrors the upstream `test_resource_pooling.js`
     Pipeline cases against the vendored v1.0.185 Pipeline + recording backend — default no
     pooling (each virtual id owns its record, `getResourcePlan()` reports pooling:false),
@@ -295,12 +299,19 @@ Engine synced from upstream `noisefactorllc/noisemaker` commit `6a0af04d` (v1.0.
     `Pipeline` constructor.
 - **Verification**: all 82 unit/integration tests pass cleanly via the documented fetch path
   (`bash vendor/fetch.sh && npm test` on the pinned 1.0.185 revision; was 70 before this sync;
-  +11 new, +1 renderer forwarding case). Parity spot checks against the re-vendored engine
-  (`parity/run.sh`, tol 2.001): `adjust`, `noise`, `blur` all byte-identical (max-abs-diff 0.000).
-  Full-sweep re-grading not rerun this round: the range's engine-src diff is pooling opt-in
-  (default off, so default renders are bit-path-identical) and backend failure diagnostics, with
-  no shader or effect-definition changes (goldens themselves were minted against the previous
-  v1.0.183 tip; the spot checks confirm the new tip renders identically).
+  +11 new, +1 renderer forwarding case) — the claim is machine-re-derivable: in a prepared
+  environment (`bash vendor/fetch.sh && npm install && PLAYWRIGHT_BROWSERS_PATH=<dir>
+  npx playwright install chromium`) `node tools/verify-sync-audit.mjs` runs the full suite as
+  its final check and requires 0 failing tests to exit 0 (verified here: "port test suite
+  passes (82/82 tests, 0 fail)"). Note the repo ships no test-running CI workflow
+  (`.github/workflows/export-kit.yml` only dispatches a scaffold kit build), so this local
+  re-derivation is the suite's verification record. Parity spot checks against the re-vendored
+  engine (`parity/run.sh`, tol 2.001): `adjust`, `noise`, `blur` all byte-identical
+  (max-abs-diff 0.000). Full-sweep re-grading not rerun this round: the range's engine-src diff
+  is pooling opt-in (default off, so default renders are bit-path-identical) and backend
+  failure diagnostics, with no shader or effect-definition changes (goldens themselves were
+  minted against the previous v1.0.183 tip; the spot checks confirm the new tip renders
+  identically).
 
 ## Vendor sync (240740dd..8eeb7b5a)
 

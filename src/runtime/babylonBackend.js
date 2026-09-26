@@ -37,11 +37,14 @@ const FULLSCREEN_VS = '#version 300 es\nprecision highp float;\nin vec2 position
 // One structured diagnostic union for backend shader/compiler failures (port of the
 // reference backends' diagnostics.js, GAP-007): every compile/link/missing-source
 // failure surfaces as a real `Error` carrying the legacy machine `code`, the
-// `backend` ('babylon'), the `stage`, the program id, the legacy `detail` string
-// (byte-identical to the previous thrown message so `err.detail || err.message`
-// consumers keep working), the parsed compiler `messages`, and the offending
-// `source`. `code`/`detail`/`program`/`source` stay enumerable own properties to
-// preserve the legacy thrown-object serialization shape.
+// `backend` ('babylon'), the `stage`, the program id, a `detail` string, the parsed
+// compiler `messages`, and the offending `source`. `code`/`detail`/`program`/`source`
+// stay enumerable own properties to preserve the legacy thrown-object serialization
+// shape. Detail fidelity differs by stage, mirroring upstream f83a427e: missing-source
+// keeps the previous message byte-identical; a Babylon compile failure previously
+// threw `Shader compile failed (${name}): ${log}` and now carries the RAW compiler
+// info-log as `detail`/`message` (the prefix is dropped, matching the reference
+// backends' compile diagnostics). No repo consumer matched on the prefixed text.
 export class ShaderDiagnostic extends Error {
   constructor (spec) {
     const detail = spec.detail !== undefined && spec.detail !== null ? String(spec.detail) : ''

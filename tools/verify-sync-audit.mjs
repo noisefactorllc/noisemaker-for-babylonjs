@@ -30,14 +30,17 @@
 //   7. the published core bundle at the pinned documented revision
 //      (shaders.noisedeck.app/1.0.185, same pin as vendor/fetch.sh) is the
 //      recorded 870700-byte 6a0af04d build and carries the GAP-006/GAP-007
-//      runtime symbols but no validator symbols.
+//      runtime symbols but no validator symbols;
+//   8. the port's own test suite (`npm test`) exits with 0 failing tests —
+//      required in a prepared environment, an explicit SKIP (with preparation
+//      steps) otherwise, so an absent run can never read as success.
 //
 // Exit 0 = every recorded claim holds; exit 1 = a claim is broken (the record
 // must then be corrected — do not loosen a check).
 
 import { execSync, execFileSync } from 'node:child_process'
-import { mkdtempSync, rmSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { existsSync, mkdtempSync, readdirSync, rmSync } from 'node:fs'
+import { homedir, tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 const UPSTREAM_URL = 'https://github.com/noisefactorllc/noisemaker.git'
@@ -162,6 +165,36 @@ check('published bundle carries the GAP-006 pooling + GAP-007 diagnostic runtime
   bundle.includes('getResourcePlan') && bundle.includes('ShaderDiagnostic') &&
   bundle.includes('parseGLSLInfoLog') && bundle.includes('parseWebGPUCompilationMessages'))
 check('published bundle contains no validator symbols', !bundle.includes('validateEffectDefinition'))
+
+// 7. The port's own test suite (`npm test`). In a prepared environment this check is
+//    REQUIRED: any failing test breaks the audit ("an absent run is not success"). In an
+//    unprepared checkout (no vendored bundle, no node_modules, no Playwright browser) the
+//    check is a SKIP with the exact preparation steps printed — it can never count as a pass.
+const REQUIRED_FOR_SUITE = [
+  'vendor/noisemaker/noisemaker-shaders-core.esm.js',
+  'node_modules/@babylonjs/core/package.json',
+  'node_modules/playwright/package.json'
+]
+const missingForSuite = REQUIRED_FOR_SUITE.filter(p => !existsSync(p))
+const browsersRoot = process.env.PLAYWRIGHT_BROWSERS_PATH || join(homedir(), '.cache', 'ms-playwright')
+let browserReady = false
+try {
+  browserReady = existsSync(browsersRoot) &&
+    readdirSync(browsersRoot).some(d => d.startsWith('chromium'))
+} catch { /* no browsers dir */ }
+if (missingForSuite.length || !browserReady) {
+  console.log(`[SKIP] port test suite — prepare the environment first: ${missingForSuite.join(', ')}` +
+    (browserReady ? '' : `, a chromium install under PLAYWRIGHT_BROWSERS_PATH (currently: ${browsersRoot})`))
+  console.log('       bash vendor/fetch.sh && npm install && PLAYWRIGHT_BROWSERS_PATH=<dir> npx playwright install chromium')
+} else {
+  const run = execSync('npm test', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'], timeout: 600000 })
+  const pass = /ℹ pass (\d+)/.exec(run)
+  const fail = /ℹ fail (\d+)/.exec(run)
+  const total = /ℹ tests (\d+)/.exec(run)
+  check(`port test suite passes (${pass?.[1] ?? '?'}/${total?.[1] ?? '?'} tests, 0 fail)`,
+    Boolean(pass && fail && total && Number(fail[1]) === 0),
+    `pass=${pass?.[1] ?? '?'} fail=${fail?.[1] ?? '?'} tests=${total?.[1] ?? '?'}`)
+}
 
 if (cleaned) rmSync(cleaned, { recursive: true, force: true })
 if (failures) {
