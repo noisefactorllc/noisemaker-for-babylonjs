@@ -231,8 +231,9 @@ Engine synced from upstream `noisefactorllc/noisemaker` commit `6a0af04d` (v1.0.
 
 - **Manifest: 210 effects** (unchanged count, 0 added, 0 removed).
 - **Engine core**: `noisemaker-shaders-core.esm.js` 870700 bytes (Build `6a0af04d`, v1.0.185).
-- **Upstream changes audit** (the `8eeb7b5a..6a0af04d` engine-src diff: `pipeline.js` +215, new
-  `backends/diagnostics.js` +185, `webgl2.js` +33, `webgpu.js` +95):
+- **Upstream changes audit** (the `8eeb7b5a..6a0af04d` engine-src diff, per `--numstat`:
+  new `backends/diagnostics.js` +185, `backends/webgl2.js` +26/−7, `backends/webgpu.js` +60/−35,
+  `pipeline.js` +213/−2, plus the two new test files; re-derived by `node tools/verify-sync-audit.mjs`):
   - Upstream commit `6113da00` (v1.0.184, GAP-006): the runtime now consumes the analyzer's
     physical allocation plan (graph.allocations) behind an opt-in `texturePooling: true` —
     `Pipeline.buildTexturePoolingPlan()`/`applyTextureAliases()` alias poolable group members
@@ -254,6 +255,16 @@ Engine synced from upstream `noisefactorllc/noisemaker` commit `6a0af04d` (v1.0.
 - **Engine unchanged-elsewhere**: `cmp` of the vendored core bundle against a fresh
   `shaders.noisedeck.app/1` fetch is byte-identical; manifest stays 210 effects (0 added, 0
   removed — no effect catalog delta in this range).
+- **Vendoring pin bumped (authority change, per fetch.sh's own rule)**: `vendor/fetch.sh`'s
+  default `VERSION` and `tools/verify-sync-audit.mjs`'s published-bundle check moved from the
+  rolling `/1` alias to the pinned documented revision `1.0.185` (build `6a0af04d`, 870700-byte
+  core). The vendored tree was produced by the documented script itself
+  (`bash vendor/fetch.sh` → `vendor/noisemaker/engine-meta.json`: version 1.0.185, coreBuild
+  6a0af04d, coreBytes 870700, effectCount 210, manifestBytes 39906) with `engine-hashes.json`
+  covering the core, manifest, and every mini-bundle; `node tools/verify-sync-audit.mjs` re-derives
+  the full range audit (ancestry, v1.0.185 tag at `6a0af04d`, exact numstat delta, catalog parity,
+  bundler validation disabled, pinned-revision bundle identity and GAP-006/GAP-007 symbols) and
+  exits 0 ("All recorded sync-audit claims re-derived from source: audit stands.").
 - **Babylon implementation & test coverage**:
   - `BabylonBackend` (the port-side analog of the reference backends' compile paths): ported
     the GAP-007 diagnostic union — `compileProgram()`'s missing-source throw and the
@@ -282,13 +293,14 @@ Engine synced from upstream `noisefactorllc/noisemaker` commit `6a0af04d` (v1.0.
     first-read textures are never pooled.
   - `test/renderer-sinks.test.js`: load options (e.g. `texturePooling`) forward into the
     `Pipeline` constructor.
-- **Verification**: all 82 unit/integration tests pass cleanly (was 70; +11 new, +1 renderer
-  forwarding case). Parity spot checks against the re-vendored engine (`parity/run.sh`,
-  tol 2.001): `adjust`, `noise`, `blur` all byte-identical (max-abs-diff 0.000). Full-sweep
-  re-grading not rerun this round: the range's engine-src diff is pooling opt-in (default off,
-  so default renders are bit-path-identical) and backend failure diagnostics, with no shader or
-  effect-definition changes (goldens themselves were minted against the previous v1.0.183 tip;
-  the spot checks confirm the new tip renders identically).
+- **Verification**: all 82 unit/integration tests pass cleanly via the documented fetch path
+  (`bash vendor/fetch.sh && npm test` on the pinned 1.0.185 revision; was 70 before this sync;
+  +11 new, +1 renderer forwarding case). Parity spot checks against the re-vendored engine
+  (`parity/run.sh`, tol 2.001): `adjust`, `noise`, `blur` all byte-identical (max-abs-diff 0.000).
+  Full-sweep re-grading not rerun this round: the range's engine-src diff is pooling opt-in
+  (default off, so default renders are bit-path-identical) and backend failure diagnostics, with
+  no shader or effect-definition changes (goldens themselves were minted against the previous
+  v1.0.183 tip; the spot checks confirm the new tip renders identically).
 
 ## Vendor sync (240740dd..8eeb7b5a)
 

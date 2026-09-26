@@ -195,6 +195,12 @@ Original verification dates are 2026-09-22. Dated review notes identify subseque
 - Acceptance: two isolated installations resolve identical engine and effect hashes for the documented revision. Satisfied by the reproducibility check above.
 - Required checks: exact version metadata checked (`engine-meta.json` matches the vendor-sync record), all bundle hashes checked (212/212), parity against preserved baselines carried by byte-identity to the verified revision. All executed and recorded above.
 - Last verification: 2026-09-26.
+- Follow-up authority note: the 2026-09-26 vendor sync `8eeb7b5a..6a0af04d` (STATUS.md "Vendor
+  sync (8eeb7b5a..6a0af04d)") deliberately bumped the documented pin from `1.0.183` to `1.0.185`
+  as its authority change, re-deriving the full range audit with `node tools/verify-sync-audit.mjs`
+  (exit 0, pinned-revision bundle check PASS for the 870700-byte `6a0af04d` build). The claims
+  above describe the pin state as verified for GAP-003 at `52809b9`; the pin mechanism and the
+  integrity-record behavior they document are unchanged.
 
 ### GAP-004: Completion wording exceeds verified coverage
 
