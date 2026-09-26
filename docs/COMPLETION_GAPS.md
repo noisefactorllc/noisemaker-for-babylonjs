@@ -169,16 +169,17 @@ Original verification dates are 2026-09-22. Dated review notes identify subseque
 
 ### GAP-002: Published kit lacks Babylon license text
 
-- Status: open. Priority: P1. Category: release.
+- Status: closed, pending publication of this record. Priority: P1. Category: release.
 - Scope: `export-kit/kit.config.json` and published kit inventory.
 - Expected: the distribution includes applicable licenses and dependency attribution.
 - Observed: the kit bundles Babylon but lists only two MIT license files. Its bundle lacks the Apache license text.
 - Evidence: E6. Installed Babylon 9.13.0 supplies `license.md` and `NOTICE.md`. The kit inventory supplies neither.
-- Next action: include Babylon's license and applicable notices through the existing kit system.
-- Dependencies: identify notices applicable to bundled code. Obtain separate implementation and publication authority.
-- Acceptance: every bundled dependency has its required license and applicable notices in the actual downloadable artifact.
-- Required checks: inspect the final inventory, check hashes, and compare notices with the exact dependency distribution.
-- Last verification: 2026-09-22.
+- Implementation evidence: `ba8bc862` (fix commit — `export-kit/kit.config.json`'s `licenses` list gains two entries copying the committed byte-identical copies under `export-kit/licenses/` — Babylon 9.13.0's own `license.md` (Apache-2.0 text, sha256 `9362ea9e…`) and `NOTICE.md` (attribution notices, sha256 `7f85d099…` — into `LICENSES/`; the suite's `test/kit-licenses.test.js` guards the entries and verifies the committed copies stay byte-identical to the exact dependency distribution, which has no transitive dependencies to attribute). An earlier candidate (`d6c43df`) referenced the files directly from `node_modules`; scaffold's export-kit-release never published a kit for that SHA, so the committed-copy form replaced it.
+- Published-artifact check, 2026-09-26 07:11 UTC: downloaded kit 0.1.8 inventory from kits.noisedeck.app — its `source.sha` is exactly `ba8bc86246f26ad8e098efdee297ffc353a0b61a`, its `files` list carries all four `LICENSES/` entries with declared bytes and sha256, and both `LICENSES/babylonjs-core-license.txt` and `LICENSES/babylonjs-core-NOTICE.txt` downloaded with hashes matching the installed `@babylonjs/core` 9.13.0 files byte for byte. Every bundled dependency (the engine, the adapter, `@babylonjs/core`) now has its required license and applicable notices in the actual downloadable artifact.
+- Next action: complete. Publication of the record needs the standing publication authority.
+- Acceptance: every bundled dependency has its required license and applicable notices in the actual downloadable artifact. Satisfied by the published-artifact check above.
+- Required checks: inspect the final inventory, check hashes, and compare notices with the exact dependency distribution. All executed and recorded above.
+- Last verification: 2026-09-26.
 
 ### GAP-003: Authority selection is not reproducible by default
 
