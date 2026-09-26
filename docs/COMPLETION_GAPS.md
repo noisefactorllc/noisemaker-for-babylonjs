@@ -110,6 +110,10 @@ The default vendor script uses rolling `/1`, despite its pinning comment.
 The audit used an exact version to prevent authority drift.
 
 Current choice extraction finds 264 choice-bearing parameters across 132 effects, totaling 1,816 named choices.
+(2026-09-26 reconciliation: this was the extraction at the audited engine — the current counts at
+engine v1.0.185, re-derived by `node tools/coverage-map.mjs`, are 257 choice-bearing parameters
+across 132 effects / 1,460 named choices, recorded in `parity/coverage-map.json`; both describe
+the schema, not a tested combination count. Retained as the dated observation.)
 These counts describe the schema. They are not a required Cartesian test count or proof of uncovered defects.
 `coverage-analysis.json` preserves the extracted values.
 
@@ -297,17 +301,91 @@ Original verification dates are 2026-09-22. Dated review notes identify subseque
 
 ### GAP-007: Current documentation contains stale counts and gates
 
-- Status: open. Priority: P3. Category: usability.
+- Status: closed, pending publication of this record. Priority: P3. Category: usability.
 - Scope: README, STATUS.md, and documented parity commands.
 - Expected: developers can distinguish current evidence from historical results and select the correct verification command.
 - Observed: STATUS.md retains 209 byte-verifiable effects beside a current 210-effect total and four external-input exclusions.
 - Observed: `parity/run.sh` defaults to tolerance 2.001 and SSIM 0.98. The sweep uses tolerance 0 and SSIM 0.999.
 - Evidence: remote STATUS.md coverage section, `parity/run.sh`, and `parity/sweep.sh`.
-- Next action: reconcile current counts and explain command gates without deleting historical evidence.
+- Implementation (this commit): documentation-only reconciliation; no fixture, golden, ledger, or
+  manifest bytes changed. Two recorded-run evidence strings in
+  `parity/external-input-grades.json` and its verbatim copy in `parity/coverage-map.json` are
+  clarified in place (the "82/82" suite figure now states it was the run before the 7
+  coverage-map gate tests, with the final GAP-004 suite 89/89 — see the review-findings bullet
+  below); no measured value, count, grade, or engine record in either file was altered. The only
+  code-adjacent change is `tools/coverage-map.mjs`'s generated `_comment` string, updated
+  identically to the JSON so a fresh regeneration reproduces the committed file byte for byte
+  (the "never hand-edited" claim would otherwise be false after the in-place clarification).
+  - STATUS.md header: the "last verified" record now names the current engine v1.0.185 (build
+    `6a0af04d`, 870700-byte core, recorded suite run 89/89 at `9ad880e` — 82 pre-GAP-004 + the 7
+    coverage-map gate tests, with the v1.0.185 sync section's own earlier 82/82 run labeled as
+    such; sync audit re-derived, external-input fixtures
+    byte-exact) and states explicitly that the 2026-09-25 v1.0.183 same-pass byte-exact re-grade
+    (66/66 at that revision, 25 roster programs) and the full-roster ledger grade (322 PASS / 3
+    SKIP / 0 FAIL over 325 programs, retained v1.0.181-era artifact) are carried, not re-run.
+  - STATUS.md gains a "Verification commands and their gates" section: a per-command table naming
+    the exact gate (roster sweep at tolerance 0 / SSIM 0.999; the corpus sweep's hardcoded gate —
+    tolerance 2.001 / SSIM 0.98, the same relaxed spot-check gate as `parity/run.sh`'s defaults,
+    with a note that the recorded corpus grades are measured byte-identical outcomes while the
+    script's gate does not itself enforce tolerance 0; `parity/run.sh` marked as not byte-exact
+    evidence with the strict invocation `bash parity/run.sh <name> 0 0.999` shown), each command's
+    denominator (suite: 89 tests — 82 + the 7 coverage-map gate tests, recorded 89/89 at
+    `9ad880e`), and the coverage authority (`parity/coverage-map.json` 210/210 bound, 0 excluded;
+    `parity/ledger.json` 325 programs). The 314-program Parity bullet and the mode-coverage
+    ledger sentence are labeled as their historical round with the current 325 denominator
+    pointed to. The recorded-run "82/82" evidence strings in
+    `parity/external-input-grades.json` and `parity/coverage-map.json` (copied verbatim by
+    `tools/coverage-map.mjs`) gain the same clarification: 82/82 was the run before the
+    coverage-map gate tests; the final GAP-004 suite is 89/89. The sweep denominator is stated
+    exactly: a fresh `parity/sweep.sh` grades **329 programs at this tree** (332 committed DSL
+    fixtures minus the 3 retired `bc`/`hs`/`colorspace`, per `parity/current-programs.mjs`'s
+    vendored-manifest roster) = the 325 committed-ledger programs (322 PASS / 3 policy skips)
+    plus the 4 GAP-004 real-input fixtures, which are graded, not skipped; 325 is the ledger
+    artifact, 329 is the fresh-sweep roster.
+  - Review findings fixed in this candidate: the first candidate wrongly stated the corpus
+    sweep's gate as tolerance 0 / SSIM 0.999 (the script hardcodes 2.001/0.98) and presented the
+    stale 82-test count as the current suite; both are corrected above, and the unqualified
+    "all 314 graded programs" ledger sentence in the mode-coverage section was labeled
+    historical. Review findings fixed against the second candidate: the sweep denominator was
+    presented as 325 committed programs where a fresh sweep grades 329 (the 4 GAP-004 real-input
+    fixtures have committed goldens and are not policy-skipped) — corrected to name both figures
+    and their distinction; `parity/coverage-map.json`'s "Re-derived, never hand-edited" header
+    was amended (with the generator's identical string) to record the in-place evidence-string
+    clarification truthfully; and the dated 2026-09-25 "264 / 1,816" choice-extraction counts in
+    this register now carry a reconciliation note pointing to the current 257/132/1,460 counts
+    at engine v1.0.185.
+  - STATUS.md Coverage: a dated 2026-09-26 correction note is added beside (not replacing) the
+    "All 209 byte-verifiable effects" paragraph and external-input group row: that split is the
+    213-effect-roster artifact (209 + 4 = 213), the current catalog is 210 effects, and all four
+    external-input real-input branches now grade byte-exact with deterministic host fixtures
+    while the three no-input fallbacks stay policy-skipped and retained. The Known-limits
+    correction from GAP-004 already marks that section; no historical text was deleted.
+  - README Contributing: the `parity/run.sh` example output no longer implies max-abs-diff 0 at
+    defaults; a "Command gates" block states the sweep gate (tolerance 0 / SSIM 0.999, 325
+    programs, 3 skips retained) versus `run.sh`'s relaxed defaults, and names the current
+    denominators and engine revision with links to the machine-re-derivable files. The
+    installed-package instructions are unchanged and remain accurate (not published to npm;
+    install from git / copy; `vendor/fetch.sh`; all three advertised entry points verified by
+    `test/installed-package.test.js` under GAP-001).
+- Required checks: prose compared against the machine artifacts — `parity/coverage-map.json`
+  (engine record: v1.0.185, build `6a0af04d`, 870700-byte core, 210 effects — matching the
+  STATUS.md vendor-sync section; 210/210 bound, 0 excluded, externalInput 4/4 fixtured, 3
+  fallback skips retained; ledger counts 325/322/3/0), `parity/mode-coverage.json` (101 rows),
+  `parity/ledger.json` (325 = 322 PASS + 3 SKIP), the fresh-sweep roster (332 committed DSL
+  fixtures − 3 retired `bc`/`hs`/`colorspace` = 329; the 4 GAP-004 real-input fixtures have
+  committed goldens and are not in `parity/sweep.sh`'s skip policy), `parity/run.sh` defaults
+  (TOL 2.001, SSIM 0.98), `parity/corpus/sweep.sh`'s hardcoded
+  `--tolerance 2.001 --ssim-min 0.98`, and `parity/sweep.sh` `tol_for` ("0 0.999") with its
+  3-name skip policy — all re-read and matched to
+  the wording in this commit. The vendored engine bytes are gitignored by policy and were not
+  re-fetched for this documentation-only change; the engine identity is read from
+  `parity/coverage-map.json`'s engine record (re-asserted against the vendored definitions by
+  `test/coverage-map.test.js`'s existing gate).
 - Dependencies: acceptance scope from GAP-004. This checkpoint preserves existing documentation except the requested register link.
-- Acceptance: current claims name exact denominators, tolerances, exclusions, and source revisions consistently.
-- Required checks: compare prose with manifests, ledgers, command defaults, and installed-package instructions.
-- Last verification: 2026-09-22.
+- Acceptance: current claims name exact denominators, tolerances, exclusions, and source revisions consistently. Satisfied — every current claim added or touched cites 210 effects @ v1.0.185/`6a0af04d`, the 325/322/3/0 ledger denominator, the 0/0.999 vs 2.001/0.98 gate split, and the retained exclusions (3 fallback policy skips, 1 reference-rejected corpus composition, non-Cartesian parameter rule); historical statements are retained and dated, not deleted.
+- Required checks: compare prose with manifests, ledgers, command defaults, and installed-package instructions. Executed (above).
+- Next action: complete. Publication of the record needs the standing publication authority.
+- Last verification: 2026-09-26.
 
 ## 5. Ordered next actions
 
@@ -338,6 +416,7 @@ Do not infer implementation, publication, or workflow authority from this list.
 | 2026-09-26 | `gap-001-implementation`, `fae8a26f4d88422452aa9844e46e98edbbcf8d29` | GAP-001 record updated with implementation and run evidence (this row). | `node --test test/*.test.js`: 68 pass, 0 fail, 0 skipped. The packed tarball installs in an empty consumer, all advertised imports load, the missing-engine error recovers via the installed fetch script (CDN), the README program compiles through the installed compiler, renders a visibly non-uniform Babylon texture in Chromium with no page errors, and uninstall is clean. | Publication of this record and the fix commits, and exact-source CI, remain supervisor actions. Other gaps unchanged. |
 | 2026-09-26 | `gap-001-ci-analysis`, `7a75a48` (tree identical to published `7ed3435`) | Added the exact-source CI path analysis to GAP-001. | Candidate `7ed3435` touches no export-kit push-trigger path, so zero should-run workflows at that exact source and the `runs: []` verification receipt is the correct state. | GAP-005 remains open for defining required checks; workflow changes lack job authority. |
 | 2026-09-26 | `gap-004-implementation` (this commit) | GAP-004 record updated with the implementation and recorded run (this row). | `node --test test/*.test.js`: 89 tests pass, 0 fail (7 new coverage-map gate tests). Four real-input fixture programs (`media_image`, `text_glyphs`, `roll_midi`, `mesh_obj`) dual-minted and graded byte-exact (max-abs-diff 0, SSIM 1.0) on engine 1.0.185; `parity/coverage-map.json` re-derives 210/210 effects bound; fresh corpus refetch 20/20 reference-compileable; historical corpus 40 (39+1) retained. | Full fresh-corpus re-grade excluded (stable-runner limitation, recorded); full-roster ledger grade remains the v1.0.181-era artifact (0 FAIL retained). |
+| 2026-09-26 | `gap-007-docs` (this commit) | GAP-007 record updated with the reconciliation (this row); STATUS.md header/coverage corrections and the new verification-commands gate table; README command-gates and roster-denominator statements; clarification of the recorded-run "82/82" evidence strings in `parity/external-input-grades.json`/`parity/coverage-map.json` plus the matching generator `_comment`; reconciliation note for the dated 264/1,816 choice counts. No fixture, golden, ledger, or manifest bytes changed; no measured value or count in the JSON records altered. | Prose re-checked against `parity/coverage-map.json` (210/210 @ v1.0.185/`6a0af04d`, 4/4 external-input fixtured, 3 fallback skips retained), `parity/mode-coverage.json` (101 rows), `parity/ledger.json` (325 = 322 PASS + 3 SKIP + 0 FAIL), the fresh-sweep roster (332 DSL − 3 retired = 329; the 4 GAP-004 real-input fixtures graded, not skipped), and the actual command gates: `parity/sweep.sh` `tol_for` (0/0.999, media/text/roll skips), `parity/corpus/sweep.sh` hardcoded `--tolerance 2.001 --ssim-min 0.98`, `parity/run.sh` defaults (2.001/0.98); suite denominator 89 (82 + 7 coverage-map gate tests, recorded 89/89 at `9ad880e`). Review findings fixed from the first and second candidates (corpus gate misstated; stale 82 count; unqualified "314"; sweep denominator 325 vs 329; "never hand-edited" header; 264/1,816 note). Historical statements retained and dated, not deleted. | No new execution: vendored engine is gitignored by policy and was not re-fetched (so `parity/current-programs.mjs`'s roster count is derived from the committed fixture set and the reviewer-verified retirement rule, not re-run here); the gate table describes existing command behavior. GAP-005/006 remain open. |
 
 No gap closed during this first audit. Successful checks do not establish whole-port completion or release approval.
 The worker stopped at the requested audit checkpoint. Publication of audit documents does not authorize implementation.

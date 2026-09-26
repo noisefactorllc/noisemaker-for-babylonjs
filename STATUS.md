@@ -1,21 +1,48 @@
 # Noisemaker for Babylon.js — status & parity
 
-*Last verified 2026-09-25 against the engine at build tag `8eeb7b5a`
-(`noisemaker-shaders-core.esm.js`, 858616 bytes) — source-side
-`noisefactorllc/noisemaker` @ `8eeb7b5ac14e` (v1.0.183): full npm suite **66/66 PASS**
-(`node --test test/*.test.js`), the machine-checked sync audit (`tools/verify-sync-audit.mjs`)
-re-derives every claim for `240740dd..9d3474df`, `9d3474df..2f47612c`, and `2f47612c..8eeb7b5a`,
-and the same-pass golden/candidate byte-exact re-grade covers 25 roster programs on this
-container's SwiftShader driver at this build (`ca3d` — initially a reproducible parity failure —
-was root-caused to viewport-precedence handling plus RTT auto-mipgen exposure, fixed in the
-port, and re-graded byte-exact; 4 heavy evolve programs that could not complete grading are
-recorded in the `9d3474df..2f47612c` sync section). Exposes output sink
+*Last verified 2026-09-26 against the vendored engine **v1.0.185** (build `6a0af04d`,
+`noisemaker-shaders-core.esm.js`, 870700 bytes): the recorded suite run at the GAP-004
+implementation commit (`9ad880e`) is **89 tests, 89 pass / 0 fail** (`node --test test/*.test.js`;
+82 pre-GAP-004 + the 7 `test/coverage-map.test.js` gate tests — the v1.0.185 sync section below
+records its own earlier 82/82 run, before the coverage-map tests), the machine-checked sync audit
+(`tools/verify-sync-audit.mjs`)
+re-derives the `8eeb7b5a..6a0af04d` claims and the four external-input real-input fixtures
+grade byte-exact on both backends (see the `8eeb7b5a..6a0af04d` sync section and
+[`parity/external-input-grades.json`](parity/external-input-grades.json)). That range changed no
+effect definitions (210 catalogued effects, 0 added / 0 removed), so the same-pass golden/candidate
+byte-exact re-grade recorded below against the v1.0.183 build (build tag `8eeb7b5a`, 858616 bytes,
+`noisefactorllc/noisemaker` @ `8eeb7b5ac14e`, 2026-09-25: **66/66 PASS** at that revision, sync
+audit re-deriving `240740dd..9d3474df`, `9d3474df..2f47612c`, `2f47612c..8eeb7b5a`; 25 roster
+programs byte-exact on this container's SwiftShader driver, `ca3d` root-caused and re-graded, 4
+heavy evolve programs' grading limits recorded in the `9d3474df..2f47612c` sync section) is
+carried by byte-identity, not re-run. The full-roster ledger grade in
+[`parity/ledger.json`](parity/ledger.json) (322 PASS / 3 SKIP / 0 FAIL over 325 programs) is the
+retained v1.0.181-era artifact. Exposes output sink
 deferral query `shouldDeferRender()` on `NoisemakerRenderer`, verifies structured parser diagnostics
 (P001 coordinates, P005 output operations, P006 subchains, P007 call forms, P008-P010 subchain arguments), authorable texture policies (GAP-004), and pass-field propagation including dynamic dimension viewport resolution (GAP-005).
 The sources of truth are `parity/sweep.sh`, `parity/corpus/sweep.sh`, and `tools/catalog.mjs`.*
 
 This file holds the detailed coverage and parity numbers. For what the project is and how to use it,
 see the [README](README.md).
+
+## Verification commands and their gates
+
+Pick the command that matches the claim you are making — the gates differ:
+
+| Command | Gate (tolerance / SSIM min) | Denominator | Use |
+|---|---|---|---|
+| `bash parity/sweep.sh` | **tolerance 0, SSIM 0.999** (flat byte-exact policy — the per-effect relaxed map was retired, see Parity below) | every current-roster program with a golden: **329 programs at this tree** (332 committed DSL fixtures minus the 3 retired `bc`/`hs`/`colorspace`, per `parity/current-programs.mjs`'s vendored-manifest roster) — the 325 committed-ledger programs (322 PASS / 3 policy skips retained: the `media`/`text`/`roll` no-input fallbacks) **plus the 4 GAP-004 real-input fixtures** (`media_image`, `text_glyphs`, `roll_midi`, `mesh_obj`), which are graded here, not skipped | the acceptance evidence for parity claims. Note the distinction: `parity/ledger.json` still records only its 325 v1.0.181-era rows (it was not rewritten with the 4 newer fixtures); 325 is the ledger artifact, 329 is what a fresh sweep grades |
+| `bash parity/corpus/sweep.sh` | **tolerance 2.001, SSIM 0.98** (hardcoded in the script — the same relaxed spot-check gate as `run.sh`, absorbing cross-driver driver noise), 1800-frame (~30 s) evolution per composition | the live corpus (historical denominator 40 raw / 39 gradeable + 1 reference-rejected, retained) | corpus grading. The recorded corpus grades in STATUS report the measured max-abs-diff per composition (the corpus evidence above is recorded **byte-identical outcomes**), but this gate does not itself enforce tolerance 0 — treat byte-exact corpus claims as recorded measured outcomes, not as an enforcement guarantee of this script |
+| `bash parity/run.sh <name>` | **defaults tolerance 2.001, SSIM 0.98** — a relaxed spot-check gate sized to cross-driver/cross-machine driver noise | one program | smoke check only. A PASS at these defaults is **not** byte-exact evidence (it can pass with a non-zero max-abs-diff). For the strict gate on one program: `bash parity/run.sh noise 0 0.999` |
+| `node --test test/*.test.js` | suite pass | **89 tests** at this tree (82 pre-GAP-004 + the 7 `test/coverage-map.test.js` gate tests); the recorded GAP-004 run is **89 pass / 0 fail** at commit `9ad880e` (docs/COMPLETION_GAPS.md GAP-004), not re-run in this docs-only commit | unit/integration incl. `test/coverage-map.test.js`, which re-derives `parity/coverage-map.json` |
+| `node tools/verify-sync-audit.mjs` | exit 0 = every recorded sync-audit claim re-derived | the pinned engine revision (`vendor/fetch.sh` default, currently 1.0.185 / `6a0af04d`) | authority / sync-audit re-derivation |
+
+Denominator and coverage authority: [`parity/coverage-map.json`](parity/coverage-map.json)
+(210/210 catalogued effects bound to graded evidence at engine 1.0.185 / build `6a0af04d`, 0
+explicitly excluded; skipped and refused cases retained in the counts) and
+[`parity/ledger.json`](parity/ledger.json) (325 programs: 322 PASS, 3 SKIP, 0 FAIL — the
+v1.0.181-era full-roster artifact, retained verbatim; the fresh-sweep roster at this tree is
+329 — the ledger plus the 4 GAP-004 real-input fixtures — see the sweep row above).
 
 ## Coverage
 
@@ -40,6 +67,18 @@ now proven to inject `defines` into a custom **vertex** shader too, not just fra
 **All 209 byte-verifiable effects are byte-identical** (max-abs-diff 0); the same 4 effects as before
 need a live external input the headless harness can't supply deterministically — see Known limits below
 (three of the four are additionally verified byte-identical on their no-input fallback path).
+
+> **2026-09-26 correction (GAP-007):** the "209 byte-verifiable / 4 external-input" split above is a
+> historical artifact of the **213-effect** roster this round was written against (209 + 4 = 213;
+> meshLoader still had no fixture then). The current catalog is **210 effects** (engine v1.0.185,
+> build `6a0af04d` — see the `8eeb7b5a..6a0af04d` sync below). The external-input state above is also
+> superseded: all four real-input branches (media image upload, text overlay-canvas upload, roll's
+> real MIDI note-grid path via the engine's `MidiState`, meshLoader via the engine's OBJ parser/packer
+> plus `BabylonBackend.uploadMeshData`) now grade **byte-exact on both backends** with deterministic
+> host fixtures ([`parity/external-input-grades.json`](parity/external-input-grades.json)); the three
+> no-input fallback programs (`media`/`text`/`roll`) stay policy-skipped in `parity/sweep.sh` with the
+> skips retained ([`parity/coverage-map.json`](parity/coverage-map.json): 210/210 effects bound, 0
+> explicitly excluded). The paragraph and group table above are retained as the historical record.
 
 | Group | What's in it | State |
 |---|---|---|
@@ -81,7 +120,8 @@ effects**, each minted as its own DSL program + golden via the vendored engine a
 | `mosaicTiles` | mosaic, shifted | 2 |
 
 Full data: [`parity/mode-coverage.json`](parity/mode-coverage.json) (the 101-row effect×mode ledger) and
-[`parity/ledger.json`](parity/ledger.json) (all 314 graded programs — full roster + mode matrix).
+[`parity/ledger.json`](parity/ledger.json) (at that historical round: 314 graded programs — the
+current committed ledger denominator is 325, see "Verification commands" above).
 Regenerate the fixtures with `node tools/gen-mode-programs.mjs`.
 
 **Scope note.** The crystallization brief named 13 effects as its (explicitly non-exhaustive) example
@@ -104,7 +144,9 @@ list: `texture`, `strokes`, `lowPoly`, `emboss`, `invert`, `hatch`, `halftone`, 
 
 ## Parity
 
-- **Whole catalog + mode matrix, freshly paired (this round's crystallization):** 314/314 programs
+- **Whole catalog + mode matrix, freshly paired (this round's crystallization — a historical
+  round; the current committed denominator is 325 programs, see "Verification commands" above):**
+  314/314 programs
   (roster + 101 mode-matrix fixtures) byte-identical (max-abs-diff 0) when golden and candidate are
   minted in the same pass — see "A found-and-fixed false failure" below for why "freshly paired"
   matters. 311 are strict-graded via `parity/sweep.sh`'s policy; `media`/`text`/`roll` are

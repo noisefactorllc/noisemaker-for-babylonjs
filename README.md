@@ -137,8 +137,10 @@ counts rather than dropped. The acceptance rule for "works" is the sweep's byte-
 engine in the same pass.
 
 - **The whole effect catalog** — all 210 effects (`tools/catalog.mjs`) — has at least one graded
-  parity fixture each (325 committed programs: the full roster plus the mode matrix; 322 PASS,
-  3 documented external-input fallback skips at the last full-roster ledger grade, 0 FAIL).
+  parity fixture each (329 roster programs with goldens at this tree = the 325 committed-ledger
+  programs — the full roster plus the mode matrix at the last full-roster ledger grade: 322 PASS,
+  3 documented external-input fallback skips, 0 FAIL — plus the 4 GAP-004 real-input fixtures,
+  graded in [`parity/external-input-grades.json`](parity/external-input-grades.json)).
   Byte-identical to the web reference **when golden and candidate are minted in the same pass on
   the same driver** (the candidate runs on the same WebGL2 driver as the reference, so the match
   is exact — no rounding tolerance). Cross-driver and cross-machine re-grades are a documented
@@ -196,10 +198,34 @@ python3 -m venv parity/.venv && parity/.venv/bin/pip install numpy pillow   # co
 npx playwright install chromium        # headless browser for the candidate renders
 bash parity/sweep.sh                    # candidates via BabylonBackend, graded against the committed goldens
 bash parity/run.sh noise                # just one program
-#   -> [PASS] noise: max-abs-diff=0 ...
+#   -> [PASS] noise: max-abs-diff=... (spot check; see the gate note below)
 ```
 
 `parity/sweep.sh` compares against the committed goldens. It does not generate them.
+
+**Command gates.** The commands enforce different gates — pick by claim:
+
+- `bash parity/sweep.sh` grades at the **byte-exact acceptance policy: tolerance 0, SSIM ≥ 0.999**,
+  over the current roster — **329 programs at this tree**: the 325 committed-ledger programs
+  (322 PASS, 3 policy skips retained — the `media`/`text`/`roll` no-input fallbacks) plus the 4
+  GAP-004 real-input fixtures, which are graded, not skipped. This is the gate behind every
+  "byte-identical" claim. (325 is the retained `parity/ledger.json` artifact; 329 is what a
+  fresh sweep grades.)
+- `bash parity/corpus/sweep.sh` (live corpus, 1800-frame evolutions) and
+  `bash parity/run.sh <name>` (single program) grade at a **relaxed spot-check gate: tolerance
+  2.001, SSIM 0.98** (corpus: hardcoded in the script; run.sh: its defaults) to absorb
+  cross-driver/cross-machine driver noise. A PASS at these gates is *not* byte-exact enforcement —
+  the recorded corpus grades report the measured max-abs-diff per composition (byte-identical
+  outcomes, recorded above), and for one roster program you can pass the strict gate explicitly:
+  `bash parity/run.sh noise 0 0.999`.
+
+Current counts and coverage denominators are machine-re-derivable: 210 catalogued effects
+(engine v1.0.185, build `6a0af04d`), 210/210 bound in
+[`parity/coverage-map.json`](parity/coverage-map.json) with skipped/refused cases retained;
+[`parity/ledger.json`](parity/ledger.json) retains the v1.0.181-era full-roster grade verbatim
+(322 PASS / 3 SKIP / 0 FAIL). STATUS.md's [verification-commands table](STATUS.md) lists every
+command, its gate, and its denominator.
+
 A few effects (`watercolor`, the chaotic iterative solvers) are sensitive to time/GPU-scheduling.
 A golden generated hours apart from the candidate can show a spurious few-percent diff.
 The two backends are byte-identical when generated together (see PORTING-GUIDE.md).
