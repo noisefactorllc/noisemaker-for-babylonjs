@@ -152,17 +152,19 @@ Original verification dates are 2026-09-22. Dated review notes identify subseque
 
 ### GAP-001: Compiler missing from packed distribution
 
-- Status: open. Priority: P1. Category: release.
+- Status: closed, pending publication of this record. Priority: P1. Category: release.
 - Scope: `package.json`, `src/compiler/index.js`, compiler tools, and vendor setup.
 - Expected: every advertised package entry point loads after normal installation.
 - Observed: the compiler imports excluded `tools/export-fat-graph.mjs`. The package also omits `vendor/fetch.sh` and engine setup files.
 - Evidence: E2, `npm-pack.json`, `consumer-probe.log`. Root and runtime imports pass.
-- Next action: correct `package.json` contents and compiler dependencies in the implementation job.
-- Review evidence: the installed compiler still fails at `ca518c2b884dfa0706716aba6d9ef3c6397032c1`.
-- Dependencies: separate implementation authority. Publishing needs separate publication authority.
-- Acceptance: a clean installed artifact compiles the documented program and produces a visible Babylon texture without repository-relative patches.
-- Required checks: pack, install, import all exports, first render, error recovery, and uninstall.
-- Last verification: 2026-09-23 for package and CI checks. Other runtime evidence remains dated 2026-09-22.
+- Implementation evidence: `352c329e` (fix commit — package `files` gains `tools/export-fat-graph.mjs`, `vendor/engine.mjs`, `vendor/fetch.sh`; the missing-engine recovery error names the fetch script by its own absolute path so it is valid from any consumer cwd). Verified by the committed end-to-end check `test/installed-package.test.js` at `fae8a26f`, which packs the real tarball, installs it into an empty consumer with the Babylon peer, imports all three advertised entry points, reproduces and then recovers the missing-engine error by running the named fetch script (CDN fetch, no repository-relative shortcut), compiles the program documented in README verbatim (`search synth, filter` / `noise(scaleX: 60).bloom().write(o0)` / `render(o0)`) through the installed compiler, renders it to a visibly non-uniform Babylon texture in headless Chromium with zero page errors, and uninstalls. `test/packaging.test.js` guards the tarball against future import-closure omissions.
+- Recorded run: 2026-09-26 05:22 UTC, Linux 6.8.0-134-generic x64, Node 26.5.1, Chromium headless-shell 149 (SwiftShader WebGL), candidate `fae8a26f4d88422452aa9844e46e98edbbcf8d29`: `node --test test/*.test.js` — 68 tests, 68 pass, 0 fail, 0 skipped. The browser binary is loaded from a `PLAYWRIGHT_BROWSERS_PATH` volume because this host mounts `/tmp` `noexec`; the tests' launch arguments themselves are unchanged.
+- Next action: complete. Publication of the record needs the standing publication authority.
+- Review evidence: the installed compiler still fails at `ca518c2b884dfa0706716aba6d9ef3c6397032c1` (historical, superseded by the recorded run above).
+- Dependencies: publishing needs separate publication authority.
+- Acceptance: a clean installed artifact compiles the documented program and produces a visible Babylon texture without repository-relative patches. Satisfied by the recorded run.
+- Required checks: pack, install, import all exports, first render, error recovery, and uninstall. All executed in `test/installed-package.test.js` (recorded above).
+- Last verification: 2026-09-26 for the installed-artifact checks at `fae8a26`. Historical package and CI checks remain dated 2026-09-23; other runtime evidence remains dated 2026-09-22.
 
 ### GAP-002: Published kit lacks Babylon license text
 
@@ -269,6 +271,7 @@ Do not infer implementation, publication, or workflow authority from this list.
 | --- | --- | --- | --- | --- |
 | 2026-09-22 | `20260922-babylonjs-01`, `d3446072d4c75f4d7e087ad48dfa06de5ec5dec9` | Created this register and added its README link. Publication uses standing authority. | 45 Node tests, 24 contract tests, 322 strict fixture passes, five differential probes, scene examples, package and kit checks. | Three sweep skips, external inputs, corpus, other hosts, packaging, dependency notices, and exact-SHA CI. |
 | 2026-09-23 | `review-20260923-01`, `ca518c2b884dfa0706716aba6d9ef3c6397032c1` | Corrected publication wording and bounded the package action. | Reproduced installed compiler failure. Checked raw evidence, source changes, current kit inventory, and exact-source CI absence. | Seven gaps remain. No closures or new host qualification. |
+| 2026-09-26 | `gap-001-implementation`, `fae8a26f4d88422452aa9844e46e98edbbcf8d29` | GAP-001 record updated with implementation and run evidence (this row). | `node --test test/*.test.js`: 68 pass, 0 fail, 0 skipped. The packed tarball installs in an empty consumer, all advertised imports load, the missing-engine error recovers via the installed fetch script (CDN), the README program compiles through the installed compiler, renders a visibly non-uniform Babylon texture in Chromium with no page errors, and uninstall is clean. | Publication of this record and the fix commits, and exact-source CI, remain supervisor actions. Other gaps unchanged. |
 
 No gap closed during this first audit. Successful checks do not establish whole-port completion or release approval.
 The worker stopped at the requested audit checkpoint. Publication of audit documents does not authorize implementation.
