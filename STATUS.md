@@ -346,9 +346,12 @@ points exactly at `2f47612c`). This is the texture-policy release the previous s
   `noisemaker-shaders-core.esm.js` 855031 bytes (ETag `6ab6bd3f-d0bf7`, Last-Modified
   Fri, 25 Sep 2026 18:28:15 GMT), verified **byte-identical (`cmp`) to the live CDN artifact**.
   The tree now vendors the newer `8eeb7b5a` build (858616 bytes, byte-identical to the CDN,
-  re-checked by `tools/verify-sync-audit.mjs` on every run) after integrating the
+  re-checked by `tools/verify-sync-audit.mjs` on every run against the pinned documented
+  revision `1.0.183` — the alias `/1` was replaced by the exact-version pin on 2026-09-26
+  (GAP-003) so the re-derivation cannot silently drift when the CDN alias rolls forward)
+  after integrating the
   `240740dd..8eeb7b5a` sync above; the v1.0.182 byte-identity claim above was verified against
-  the artifact live at audit time and re-derivation now checks the current published build.
+  the artifact live at audit time and re-derivation now checks the pinned documented revision.
 - **Manifest: 210 effects** (unchanged count, 0 added, 0 removed); `git diff 9d3474df..2f47612c --
   shaders/src/effects` is empty — **no effect definition, GLSL/WGSL source, manifest entry, or
   parameter contract changed** (catalog parity holds; no WGSL/GLSL translation cross-check needed
