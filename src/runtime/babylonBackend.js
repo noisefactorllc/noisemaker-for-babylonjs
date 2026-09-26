@@ -52,6 +52,17 @@ function resolveFormat (format) {
   return table[format] || table.rgba8
 }
 
+// Full mip chain length for a 2D texture dimension pair (mirrors webgl2 mipLevelCount).
+function mipLevelCount (width, height) {
+  const maxDim = Math.max(1, Math.floor(width), Math.floor(height))
+  return Math.max(1, Math.floor(Math.log2(maxDim)) + 1)
+}
+
+// Size (>= 1) of one mip level for a dimension (mirrors webgl2 mipLevelSize).
+function mipLevelSize (dim, level) {
+  return Math.max(1, Math.floor(dim / Math.pow(2, level)))
+}
+
 // Parse `uniform <type> <name>[N];` declarations out of GLSL source so we can declare
 // them to Babylon's Effect and dispatch the correct setter by type. (webgl2.js gets this
 // from gl.getActiveUniform; we read it from source — same result for our shaders.)
@@ -108,6 +119,8 @@ export class BabylonBackend {
     this._bindPass = null
     this._bindState = null
     this._copyWrapper = null
+    this._mipReadFbo = null // lazy — generateMipmaps NEAREST blit-chain FBO pair
+    this._mipDrawFbo = null
     this._destroyed = false
   }
 
@@ -210,21 +223,28 @@ export class BabylonBackend {
     // Every graph texture is a renderable, NEAREST/CLAMP, linear half-float-by-default RGBA
     // target (surfaces, node intermediates, temps). We always make it a render target so it
     // can be both written and sampled.
-    const samplingMode = spec.mipmaps
-      ? Constants.TEXTURE_LINEAR_LINEAR_MIPLINEAR
-      : Constants.TEXTURE_NEAREST_SAMPLINGMODE
+    // Opt-in mip chain (webgl2.js `spec.mipmaps`): allocate EVERY level up front — sampling an
+    // unallocated chain returns black and the per-level blits in generateMipmaps() would run
+    // against incomplete framebuffers — then sample with mag NEAREST / min LINEAR_MIPMAP_LINEAR.
+    const mipmaps = spec.mipmaps === true
+    const mipLevels = mipmaps ? mipLevelCount(width, height) : 1
     const rtw = this.engine.createRenderTargetTexture({ width, height }, {
-      generateMipMaps: !!spec.mipmaps,
+      // generateMipMaps stays false at creation: Babylon's own gl.generateMipmap() is invalid for
+      // non-filterable float formats (the default rgba16f) and would not fill the chain with the
+      // frame's level-0 contents anyway — the chain is allocated here and filled by the NEAREST
+      // blits in generateMipmaps() (mirrors webgl2.js createTexture).
+      generateMipMaps: false,
       generateDepthBuffer: false,
       generateStencilBuffer: false,
       type: fmt.type,
       format: fmt.format,
-      samplingMode,
+      samplingMode: Constants.TEXTURE_NEAREST_SAMPLINGMODE,
       noColorAttachment: false
     })
     const internal = rtw.texture
     internal.wrapU = Constants.TEXTURE_CLAMP_ADDRESSMODE
     internal.wrapV = Constants.TEXTURE_CLAMP_ADDRESSMODE
+    if (mipLevels > 1) this._allocateMipChain(internal, width, height, fmt, mipLevels)
     const thin = new ThinTexture(internal)
     const rec = {
       internal,
@@ -234,7 +254,8 @@ export class BabylonBackend {
       height,
       format: spec.format,
       handle: thin,
-      mipmaps: !!spec.mipmaps,
+      mipmaps: mipLevels > 1,
+      mipLevels,
       persistent: !!spec.persistent
     }
     this.textures.set(id, rec)
@@ -243,28 +264,76 @@ export class BabylonBackend {
     return rec
   }
 
+  // webgl2.js createTexture mip-chain branch: allocate levels 1..n-1 on the internal GL
+  // texture (Babylon only ever allocates level 0 for an RTT with generateMipMaps:false), then
+  // move the sampler to mag NEAREST / min LINEAR_MIPMAP_LINEAR WITHOUT gl.generateMipmap()
+  // (invalid for non-filterable float formats — the chain is filled by the NEAREST blits in
+  // generateMipmaps()). Mirrors the reference's up-front texImage2D chain + texParameter pair.
+  _allocateMipChain (internal, width, height, fmt, mipLevels) {
+    const gl = this.gl
+    const glTex = internal._hardwareTexture?.underlyingResource || null
+    if (!glTex) throw new Error('BabylonBackend.createTexture: mip chain allocation could not resolve the internal GL texture')
+    // The sized internal format Babylon itself used for level 0 — same helper, same args.
+    const internalFormat = this.engine._getRGBABufferInternalSizedFormat(fmt.type, fmt.format)
+    // Babylon texture-type enum → GL type enum (the texImage2D chain speaks raw GL).
+    const glType = this.engine._getWebGLTextureType(fmt.type)
+    const readBinding = gl.getParameter(gl.READ_FRAMEBUFFER_BINDING)
+    const drawBinding = gl.getParameter(gl.DRAW_FRAMEBUFFER_BINDING)
+    try {
+      gl.bindTexture(gl.TEXTURE_2D, glTex)
+      for (let level = 1; level < mipLevels; level++) {
+        gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, mipLevelSize(width, level), mipLevelSize(height, level), 0, gl.RGBA, glType, null)
+      }
+      internal.generateMipMaps = true
+      // mag NEAREST + min LINEAR_MIPMAP_LINEAR (=TEXTURE_NEAREST_LINEAR_MIPLINEAR); the
+      // explicit generateMipMaps=false arg skips Babylon's own gl.generateMipmap() call.
+      this.engine.updateTextureSamplingMode(Constants.TEXTURE_NEAREST_LINEAR_MIPLINEAR, internal, false)
+    } finally {
+      gl.bindTexture(gl.TEXTURE_2D, null)
+      gl.bindFramebuffer(gl.READ_FRAMEBUFFER, readBinding)
+      gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, drawBinding)
+      this.engine.resetTextureCache?.()
+    }
+  }
+
+  // webgl2.js generateMipmaps: regenerate the mip chain of mipmapped 2D textures from level 0
+  // via a NEAREST blit chain between adjacent levels (works for every renderable format,
+  // including non-filterable floats where gl.generateMipmap() is invalid — it is NOT used here).
+  // Called by the reference Pipeline after each frame's passes for every `mipmaps: true`
+  // texture; textures without a mip chain are skipped. Babylon FBO bindings are saved/restored
+  // so the engine's cached GL state stays consistent across the raw blits.
   generateMipmaps (ids) {
-    // Opt-in mip chain regeneration (GAP-004): called by the Pipeline after each frame
-    // for textures authored with `mipmaps: true`.
-    if (!ids || !ids.length) return
-    for (const id of ids) {
-      const rec = this.textures.get(id)
-      if (!rec || !rec.mipmaps || rec.is3D) continue
-      try {
-        if (typeof this.engine.generateMipmaps === 'function') {
-          this.engine.generateMipmaps(rec.internal)
-        } else if (typeof this.engine.generateMipMaps === 'function') {
-          this.engine.generateMipMaps(rec.internal)
-        } else if (this.gl && typeof this.gl.generateMipmap === 'function') {
-          const tex = this._glTexOf(rec)
-          if (tex) {
-            this.gl.bindTexture(this.gl.TEXTURE_2D, tex)
-            this.gl.generateMipmap(this.gl.TEXTURE_2D)
-            this.gl.bindTexture(this.gl.TEXTURE_2D, null)
-            if (typeof this.engine.wipeCaches === 'function') this.engine.wipeCaches(true)
-          }
+    const gl = this.gl
+    if (!gl || !ids || !ids.length) return
+    if (!this._mipReadFbo) {
+      this._mipReadFbo = gl.createFramebuffer()
+      this._mipDrawFbo = gl.createFramebuffer()
+    }
+    const readBinding = gl.getParameter(gl.READ_FRAMEBUFFER_BINDING)
+    const drawBinding = gl.getParameter(gl.DRAW_FRAMEBUFFER_BINDING)
+    try {
+      for (const id of ids) {
+        const rec = this.textures.get(id)
+        if (!rec || !rec.mipmaps || rec.is3D) continue
+        const glTex = this._glTexOf(rec)
+        if (!glTex) continue
+        const { width, height, mipLevels } = rec
+        gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this._mipReadFbo)
+        gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this._mipDrawFbo)
+        for (let level = 1; level < mipLevels; level++) {
+          gl.framebufferTexture2D(gl.READ_FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, glTex, level - 1)
+          gl.framebufferTexture2D(gl.DRAW_FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, glTex, level)
+          gl.blitFramebuffer(
+            0, 0, mipLevelSize(width, level - 1), mipLevelSize(height, level - 1),
+            0, 0, mipLevelSize(width, level), mipLevelSize(height, level),
+            gl.COLOR_BUFFER_BIT,
+            gl.NEAREST
+          )
         }
-      } catch (_) {}
+      }
+    } finally {
+      gl.bindFramebuffer(gl.READ_FRAMEBUFFER, readBinding)
+      gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, drawBinding)
     }
   }
 
@@ -439,6 +508,10 @@ export class BabylonBackend {
     const sameSize = src.width === dst.width && src.height === dst.height
     this._bindPass = {
       __copySrc: src.thin,
+      // Same-size: the texelFetch branch is pixel-identical to the reference 1:1 NEAREST blit.
+      // Size-changing (persistent-texture preservation through resize): the texture() branch's
+      // NEAREST sample mapping floor((d+0.5)*src/dst) is exactly the reference
+      // blitFramebuffer(0,0,src → 0,0,dst) rule.
       __copyScale: sameSize ? [1, 1] : [dst.width / src.width, dst.height / src.height]
     }
     this.engine.setAlphaMode(Constants.ALPHA_DISABLE)
@@ -1120,6 +1193,11 @@ export class BabylonBackend {
       for (const fbo of this._mrtFbos?.values?.() || []) { try { this.gl.deleteFramebuffer(fbo) } catch { /* noop */ } }
       for (const rb of this._depthRBs?.values?.() || []) { try { this.gl.deleteRenderbuffer(rb) } catch { /* noop */ } }
       try { if (this._emptyVAO) this.gl.deleteVertexArray(this._emptyVAO) } catch { /* noop */ }
+      for (const fbo of [this._mipReadFbo, this._mipDrawFbo]) {
+        if (fbo) { try { this.gl.deleteFramebuffer(fbo) } catch { /* noop */ } }
+      }
+      this._mipReadFbo = null
+      this._mipDrawFbo = null
     }
     this.uniformBuffers.clear()
     this._mrtFbos?.clear?.()

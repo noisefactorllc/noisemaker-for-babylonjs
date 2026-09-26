@@ -2,8 +2,12 @@
 
 *Last verified 2026-09-25 against the engine at build tag `8eeb7b5a`
 (`noisemaker-shaders-core.esm.js`, 858616 bytes) — source-side
-`noisefactorllc/noisemaker` @ `8eeb7b5ac14e` (v1.0.183): full sweep **322/322 PASS**, 3 documented
-external-input skips, every graded effect still byte-exact at max-abs-diff 0. Exposes output sink
+`noisefactorllc/noisemaker` @ `8eeb7b5ac14e` (v1.0.183): full npm suite **69/69 PASS**
+(`node --test test/*.test.js`), the machine-checked sync audit (`tools/verify-sync-audit.mjs`)
+re-derives every claim for `240740dd..9d3474df`, `9d3474df..2f47612c`, and `2f47612c..8eeb7b5a`,
+and the same-pass golden/candidate byte-exact re-grade covers 24 roster programs on this
+container's SwiftShader driver (5 heavy evolve programs could not complete — environment,
+recorded below). Exposes output sink
 deferral query `shouldDeferRender()` on `NoisemakerRenderer`, verifies structured parser diagnostics
 (P001 coordinates, P005 output operations, P006 subchains, P007 call forms, P008-P010 subchain arguments), authorable texture policies (GAP-004), and pass-field propagation including dynamic dimension viewport resolution (GAP-005).
 The sources of truth are `parity/sweep.sh`, `parity/corpus/sweep.sh`, and `tools/catalog.mjs`.*
@@ -231,6 +235,12 @@ Engine synced from upstream `noisefactorllc/noisemaker` commit `8eeb7b5a` (v1.0.
   - `test/compiler.test.js`: added unit test verifying that `exportFatGraph()` propagates all GAP-005 pass fields onto expanded passes across multi-pass graphs, and unit test verifying `Pipeline.resolvePassViewport()` evaluation of authored dimension specs and passthrough of numeric boxes.
   - `test/backend-capabilities.test.js`: added unit tests verifying that `BabylonBackend.createTexture()` correctly sets `mipmaps` and `persistent` flags, passes mipmap sampling mode constants, executes `generateMipmaps()` with internal texture handles, scales persistent texture copies across dimension changes, and verifies `_resolvePassViewportBox()` across diverse viewport representations.
 - **Verification**: All 59 unit tests pass cleanly.
+- **Integration note (next sync)**: the texture-policy Babylon implementation was subsequently
+  aligned to upstream `webgl2.js` semantics (up-front mip-chain allocation, mag NEAREST /
+  min LINEAR_MIPMAP_LINEAR sampler, NEAREST blit-chain `generateMipmaps` — `gl.generateMipmap()`
+  is invalid for the default non-filterable float formats) and the engine re-vendored to this
+  range's tip; see the `9d3474df..2f47612c` sync section below for the faithful implementation,
+  its real-GL verification, and the supersession rationale.
 
 ## Vendor sync (4891b995..240740dd)
 
@@ -309,7 +319,7 @@ a sub-range of it, and `fca611fd` itself was already consumed by the `4891b995..
     the mipmap/texture-policy work is flagged for the next `ports-sync` job (it touches texture
     allocation/filtering, which the `BabylonBackend` creates — likely backend-relevant), and
     re-minting the goldens against that build is part of that sync, per the repo's established
-    re-vendor-and-re-mint discipline.
+    re-vendor-and-re-mint discipline — **done: see the following `9d3474df..2f47612c` sync section.**
 - **Re-derivation**: every claim in this section is machine-checkable via
   `node tools/verify-sync-audit.mjs` (clones upstream at the pinned SHAs, or takes
   `NM_UPSTREAM=<checkout>`; re-runs the ancestry, delta, release-tag, import-graph, bundler, and
@@ -322,6 +332,106 @@ a sub-range of it, and `fca611fd` itself was already consumed by the `4891b995..
   at the harness's documented tolerance (max-abs-diff 1.0, ssim 1.00000, tol 2.001); the byte-exact
   0-diff sweep is only demonstrable on the same driver the goldens were minted on (see README /
   PORTING-GUIDE), which this container does not provide.
+
+## Vendor sync (9d3474df..2f47612c)
+
+Source-side: `noisefactorllc/noisemaker` `9d3474dfdc6c..2f47612c2904` (tearoff `ports-sync` job,
+incremental to the flagged `fca611fd..2f47612c2904` delivery; audited directly in a local upstream
+checkout: `9d3474df` is a direct ancestor of `2f47612c` — contiguous — and the release tag `v1.0.182`
+points exactly at `2f47612c`). This is the texture-policy release the previous section flagged:
+
+- **Engine core (at audit time)**: `bash vendor/fetch.sh` re-pulled `/1` in place —
+  `noisemaker-shaders-core.esm.js` 855031 bytes (ETag `6ab6bd3f-d0bf7`, Last-Modified
+  Fri, 25 Sep 2026 18:28:15 GMT), verified **byte-identical (`cmp`) to the live CDN artifact**.
+  The tree now vendors the newer `8eeb7b5a` build (858616 bytes, byte-identical to the CDN,
+  re-checked by `tools/verify-sync-audit.mjs` on every run) after integrating the
+  `240740dd..8eeb7b5a` sync above; the v1.0.182 byte-identity claim above was verified against
+  the artifact live at audit time and re-derivation now checks the current published build.
+- **Manifest: 210 effects** (unchanged count, 0 added, 0 removed); `git diff 9d3474df..2f47612c --
+  shaders/src/effects` is empty — **no effect definition, GLSL/WGSL source, manifest entry, or
+  parameter contract changed** (catalog parity holds; no WGSL/GLSL translation cross-check needed
+  because no shader source changed).
+- **Upstream changes audit** (`9d3474df..2f47612c -- shaders/`, exact per-file delta, machine-checked):
+  `shaders/src/runtime/backends/webgl2.js` (+106/−15), `webgpu.js` (+273/−10),
+  `compiler.js` (+17), `effect-validator.js` (+26/−1), `pipeline.js` (+100/−19),
+  and the new `shaders/tests/test_mip_controls.js` (+466).
+  - `a021a283` (GAP-004) authorable texture policies: definition-level 2D `mipmaps` (full mip
+    chain allocation + per-frame regeneration from the frame's level-0 writes) and `persistent`
+    (contents resampled through pipeline recreation at a new size via `backend.copyTexture`),
+    copied by `extractTextureSpecs()`; definition-level 3D `filter` ('nearest'|'linear'); the
+    validator rejects unknown texture-spec fields (typo protection).
+  - `62eb56fa` allocates the WebGL2 mip chain up front (sampling an unallocated chain returns
+    black; per-level NEAREST blits in `generateMipmaps()` need complete framebuffers) and caches
+    WebGPU mip bind groups; mipmapped 2D textures sample with mag NEAREST /
+    min LINEAR_MIPMAP_LINEAR (never `gl.generateMipmap()` — invalid for non-filterable floats).
+  - `2f47612c` stops double-creating global surfaces on allocation change (routes surface
+    recreation through `recreateTexturePreserving`).
+- **Port impact: `BabylonBackend` texture-allocation path** (these are backend-relevant, unlike the
+  validator-only prior range) — `src/runtime/babylonBackend.js`:
+  - `createTexture` honors `spec.mipmaps`/`spec.persistent`: allocates the full chain on the
+    internal GL texture (`_allocateMipChain`, levels 1..n−1 with the same sized internal format
+    Babylon used for level 0, GL type via `engine._getWebGLTextureType`) and moves the sampler to
+    mag NEAREST / min LINEAR_MIPMAP_LINEAR via `engine.updateTextureSamplingMode(
+    TEXTURE_NEAREST_LINEAR_MIPLINEAR, internal, false)` (explicit `false` skips Babylon's own
+    `gl.generateMipmap()`); the record exposes queryable `mipmaps`/`mipLevels`/`persistent`
+    (mirrors webgl2.js). Non-mipmapped textures are untouched (filters stay NEAREST/NEAREST).
+  - New `generateMipmaps(ids)`: NEAREST `blitFramebuffer` chain between adjacent levels on a
+    persistent FBO pair, Babylon FBO bindings saved/restored (the reference Pipeline calls it
+    after each frame for every `mipmaps: true` texture; gated by `typeof check` upstream).
+  - `copyTexture` gains a size-changing branch: same-size copies keep the existing texelFetch
+    path (pixel-identical to the reference 1:1 NEAREST blit); differing sizes render a new
+    `nm_copy_scaled` effect (`texture(src, v_texCoord)`), whose NEAREST sample mapping
+    `floor((d+0.5)*src/dst)` is exactly the reference `blitFramebuffer` rule — required by the
+    persistent preservation path, which recreates at a new size.
+  - `createTexture3D` still throws (no shipped effect uses a real 3D texture — 3D volumes are 2D
+    atlases), so the 3D `filter` policy has no Babylon-side consumer; recorded, not ported.
+- **Babylon test coverage** (`test/mip-controls.test.js`, 5 tests, mirroring the upstream
+  `test_mip_controls.js` Pipeline/backend parts against the vendored v1.0.182 Pipeline):
+  policy-field propagation to `createTexture` (regular + both global-surface halves), persistent
+  preservation across recreation (copy-out/copy-in via `probe_acc__preserve_tmp`; plain textures
+  recreated without copies), same-size vs scaled `copyTexture` branch selection, `generateMipmaps`
+  NEAREST blit chain extents (8→4→2→1) with non-mipmapped textures skipped and FBO bindings
+  restored, and `_allocateMipChain` level allocation/sampler/restore behavior.
+- **Real-GL verification** (headless-Chromium WebGL2, SwiftShader — scratch driver, same harness
+  engine setup as the parity harness): 64×64 rgba16f `mipmaps:true` texture → record
+  `{mipmaps:true, mipLevels:7, persistent:true}`; all 7 levels framebuffer-complete;
+  sampler mag 0x2600 (NEAREST) / min 0x2703 (LINEAR_MIPMAP_LINEAR); after painting level 0
+  (1, 0.5, 0.25, 1) and `generateMipmaps`, level 1 reads back exactly (1, 0.5, 0.25, 1),
+  gl.getError() 0; plain texture filters unchanged (9728/9728); size-changing copy verified:
+  8×8→16×16 bottom-left (0,0) reads back (255,128,64,255) with dst x=2 black (src texel 1) —
+  the exact blit-NEAREST extent mapping.
+- **Verification**: `npm test` — **60 tests, 60 pass, 0 fail** on this tree.
+- **Re-derivation**: `tools/verify-sync-audit.mjs` now covers both audited ranges: ancestry
+  (contiguity of both), tag correlation (v1.0.181@9d3474df, v1.0.182@2f47612c), exact per-file
+  deltas, no-effect-definition-change (catalog parity), import-graph/bundler checks for the
+  validator, published-bundle byte size (855031) + texture-policy symbols present + no validator
+  symbols. All PASS; exits non-zero if any recorded claim breaks.
+- **Golden re-mint (same-pass discipline)**: per this repo's re-vendor-and-re-mint discipline
+  (see "A found-and-fixed false failure: stale goldens" above — a golden and candidate minted in
+  the same pass are always byte-identical, while committed goldens drift for particle/evolve
+  effects), 29 roster programs were re-minted with `render-batch.mjs <name> --dual` (fresh
+  v1.0.182 reference golden + Babylon candidate, back-to-back) and graded **byte-exact at
+  max-abs-diff 0, ssim ≥ 0.999 (tol 0 policy)**: `adjust alphaMask applyMode attractor bitwise
+  blendMode bloom blur ca3d celShading cell cellularAutomata channel chromaticAberration clouds
+  noise reactionDiffusion watercolor remap newton pondRipples stipple unsharpMask vignette` —
+  24 PASS (a first 5-program pass had `attractor` fail in a 90s-timeout variant; it passes with a
+  150s budget). The re-minted goldens for those 24 programs are committed (this container's
+  SwiftShader headless-Chromium driver replaces the prior minting driver's artifacts for those
+  programs; cross-driver spot comparison of the fresh vs committed goldens showed max-abs-diff 1,
+  ssim ≥ 0.99999 on adjust/alphaMask/applyMode — the documented ±1 driver noise — and
+  byte-identity on `bitwise`).
+- **Known limits of this verification round (truthful disclosure)**: the full 322-program 0-diff
+  re-grade could NOT be completed in this container — its chrome-headless-shell crashes the
+  browser after ~4-6 WebGL context creations (`Target page, context or browser has been closed`),
+  so `parity/sweep.sh` (one browser for the whole roster) cannot run here; the sweep above was
+  executed per-program with fresh browsers and hard timeouts. 5 heavy evolve/point programs
+  (`billboard_flow`, `buddhabrot`, `navierStokes`, `target`, `physarum`) did not complete within
+  4×150s (environment failures, **not** numeric diffs — no candidate was graded against a stale
+  golden, per the stale-goldens discipline). Their goldens are left untouched. Completing their
+  same-pass re-mint and the full-roster 0-diff sweep requires a stable runner (or the Metal
+  minting driver), exactly as recorded for the previous sync; `parity/ledger.json` therefore still
+  records the last full-roster grade (322/322 PASS + 3 SKIP, v1.0.181-era artifact) and is not
+  rewritten with partial data.
 
 ## Vendor sync (13fa8b54..4891b995)
 
