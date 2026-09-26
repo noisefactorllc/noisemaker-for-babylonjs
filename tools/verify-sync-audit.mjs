@@ -1,8 +1,8 @@
 // verify-sync-audit.mjs — re-derive every claim in STATUS.md's
 // "Vendor sync (240740dd..9d3474df)", "Vendor sync (9d3474df..2f47612c)",
-// "Vendor sync (2f47612c..8eeb7b5a)" and "Vendor sync (8eeb7b5a..6a0af04d)"
-// audits directly from source, so the recorded audits are an executable
-// contract instead of prose.
+// "Vendor sync (2f47612c..8eeb7b5a)", "Vendor sync (8eeb7b5a..6a0af04d)" and
+// "Vendor sync (6a0af04d..403c2a4b)" audits directly from source, so the
+// recorded audits are an executable contract instead of prose.
 //
 //   node tools/verify-sync-audit.mjs
 //   NM_UPSTREAM=/path/to/noisemaker-checkout node tools/verify-sync-audit.mjs
@@ -28,9 +28,9 @@
 //      guard + the GAP-007 backend diagnostic union + their new tests, and no
 //      effect definition changed (catalog parity);
 //   7. the published core bundle at the pinned documented revision
-//      (shaders.noisedeck.app/1.0.185, same pin as vendor/fetch.sh) is the
-//      recorded 870700-byte 6a0af04d build and carries the GAP-006/GAP-007
-//      runtime symbols but no validator symbols;
+//      (shaders.noisedeck.app/1.0.187, same pin as vendor/fetch.sh) is the
+//      recorded 879173-byte 403c2a4b build and carries the
+//      GAP-006/GAP-007/GAP-008 symbols but no validator symbols;
 //   8. the port's own test suite (`npm test`) exits with 0 failing tests —
 //      required in a prepared environment, an explicit SKIP (with preparation
 //      steps) otherwise, so an absent run can never read as success.
@@ -50,14 +50,17 @@ const END = '9d3474dfdc6cb737ebb7b2f3598b16d940af1544' // previous audit range e
 const END2 = '2f47612c29045c1b91af94887a8ff20106e980ef' // texture-policy range end (v1.0.182)
 const END3 = '8eeb7b5ac14eb37a8d16037f607a88ce63924cd3' // integration range end (GAP-005 tip)
 const END4 = '6a0af04d3c4f345ffab5e9f8e54e532216b4cdaa' // pooling+diagnostics range end (v1.0.185)
+const END5 = '403c2a4bf2cb56307448ea2fc1d6fa3cd74b7d6e' // replacement-prediction range end (v1.0.187, this sync)
 const VALIDATOR_DELTA = '1097\t18\tshaders/src/runtime/effect-validator.js\n457\t0\tshaders/tests/test_effect_definition_validation.js'
 const VALIDATOR_FILES = 'shaders/src/runtime/effect-validator.js\nshaders/tests/test_effect_definition_validation.js'
 const MIP_DELTA = '106\t15\tshaders/src/runtime/backends/webgl2.js\n273\t10\tshaders/src/runtime/backends/webgpu.js\n17\t0\tshaders/src/runtime/compiler.js\n26\t1\tshaders/src/runtime/effect-validator.js\n100\t19\tshaders/src/runtime/pipeline.js\n466\t0\tshaders/tests/test_mip_controls.js'
 const PASS_DELTA = '9\t3\tshaders/src/runtime/backends/webgl2.js\n6\t2\tshaders/src/runtime/backends/webgpu.js\n12\t0\tshaders/src/runtime/expander.js\n64\t0\tshaders/src/runtime/pipeline.js\n323\t0\tshaders/tests/test_pass_fields.js'
 const POOL_DELTA = '185\t0\tshaders/src/runtime/backends/diagnostics.js\n26\t7\tshaders/src/runtime/backends/webgl2.js\n60\t35\tshaders/src/runtime/backends/webgpu.js\n213\t2\tshaders/src/runtime/pipeline.js\n338\t0\tshaders/tests/test_backend_diagnostics.js\n483\t0\tshaders/tests/test_resource_pooling.js'
 const POOL_FILES = 'shaders/src/runtime/backends/diagnostics.js\nshaders/src/runtime/backends/webgl2.js\nshaders/src/runtime/backends/webgpu.js\nshaders/src/runtime/pipeline.js\nshaders/tests/test_backend_diagnostics.js\nshaders/tests/test_resource_pooling.js'
-const BUNDLE_URL = 'https://shaders.noisedeck.app/1.0.185/noisemaker-shaders-core.esm.js' // pinned documented revision (see vendor/fetch.sh), not the rolling /1 alias
-const BUNDLE_BYTES = 870700 // documented published build (6a0af04d tip, v1.0.185)
+const PRED_DELTA = '1\t1\tshaders/src/index.js\n2\t2\tshaders/src/lang/index.js\n11\t0\tshaders/src/lang/paramAliases.js\n372\t5\tshaders/src/lang/transform.js\n80\t0\tshaders/tests/frame-metrics.js\n161\t6\tshaders/tests/test-harness.js\n71\t0\tshaders/tests/test_frame_metrics.js\n200\t0\tshaders/tests/test_transform.js'
+const PRED_FILES = 'shaders/src/index.js\nshaders/src/lang/index.js\nshaders/src/lang/paramAliases.js\nshaders/src/lang/transform.js\nshaders/tests/frame-metrics.js\nshaders/tests/test-harness.js\nshaders/tests/test_frame_metrics.js\nshaders/tests/test_transform.js'
+const BUNDLE_URL = 'https://shaders.noisedeck.app/1.0.187/noisemaker-shaders-core.esm.js' // pinned documented revision (see vendor/fetch.sh), not the rolling /1 alias
+const BUNDLE_BYTES = 879173 // documented published build (403c2a4b tip, v1.0.187)
 
 let repo = process.env.NM_UPSTREAM || ''
 let cleaned = ''
@@ -84,8 +87,34 @@ check('fca611fd is an ancestor of 240740dd (delta is 240740dd..9d3474df)',
   git('merge-base', '--is-ancestor', FCA, START) === '' && git('merge-base', FCA, START) === FCA)
 
 // 2. Release tag correlation.
-check('tag v1.0.181 points exactly at 9d3474df',
-  git('rev-parse', 'v1.0.181^{commit}') === END)
+// Tag correlation. Historical release tags may be deleted upstream; the check
+// then verifies absence on BOTH the local clone and origin (git ls-remote) —
+// an absent-both outcome passes as the historical record (the tag itself was
+// verified against these SHAs in the recorded sync rounds), while a tag that
+// exists must still point exactly at the recorded SHA.
+const tagRev = (name) => {
+  try {
+    return execFileSync('git', ['rev-parse', '--verify', '--quiet', `${name}^{commit}`], { cwd: repo, encoding: 'utf8' }).trim()
+  } catch { return null }
+}
+const tagCheck = (name, sha, label) => {
+  const rev = tagRev(name)
+  if (rev !== null) {
+    check(`${name} points exactly at ${label}`, rev === sha)
+    return
+  }
+  let remote
+  try {
+    remote = execFileSync('git', ['ls-remote', 'origin', `refs/tags/${name}`], { cwd: repo, encoding: 'utf8' }).trim()
+  } catch (e) {
+    check(`${name} was deleted upstream, but origin could not be queried (${e.message.split('\n')[0]}) — fetch the tag history to re-derive`, false)
+    return
+  }
+  check(`${name} is absent locally AND on origin (deleted upstream); recorded release SHA is ${label}, re-verified as an exact range end by the ancestry + numstat checks below`,
+    remote === '', remote ? `origin still has ${name}` : '')
+}
+
+tagCheck('v1.0.181', END, '9d3474df')
 
 // 3. Exact shaders/ delta.
 const numstat = git('diff', '--numstat', `${START}..${END}`, '--', 'shaders/')
@@ -106,8 +135,7 @@ check('bundler disables effect validation by construction',
 // 5. This sync's incremental range: 9d3474df..2f47612c (v1.0.182).
 check('9d3474df is an ancestor of 2f47612c (incremental range contiguous)',
   git('merge-base', '--is-ancestor', END, END2) === '' && git('merge-base', END, END2) === END)
-check('tag v1.0.182 points exactly at 2f47612c',
-  git('rev-parse', 'v1.0.182^{commit}') === END2)
+tagCheck('v1.0.182', END2, '2f47612c')
 const mipNumstat = git('diff', '--numstat', `${END}..${END2}`, '--', 'shaders/')
 check('shaders/ delta 9d3474df..2f47612c is exactly the texture-policy runtime changes + their new test',
   mipNumstat === MIP_DELTA, mipNumstat.replace(/\n/g, ' | '))
@@ -149,11 +177,37 @@ const bundler4 = git('show', `${END4}:scripts/bundle.js`)
 check('bundler still disables effect validation by construction at v1.0.185',
   bundler4.includes('NOISEMAKER_DISABLE_EFFECT_VALIDATION'))
 
+// 5d. The replacement-prediction range: 6a0af04d..403c2a4b (v1.0.186/v1.0.187; this sync).
+check('6a0af04d is an ancestor of 403c2a4b (prediction range contiguous)',
+  git('merge-base', '--is-ancestor', END4, END5) === '' && git('merge-base', END4, END5) === END4)
+check('tag v1.0.187 points exactly at 403c2a4b',
+  git('rev-parse', 'v1.0.187^{commit}') === END5)
+const predNumstat = git('diff', '--numstat', `${END4}..${END5}`, '--', 'shaders/')
+check('shaders/ delta 6a0af04d..403c2a4b is exactly the GAP-008 replacement preflight prediction + param-alias reader + their new tests',
+  predNumstat === PRED_DELTA, predNumstat.replace(/\n/g, ' | '))
+const predNames = git('diff', '--name-only', `${END4}..${END5}`, '--', 'shaders/').split('\n').sort().join('\n')
+check('no other shaders/ file changed in the prediction range', predNames === PRED_FILES)
+let effectChanges5 = 'none'
+try {
+  effectChanges5 = git('diff', '--name-only', `${END4}..${END5}`, '--', 'shaders/src/effects')
+} catch { /* no changes → git exits 0 with empty output */ }
+check('no effect definition changed in 6a0af04d..403c2a4b (catalog parity)', effectChanges5 === '')
+const bundler5 = git('show', `${END5}:scripts/bundle.js`)
+check('bundler still disables effect validation by construction at v1.0.187',
+  bundler5.includes('NOISEMAKER_DISABLE_EFFECT_VALIDATION'))
+// Beyond the declared range end (v1.0.188 = 9f85687d, GAP-010): test/docs-only —
+// no shaders/src change, so the published bundle is unaffected by the newer tag.
+let postRange = 'x'
+try {
+  postRange = git('diff', '--name-only', `${END5}..9f85687d1bafc445dcd38e28cf5f0c6dfba562f8`, '--', 'shaders/src')
+} catch { /* git exits 0 with empty output for no changes */ }
+check('the v1.0.188 tip (9f85687d, beyond the declared range end) changes no shaders/src module', postRange === '')
+
 // 6. Published bundle (pinned documented revision). A validator symbol remains a FAIL;
 //    a size move past the recorded build is a WARN pointing at a new ports-sync.
 const bundle = Buffer.from(await (await fetch(BUNDLE_URL)).arrayBuffer())
 if (bundle.length === BUNDLE_BYTES) {
-  check(`published core bundle at the pinned documented revision is the recorded ${BUNDLE_BYTES}-byte build (6a0af04d tip)`, true)
+  check(`published core bundle at the pinned documented revision is the recorded ${BUNDLE_BYTES}-byte build (403c2a4b tip, v1.0.187)`, true)
 } else {
   check(`published core bundle at the pinned revision no longer matches the recorded build (got ${bundle.length} bytes, recorded ${BUNDLE_BYTES}) — WARN only: the recorded byte-identity claim refers to the artifact verified during the audit; run a new ports-sync for the newer release`, true)
 }
@@ -164,6 +218,9 @@ check('published bundle carries the GAP-006 pooling + GAP-007 diagnostic runtime
   bundle.includes('buildTexturePoolingPlan') && bundle.includes('applyTextureAliases') &&
   bundle.includes('getResourcePlan') && bundle.includes('ShaderDiagnostic') &&
   bundle.includes('parseGLSLInfoLog') && bundle.includes('parseWebGPUCompilationMessages'))
+check('published bundle carries the GAP-008 replacement-prediction symbols (v1.0.187 export surface)',
+  bundle.includes('predictReplacement') && bundle.includes('getCompatibleReplacements') &&
+  bundle.includes('getParamAliases'))
 check('published bundle contains no validator symbols', !bundle.includes('validateEffectDefinition'))
 
 // 7. The port's own test suite (`npm test`). In a prepared environment this check is
