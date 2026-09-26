@@ -104,6 +104,12 @@ to a bit-identical steady state when evolved ~30s (the `EVOLVE` map in `render-b
 non-byte-identical effects all require an external source the headless harness can't supply:
 **media** (texture), **text** (glyphs), **roll** (MIDI), **meshLoader** (OBJ — not yet vetted).
 
+> **2026-09-26 update (GAP-004):** the paragraph above describes the historical round. Deterministic
+> host fixtures now supply all four external-input branches, and each grades **byte-exact on both
+> backends** (`media_image`, `text_glyphs`, `roll_midi`, `mesh_obj` — recorded in
+> `parity/external-input-grades.json`, bound per effect in `parity/coverage-map.json`); the
+> no-input fallback programs remain policy-skipped with the skips retained in the ledger.
+
 **Beyond defaults: every mode of every artistic filter.** 101 (effect, mode) fixtures across 19
 effects — every enum/define-selected mode of `texture` (15), `hatch` (6), `morphology`
 (dilate/erode × square/round), etc., not just each effect's default configuration — are individually

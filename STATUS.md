@@ -790,6 +790,17 @@ Source-side: `noisefactorllc/noisemaker` `5a14256732b5..688c514655d3` (tearoff `
 
 ## Known limits
 
+**2026-09-26 correction (GAP-004):** the first sentence below is now outdated. Deterministic host
+fixtures exist for all four external-input effects — each real-input branch (media image upload,
+text overlay-canvas upload, roll's real MIDI note-grid path via the engine's own `MidiState`,
+meshLoader via the engine's own OBJ parser/packer plus the newly implemented
+`BabylonBackend.uploadMeshData`) is graded **byte-exact on both backends**; see
+[`parity/external-input-grades.json`](parity/external-input-grades.json) and
+[`parity/coverage-map.json`](parity/coverage-map.json). The no-input fallback programs stay
+policy-skipped in `parity/sweep.sh` (those skipped cases are retained in the ledger); the four
+new real-input fixtures (`media_image`, `text_glyphs`, `roll_midi`, `mesh_obj`) are graded. The
+counts below retain the historical state at their recorded revision.
+
 Four effects need a runtime input the headless parity harness can't supply deterministically. Three of
 the four now additionally render **byte-identical on their no-input fallback path** — proving the base
 plumbing is correct on both backends — but stay policy-skipped in `parity/sweep.sh`: a pass on the
@@ -822,7 +833,11 @@ renderable-2D scope). The triangle-raster pass it feeds, `render/meshRender`
 remains separately proven byte-identical by injecting an identical procedural sphere into both engines'
 mesh textures. Only the host OBJ-load → mesh-surface upload step is unvetted.
 
-**Follow-up work**
+**Follow-up work** (2026-09-26 GAP-004 note: the first four items below are now CLOSED —
+deterministic host fixtures exist and their real-input branches grade byte-exact on both
+backends; see the correction at the top of this section and
+[`parity/external-input-grades.json`](parity/external-input-grades.json). The items are retained
+as written for their historical context.)
 
 - **`media`** — upload host media into a surface and sample it. Expected to need **no new backend
   code** (it's a plain texture read), once a deterministic image source is wired into the harness.

@@ -9,7 +9,7 @@ import '@babylonjs/core/Shaders/postprocess.vertex.js' // register EffectRendere
 // The fat graph already embeds GLSL, so the runtime only needs `Pipeline` from the vendored
 // published engine (vendor/noisemaker — the same artifact noisedeck.app ships). In a browser the
 // core ESM evaluates directly (HTMLElement exists); no sibling checkout, nothing in `..`.
-import { Pipeline, WebGL2Backend } from '../../vendor/noisemaker/noisemaker-shaders-core.esm.js'
+import { Pipeline, WebGL2Backend, MidiState, CanvasRenderer } from '../../vendor/noisemaker/noisemaker-shaders-core.esm.js'
 import { BabylonBackend } from '../../src/runtime/babylonBackend.js'
 import { NoisemakerRenderer } from '../../src/runtime/renderer.js'
 
@@ -23,6 +23,109 @@ function reconstruct (fat) {
     textures: new Map(Object.entries(fat.textures || {})),
     allocations: new Map()
   }
+}
+
+// ---------------------------------------------------------------------------
+// Deterministic external-input fixtures (GAP-004).
+//
+// The four external-input effects (`media`, `text`, `roll`, `meshLoader`) are host-fed by
+// contract: the HOST parses/uploads a deterministic source through the engine's own
+// external-input path and the port renders it. The parity harness supplies the same
+// deterministic host fixture to BOTH backends (reference WebGL2Backend + BabylonBackend), so
+// the real-input branch (not just the no-input fallback) is graded byte-exact:
+//
+//   media  — a deterministic putImageData canvas uploaded via `backend.updateTextureFromSource`
+//            on the compiled pass's `imageTex_step_N` input id (flipY:false — the video-upload
+//            path), with `pipeline.setUniform('imageSize', [w, h])` mirroring the UI's
+//            `_updateMediaTexture` size reporting.
+//   text   — a deterministic putImageData canvas (output-sized, the overlay shader samples
+//            textTex in normalized output space) uploaded on `textTex_step_N` with
+//            flipY:true — mirroring `_updateTextTexture`.
+//   roll   — the engine's own exported `MidiState`: deterministic noteOn events + clockCount,
+//            attached via `pipeline.setMidiState(state)`; the engine uploads the resulting
+//            noteGrid through `backend.uploadDataTexture` every frame (the real MIDI path,
+//            no stub).
+//   meshLoader — the engine's own `CanvasRenderer.loadOBJFromString` (its internal parseOBJ +
+//            packMeshDataForTextures) against a deterministic OBJ string; requires
+//            `backend.uploadMeshData` on both backends.
+// ---------------------------------------------------------------------------
+function nmPaintFixtureCanvas (width, height, kind) {
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+  const ctx = canvas.getContext('2d')
+  const img = ctx.createImageData(width, height)
+  const d = img.data
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * 4
+      if (kind === 'text') {
+        // Deterministic glyph-atlas-like overlay: opaque marks on a transparent background
+        // (the overlay shader keys on textTex.a).
+        const band = (x + y) % 16 < 3
+        const block = x >= 8 && x < 24 && y >= 8 && y < 40
+        const dot = (x - width / 2) ** 2 + (y - height / 2) ** 2 < 100
+        d[i] = 255; d[i + 1] = 255; d[i + 2] = 255
+        d[i + 3] = (band || block || dot) ? 255 : 0
+      } else {
+        // Deterministic media frame: high-frequency, non-symmetric per-channel values so any
+        // sampling/orientation mismatch shows as a real diff.
+        d[i] = (x * 251 + y * 7) & 255
+        d[i + 1] = (y * 241 + x * 13) & 255
+        d[i + 2] = (x * y) & 255
+        d[i + 3] = 255
+      }
+    }
+  }
+  ctx.putImageData(img, 0, 0)
+  return canvas
+}
+
+async function nmApplyExternalInputs (pipeline, backend, engine, fat, external, renderSize) {
+  const applied = {}
+  if (external.midi) {
+    // The engine's own MidiState (exported by the published bundle): real note events on real
+    // channels, deterministic clock. updateNoteGrid() is driven by the engine every render.
+    const midi = new MidiState()
+    for (const ev of external.midi.notes) {
+      midi.channels[ev.ch].noteOn(ev.key, ev.velocity, { time: 0, order: ev.order })
+    }
+    midi.clockCount = external.midi.clockCount
+    pipeline.setMidiState(midi)
+    applied.midi = { channels: external.midi.notes.length, clockCount: external.midi.clockCount }
+  }
+  if (external.media) {
+    const pass = fat.passes.find(p => p.effectFunc === 'media' && p.inputs && p.inputs.imageTex)
+    if (!pass) throw new Error('external.media: no compiled media pass (imageTex input) in this fat graph')
+    const { width, height } = external.media
+    const canvas = nmPaintFixtureCanvas(width, height, 'media')
+    const res = backend.updateTextureFromSource(pass.inputs.imageTex, canvas, { flipY: false })
+    if (!res || res.width === 0) throw new Error('external.media: updateTextureFromSource rejected the fixture canvas')
+    pipeline.setUniform('imageSize', [width, height])
+    applied.media = { texId: pass.inputs.imageTex, width, height }
+  }
+  if (external.text) {
+    const pass = fat.passes.find(p => p.effectFunc === 'text' && p.inputs && p.inputs.textTex)
+    if (!pass) throw new Error('external.text: no compiled text pass (textTex input) in this fat graph')
+    // The overlay shader samples textTex in normalized OUTPUT space; the fixture canvas must be
+    // output-sized (the UI's _renderTextToCanvas uses the renderer width for both dimensions).
+    const width = external.text.width || renderSize || 256
+    const height = external.text.height || width
+    const canvas = nmPaintFixtureCanvas(width, height, 'text')
+    const res = backend.updateTextureFromSource(pass.inputs.textTex, canvas, { flipY: true })
+    if (!res || res.width === 0) throw new Error('external.text: updateTextureFromSource rejected the fixture canvas')
+    applied.text = { texId: pass.inputs.textTex, width, height }
+  }
+  if (external.obj) {
+    // The engine's own OBJ parse + pack path, against the real host upload contract. Both
+    // backends must implement uploadMeshData (webgl2.js reference + BabylonBackend).
+    const loader = new CanvasRenderer({}) // canvas-less: both observer setups early-return
+    loader._pipeline = pipeline
+    const result = await loader.loadOBJFromString(external.obj) // engine default mesh surface: mesh0
+    if (!result.success) throw new Error('external.obj: engine loadOBJFromString failed: ' + (result.error || 'unknown'))
+    applied.obj = { meshId: 'mesh0', vertexCount: result.vertexCount }
+  }
+  return applied
 }
 
 window.nmRunFatGraph = async function (fat, opts = {}) {
@@ -51,6 +154,12 @@ window.nmRunFatGraph = async function (fat, opts = {}) {
   const pipeline = new Pipeline(graph, backend)
 
   await pipeline.init(size, size)
+  // Deterministic external-input fixtures (GAP-004): feed the real host-input path (media canvas /
+  // glyph canvas / MIDI state / OBJ mesh) when this run requests it. No-op by default.
+  let appliedExternal = null
+  if (opts.external) {
+    appliedExternal = await nmApplyExternalInputs(pipeline, backend, engine, fat, opts.external, size)
+  }
   // Test hook (mesh raster parity): upload identical synthetic geometry to the mesh surfaces that
   // meshRender reads (global_mesh0_positions/normals). meshLoader normally fills these host-side
   // from an OBJ (externalMesh); injecting the SAME float geometry the reference gets lets us prove
@@ -84,7 +193,7 @@ window.nmRunFatGraph = async function (fat, opts = {}) {
   if (!readId) throw new Error('nmRunFatGraph: render surface not found: ' + name)
 
   const px = await backend.readPixels(readId)
-  const out = { width: px.width, height: px.height, data: Array.from(px.data), readId, renderSurface: name }
+  const out = { width: px.width, height: px.height, data: Array.from(px.data), readId, renderSurface: name, external: appliedExternal }
 
   if (opts.debug) {
     const caps = engine.getCaps ? engine.getCaps() : {}
@@ -365,6 +474,12 @@ window.nmRunFatGraphWebGL2 = async function (fat, opts = {}) {
   const graph = reconstruct(fat)
   const pipeline = new Pipeline(graph, backend)
   await pipeline.init(size, size)
+  // Deterministic external-input fixtures (GAP-004): identical host sources on the reference
+  // backend (see nmRunFatGraph above). No-op by default.
+  let appliedExternal = null
+  if (opts.external) {
+    appliedExternal = await nmApplyExternalInputs(pipeline, backend, null, fat, opts.external, size)
+  }
 
   const ts = opts.timestep || 0
   for (let i = 0; i < frames; i++) pipeline.render(ts > 0 ? (time + i * ts) % 1 : time)
@@ -376,7 +491,7 @@ window.nmRunFatGraphWebGL2 = async function (fat, opts = {}) {
   if (!readId) throw new Error('nmRunFatGraphWebGL2: render surface not found: ' + name)
 
   const px = await backend.readPixels(readId)
-  const out = { width: px.width, height: px.height, data: Array.from(px.data), readId, renderSurface: name }
+  const out = { width: px.width, height: px.height, data: Array.from(px.data), readId, renderSurface: name, external: appliedExternal }
   try { canvas.remove() } catch { /* noop */ }
   return out
 }

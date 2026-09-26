@@ -419,6 +419,39 @@ export class BabylonBackend {
     }
   }
 
+  // Host mesh-surface upload (webgl2.js `uploadMeshData`): used by meshLoader's host OBJ-load
+  // path (`CanvasRenderer.loadOBJFrom*` parses/packs host geometry and calls
+  // `backend.uploadMeshData(meshId, positionData, normalData, uvData, width, height, vertexCount)`).
+  // The three mesh textures are plain NEAREST/CLAMP float textures (positions/normals RGBA32F,
+  // uvs RGBA16F) — mirrors webgl2.js `_uploadMeshTexture` exactly: create (or recreate on size
+  // change) via the backend's own createTexture so the record is a normal sampler-lookup record,
+  // then texSubImage2D the packed Float32Array in.
+  _uploadMeshTexture (texId, data, width, height, format) {
+    const gl = this.gl
+    let rec = this.textures.get(texId)
+    if (!rec || rec.width !== width || rec.height !== height) {
+      rec = this.createTexture(texId, { width, height, format })
+      this.engine.resetTextureCache?.()
+    }
+    const glTex = this._glTexOf(rec)
+    try {
+      gl.bindTexture(gl.TEXTURE_2D, glTex)
+      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, height, gl.RGBA, gl.FLOAT, data)
+    } finally {
+      gl.bindTexture(gl.TEXTURE_2D, null)
+    }
+  }
+
+  uploadMeshData (meshId, positionData, normalData, uvData, width, height, vertexCount) {
+    const posId = `global_${meshId}_positions`
+    const normId = `global_${meshId}_normals`
+    const uvId = `global_${meshId}_uvs`
+    this._uploadMeshTexture(posId, positionData, width, height, 'rgba32f')
+    this._uploadMeshTexture(normId, normalData, width, height, 'rgba32f')
+    this._uploadMeshTexture(uvId, uvData, width, height, 'rgba16f')
+    return { success: true, vertexCount }
+  }
+
   // External media texture upload (webgl2.js `updateTextureFromSource`): used by media input
   // effects (camera/video content, asyncInit updateTexture, VideoFrame).
   // Supports VideoFrame, HTMLVideoElement, HTMLImageElement, HTMLCanvasElement/OffscreenCanvas, ImageBitmap.

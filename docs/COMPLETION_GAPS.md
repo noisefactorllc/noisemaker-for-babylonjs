@@ -204,16 +204,70 @@ Original verification dates are 2026-09-22. Dated review notes identify subseque
 
 ### GAP-004: Completion wording exceeds verified coverage
 
-- Status: open. Priority: P1. Category: verification.
+- Status: closed, pending publication of this record. Priority: P1. Category: verification.
 - Scope: README completion claims, mode coverage, corpus, and external inputs.
 - Expected: each claim states its measured scope, exclusions, and acceptance rules.
 - Observed: four external-input gaps are not the only gaps. The sweep covers 325 fixtures, not every runtime combination.
 - Evidence: E3–E5, `coverage-analysis.json`, and the historical 101-row mode ledger.
-- Next action: map current effect branches and representative developer workflows to explicit acceptance cases.
-- Dependencies: stable authority from GAP-003. External inputs need deterministic host fixtures. Corpus qualification needs its missing raw inputs.
-- Acceptance: every claimed branch has source-bound evidence or an explicit exclusion. Counts retain skipped and refused cases.
-- Required checks: media, text, MIDI, OBJ, parameter interactions, stateful sequences, and the historical 40-item corpus denominator.
-- Last verification: 2026-09-22.
+- Implementation (this commit): the acceptance map is now machine-re-derivable and every external-input branch carries real-input evidence.
+  - `tools/coverage-map.mjs` generates `parity/coverage-map.json`: all 210 catalogued effects
+    (engine 1.0.185, build `6a0af04d`) are bound to their graded fixture programs from
+    `parity/ledger.json` (322 PASS / 3 policy-SKIP / 0 FAIL retained verbatim) and the 101-row
+    mode matrix, or carry an explicit exclusion with a required fixture (none needed: 210/210
+    bound). The parameter-interaction surface is re-counted from the vendored definitions
+    (257 choice-bearing params / 132 effects / 1,460 named choices at this engine) with the
+    explicit rule that the Cartesian product is NOT tested; stateful sequences list the
+    `EVOLVE` programs (1800-frame evolution) parsed from `parity/render-batch.mjs`.
+    `test/coverage-map.test.js` re-derives the whole map and fails on any unbound branch, lost
+    skip/refused count, stale committed JSON, or a real-input fixture without a recorded
+    byte-exact grade.
+  - Deterministic host fixtures (the GAP-004 "external inputs need deterministic host
+    fixtures" dependency) were built and dual-minted in the same pass (golden via the vendored
+    `WebGL2Backend`, candidate via `BabylonBackend`; SwiftShader headless Chromium 149, Node
+    26.5.1, Linux 6.8.0-134-generic, engine 1.0.185; browser from a `PLAYWRIGHT_BROWSERS_PATH`
+    exec-mounted volume because `/tmp` mounts noexec): `media_image` (host image upload via
+    `backend.updateTextureFromSource` + `imageSize` uniform), `text_glyphs` (host overlay-canvas
+    upload; the DSL pins `text(matteColor:, color:)` numerically because string color DEFAULTS
+    reach the raw-Pipeline uniforms as NaN — the noisedeck host converts color defaults in its
+    program-state layer), `roll_midi` (the engine's own exported `MidiState` via
+    `pipeline.setMidiState` — the real MIDI note-grid upload path, no stub; output verified
+    distinct from the committed no-input fallback golden), and `mesh_obj` (the engine's own
+    `CanvasRenderer.loadOBJFromString` parse/pack feeding the host mesh-surface upload). All
+    four grade byte-exact (max-abs-diff 0, SSIM 1.0) via
+    `parity/compare.py … --tolerance 0 --ssim-min 0.999`; commands and results are recorded in
+    `parity/external-input-grades.json`. This required implementing
+    `BabylonBackend.uploadMeshData` (+ `_uploadMeshTexture`), mirroring `webgl2.js`.
+  - Corpus: the historical 40-item denominator is retained verbatim (39 gradeable + 1
+    reference-rejected). The historical raw inputs are local-only (gitignored by policy) and
+    absent from this checkout, so that grade cannot be re-executed here. A fresh live-feed
+    refetch (`bash parity/corpus/fetch.sh`, 2026-09-26) saved 20/20 current compositions, all
+    20 reference-compileable (0 refused), recorded in
+    `parity/external-input-grades.json`. The full fresh-corpus re-grade stays an explicit,
+    reasoned exclusion (same-pass 1800-frame evolution per composition; one dual-minted
+    composition exceeded this container's stable-browser budget — the recorded container
+    limitation, see STATUS.md known limits).
+  - README "What works today" now states each claim's measured scope, exclusions, and
+    acceptance rule (same-pass byte-exact gate; representative mode coverage, not the
+    parameter Cartesian; corpus counts retained; external-input fallbacks stay policy-skipped
+    with the skips retained). STATUS.md carries a dated correction for the superseded
+    external-input limitation text.
+- Dependencies: stable authority from GAP-003 (closed, published pin 1.0.185) — satisfied.
+  External-input deterministic host fixtures — built (above). Corpus qualification needs its
+  missing raw inputs — the historical raw set remains absent (local-only by policy); recorded
+  as the exclusion above rather than silently dropped.
+- Acceptance: every claimed branch has source-bound evidence or an explicit exclusion. Satisfied
+  — 210/210 effects bound (fixture evidence from the graded ledger/mode matrix/real-input
+  grades); skipped (3 fallback policy skips) and refused (1 historical reference-rejected
+  corpus composition) cases are retained in the counts.
+- Required checks: media, text, MIDI, OBJ, parameter interactions, stateful sequences, and the
+  historical 40-item corpus denominator — all covered: media/text/MIDI/OBJ real-input fixtures
+  byte-exact (above), parameter-interaction surface counted with an explicit non-Cartesian rule
+  and representative 101-row mode matrix, stateful `EVOLVE` sequences listed with their
+  evolution frames, corpus denominator retained with skipped/refused counts and the re-grade
+  exclusion stated.
+- Next action: complete. Publication of the record needs the standing publication authority.
+- Review evidence: the historical audit observations above retain their 2026-09-22 provenance.
+- Last verification: 2026-09-26 (coverage map + fixture grades + suite run at this commit).
 
 ### GAP-005: No CI evidence for the reviewed source
 
@@ -283,6 +337,7 @@ Do not infer implementation, publication, or workflow authority from this list.
 | 2026-09-23 | `review-20260923-01`, `ca518c2b884dfa0706716aba6d9ef3c6397032c1` | Corrected publication wording and bounded the package action. | Reproduced installed compiler failure. Checked raw evidence, source changes, current kit inventory, and exact-source CI absence. | Seven gaps remain. No closures or new host qualification. |
 | 2026-09-26 | `gap-001-implementation`, `fae8a26f4d88422452aa9844e46e98edbbcf8d29` | GAP-001 record updated with implementation and run evidence (this row). | `node --test test/*.test.js`: 68 pass, 0 fail, 0 skipped. The packed tarball installs in an empty consumer, all advertised imports load, the missing-engine error recovers via the installed fetch script (CDN), the README program compiles through the installed compiler, renders a visibly non-uniform Babylon texture in Chromium with no page errors, and uninstall is clean. | Publication of this record and the fix commits, and exact-source CI, remain supervisor actions. Other gaps unchanged. |
 | 2026-09-26 | `gap-001-ci-analysis`, `7a75a48` (tree identical to published `7ed3435`) | Added the exact-source CI path analysis to GAP-001. | Candidate `7ed3435` touches no export-kit push-trigger path, so zero should-run workflows at that exact source and the `runs: []` verification receipt is the correct state. | GAP-005 remains open for defining required checks; workflow changes lack job authority. |
+| 2026-09-26 | `gap-004-implementation` (this commit) | GAP-004 record updated with the implementation and recorded run (this row). | `node --test test/*.test.js`: 89 tests pass, 0 fail (7 new coverage-map gate tests). Four real-input fixture programs (`media_image`, `text_glyphs`, `roll_midi`, `mesh_obj`) dual-minted and graded byte-exact (max-abs-diff 0, SSIM 1.0) on engine 1.0.185; `parity/coverage-map.json` re-derives 210/210 effects bound; fresh corpus refetch 20/20 reference-compileable; historical corpus 40 (39+1) retained. | Full fresh-corpus re-grade excluded (stable-runner limitation, recorded); full-roster ledger grade remains the v1.0.181-era artifact (0 FAIL retained). |
 
 No gap closed during this first audit. Successful checks do not establish whole-port completion or release approval.
 The worker stopped at the requested audit checkpoint. Publication of audit documents does not authorize implementation.

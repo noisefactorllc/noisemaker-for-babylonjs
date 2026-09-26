@@ -14,7 +14,7 @@ import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { chromium } from 'playwright'
 import { exportFatGraph } from '../tools/export-fat-graph.mjs'
-import { ROOT, INDEX_HTML, encodePNG, ensureBundle } from './render-candidate.mjs'
+import { ROOT, INDEX_HTML, encodePNG, ensureBundle, EXTERNAL_FIXTURES } from './render-candidate.mjs'
 import { currentPrograms } from './current-programs.mjs'
 
 // Effects that need TIME EVOLUTION to a steady state rather than a pinned frame: continuous
@@ -91,7 +91,7 @@ async function main () {
         if (!existsSync(dslPath)) throw new Error(`unknown parity fixture: ${name}`)
         const fat = await exportFatGraph(readFileSync(dslPath, 'utf8'))
         const ev = EVOLVE[name]
-        const opts = { size: o.size, time: o.time, frames: ev ? ev.frames : o.frames, timestep: ev ? ev.timestep : (o.timestep || 0) }
+        const opts = { size: o.size, time: o.time, frames: ev ? ev.frames : o.frames, timestep: ev ? ev.timestep : (o.timestep || 0), external: EXTERNAL_FIXTURES[name] }
         for (const mode of modes) {
           const res = await page.evaluate(async ({ fat, opts, harnessFn }) => {
             try { return { ok: true, ...(await window[harnessFn](fat, opts)) } } catch (e) { return { ok: false, error: String((e && e.stack) || e) } }

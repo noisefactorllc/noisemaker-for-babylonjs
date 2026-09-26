@@ -1,0 +1,46 @@
+{
+  "_comment": "Recorded acceptance-case grades for the GAP-004 external-input real-input fixtures and the corpus denominator. Written by the 2026-09-26 GAP-004 job; parity/coverage-map.json reads this file (never the reverse). Every grade below was executed in the recorded run; nothing here is carried from prose.",
+  "environment": {
+    "date": "2026-09-26",
+    "host": "Linux 6.8.0-134-generic x64 (container, SwiftShader WebGL2)",
+    "node": "26.5.1",
+    "browser": "headless Chromium 149.0.7827.55 (chrome-headless-shell, Playwright v1228)",
+    "engine": { "version": "1.0.185", "build": "6a0af04d", "coreBytes": 870700, "effectCount": 210 },
+    "note": "the browser binary was loaded from a PLAYWRIGHT_BROWSERS_PATH exec-mounted volume because this host mounts /tmp noexec; the launch arguments themselves are unchanged"
+  },
+  "grades": {
+    "media_image": { "date": "2026-09-26", "maxAbsDiff": 0, "ssim": 1.0, "status": "PASS", "command": "node parity/render-batch.mjs media_image --dual  (same-pass golden via vendored WebGL2Backend + BabylonBackend candidate, one page) then parity/.venv/bin/python parity/compare.py parity/out/media_image.golden.png parity/out/media_image.candidate.png --name media_image --tolerance 0 --ssim-min 0.999", "fixture": "deterministic 161x97 putImageData host image uploaded via backend.updateTextureFromSource(imageTex_step_0, canvas, {flipY:false}) + pipeline.setUniform('imageSize',[161,97]) — the real media input path, both backends" },
+    "text_glyphs": { "date": "2026-09-26", "maxAbsDiff": 0, "ssim": 1.0, "status": "PASS", "command": "node parity/render-batch.mjs text_glyphs --dual  then  parity/.venv/bin/python parity/compare.py parity/out/text_glyphs.golden.png parity/out/text_glyphs.candidate.png --name text_glyphs --tolerance 0 --ssim-min 0.999", "fixture": "deterministic output-sized (256x256) putImageData overlay canvas uploaded via backend.updateTextureFromSource(textTex_step_1, canvas, {flipY:true}) — the real text input path, both backends. The DSL pins text(matteColor:, color:) numerically: the raw-Pipeline harness receives string color DEFAULTS ('#000000') which _setUniform feeds to uniform3fv as NaN (the noisedeck host converts color defaults through its program-state layer); explicit DSL color args are compiler-converted to numeric vec4" },
+    "roll_midi": { "date": "2026-09-26", "maxAbsDiff": 0, "ssim": 1.0, "status": "PASS", "command": "node parity/render-batch.mjs roll_midi --dual  then  parity/.venv/bin/python parity/compare.py parity/out/roll_midi.golden.png parity/out/roll_midi.candidate.png --name roll_midi --tolerance 0 --ssim-min 0.999", "fixture": "the engine's own exported MidiState (deterministic noteOn events on channels 1/2/9, clockCount 96) attached via pipeline.setMidiState; the engine uploads the resulting noteGrid through backend.uploadDataTexture('midiNoteGrid', ...) every frame — the real MIDI path, no stub. Output verified distinct from the committed no-input fallback golden" },
+    "mesh_obj": { "date": "2026-09-26", "maxAbsDiff": 0, "ssim": 1.0, "status": "PASS", "command": "node parity/render-batch.mjs mesh_obj --dual  then  parity/.venv/bin/python parity/compare.py parity/out/mesh_obj.golden.png parity/out/mesh_obj.candidate.png --name mesh_obj --tolerance 0 --ssim-min 0.999", "fixture": "deterministic unit-cube OBJ text parsed+packed by the ENGINE's own CanvasRenderer.loadOBJFromString (internal parseOBJ/packMeshDataForTextures) and uploaded through backend.uploadMeshData — the real host OBJ-load path. This required implementing BabylonBackend.uploadMeshData (+_uploadMeshTexture, mirroring webgl2.js) in this job" }
+  },
+  "corpus": {
+    "historicalDenominator": {
+      "raw": 40, "gradeable": 39, "referenceRejected": 1,
+      "status": "historical (STATUS.md corpus section, v1.0.181-era artifact); counts retained unchanged",
+      "reason": "raw/ is a local-only gitignored fixture set by policy; the historical raw inputs are absent from this checkout, so the historical 39+1 grade cannot be re-executed here"
+    },
+    "freshLiveFeed": {
+      "date": "2026-09-26", "compositions": 20, "gradeableByReferenceCompiler": 20, "referenceRejected": 0,
+      "command": "bash parity/corpus/fetch.sh (RSS + sharing.noisedeck.app API, 20/20 saved) then reference-compiler classification of each raw composition via tools/export-fat-graph.mjs (20 compile, 0 rejected)",
+      "status": "fetched and reference-classified only"
+    },
+    "reGraded": false,
+    "reGradeExclusion": {
+      "reason": "each corpus composition requires a same-pass 1800-frame (~30 s) golden+candidate evolution pair per parity/corpus/sweep.sh; one dual-minted composition exceeded this container's stable-browser budget (SwiftShader headless session >420 s for a single composition), so the 20-composition re-grade was not executed here. Completing it requires a stable runner (the recorded container limitation for full-roster sweeps, see STATUS.md known limits).",
+      "requiredFixture": "parity/corpus/raw inputs + a stable long-session browser runner"
+    }
+  },
+  "workflows": [
+    { "claim": "install from a packed tarball into an empty consumer; every advertised entry point imports; the README program compiles and renders a visible Babylon texture; missing-engine error recovers via the fetch script; uninstall clean", "evidence": "test/installed-package.test.js (executed in this job's run: node --test test/*.test.js — 82/82 pass; the installed-artifact path is exercised inside the suite)", "status": "re-verified 2026-09-26 (same harness, engine 1.0.185)" },
+    { "claim": "packed tarball stays import-closure complete", "evidence": "test/packaging.test.js (same suite run)", "status": "re-verified 2026-09-26" },
+    { "claim": "frame-export queue drops/abandons semantics", "evidence": "test/frame-export-queue.test.js (same suite run)", "status": "re-verified 2026-09-26" },
+    { "claim": "real-WebGL2 frame export matches synchronous readback; context-lost restore resumes rendering", "evidence": "test/frame-export-browser.test.js (same suite run, headless Chromium WebGL2)", "status": "re-verified 2026-09-26" },
+    { "claim": "authorable texture policies (mipmaps/persistent) and pooling behave per upstream", "evidence": "test/mip-controls.test.js, test/resource-pooling.test.js (same suite run)", "status": "re-verified 2026-09-26" },
+    { "claim": "structured backend shader diagnostics", "evidence": "test/backend-diagnostics.test.js (same suite run)", "status": "re-verified 2026-09-26" },
+    { "claim": "output sink deferral + load-option forwarding", "evidence": "test/renderer-sinks.test.js (same suite run)", "status": "re-verified 2026-09-26" },
+    { "claim": "cubemap bake (6-face) via renderCubemap", "evidence": "parity/harness nmRunCubemap; byte-identical 6-face grade recorded in STATUS.md (historical, v1.0.181-era engine; the 1.0.182-1.0.185 ranges changed no effect definitions)", "status": "carried (unchanged files; no cubemap-path code changed since)" },
+    { "claim": "examples (box + cubemap scenes) render in a browser", "evidence": "node examples/build.mjs + headless Chromium page check recorded in the 2026-09-22 audit (E5); examples/bundle.js is gitignored and rebuilt per host", "status": "carried (no examples code changed since)" },
+    { "claim": "stateful sequences evolve to a byte-identical steady state", "evidence": "EVOLVE map (parity/render-batch.mjs) programs graded in parity/ledger.json (PASS, evolved 1800 frames); corpus re-grade excluded above", "status": "carried ledger grade + this job's suite run" }
+  ]
+}

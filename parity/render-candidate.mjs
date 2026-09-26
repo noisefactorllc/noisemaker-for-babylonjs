@@ -79,6 +79,44 @@ export function bundleInputsAreFresh (bundle, inputs) {
   return inputs.every(input => existsSync(input) && statSync(input).mtimeMs <= bundleTime)
 }
 
+// Deterministic external-input fixtures (GAP-004): the host sources fed to BOTH backends for the
+// real-input branch of each external-input effect (see parity/harness/entry.js). Applied whenever
+// the rendered program appears here. The OBJ mesh is parsed + packed by the ENGINE's own
+// loadOBJFromString (its internal parseOBJ/packMeshDataForTextures) and uploaded through
+// backend.uploadMeshData — the real host OBJ-load path, on both backends.
+export const EXTERNAL_FIXTURE_OBJ = [
+  '# deterministic parity fixture mesh (unit cube, outward faces)',
+  'v -0.5 -0.5 -0.5', 'v 0.5 -0.5 -0.5', 'v 0.5 0.5 -0.5', 'v -0.5 0.5 -0.5',
+  'v -0.5 -0.5 0.5', 'v 0.5 -0.5 0.5', 'v 0.5 0.5 0.5', 'v -0.5 0.5 0.5',
+  'vt 0 0', 'vt 1 0', 'vt 1 1', 'vt 0 1',
+  'vn 0 0 -1', 'vn 0 0 1', 'vn 1 0 0', 'vn -1 0 0', 'vn 0 1 0', 'vn 0 -1 0',
+  'f 1/1/1 2/2/1 3/3/1 4/4/1',
+  'f 5/1/2 8/2/2 7/3/2 6/4/2',
+  'f 2/1/3 6/2/3 7/3/3 3/4/3',
+  'f 4/1/4 8/2/4 5/3/4 1/4/4',
+  'f 3/1/5 7/2/5 8/3/5 4/4/5',
+  'f 1/1/6 5/2/6 6/3/6 2/4/6'
+].join('\n') + '\n'
+
+export const EXTERNAL_FIXTURES = {
+  // media: deterministic non-square host image (odd dimensions exercise the aspect/crop math),
+  // uploaded on the compiled media pass's imageTex id (flipY:false — the video path) with the
+  // imageSize uniform mirroring the UI's size reporting.
+  media_image: { media: { width: 161, height: 97 } },
+  // text: output-sized deterministic overlay canvas (the shader samples textTex in normalized
+  // output space; canvas defaults to the render size) uploaded with flipY:true.
+  text_glyphs: { text: {} },
+  // roll: the engine's own MidiState with deterministic note events + clock.
+  roll_midi: { midi: { clockCount: 96, notes: [
+    { ch: 1, key: 60, velocity: 100, order: 1 },
+    { ch: 1, key: 64, velocity: 64, order: 2 },
+    { ch: 2, key: 48, velocity: 127, order: 3 },
+    { ch: 9, key: 84, velocity: 32, order: 4 }
+  ] } },
+  // meshLoader: the deterministic OBJ above through the engine's own parser/pack/upload path.
+  mesh_obj: { obj: EXTERNAL_FIXTURE_OBJ }
+}
+
 export async function ensureBundle (rebuild) {
   if (!rebuild && bundleInputsAreFresh(BUNDLE, BUNDLE_INPUTS)) return
   await build({
@@ -117,7 +155,7 @@ async function main () {
     const result = await page.evaluate(async ({ fat, opts, mode }) => {
       const fn = mode === 'golden' ? window.nmRunFatGraphWebGL2 : (mode === 'viaRenderer' ? window.nmRunViaRenderer : window.nmRunFatGraph)
       try { return { ok: true, ...(await fn(fat, opts)) } } catch (e) { return { ok: false, error: String((e && e.stack) || e) } }
-    }, { fat, opts: { size: args.size, time: args.time, frames: args.frames, timestep: args.timestep, debug: !!process.env.NM_DEBUG }, mode })
+    }, { fat, opts: { size: args.size, time: args.time, frames: args.frames, timestep: args.timestep, debug: !!process.env.NM_DEBUG, external: EXTERNAL_FIXTURES[args.name] }, mode })
     if (!result.ok) throw new Error('harness error: ' + result.error + (errs.length ? '\nconsole:\n' + errs.join('\n') : ''))
     if (process.env.NM_DEBUG && result.debug) process.stderr.write('[debug] ' + JSON.stringify(result.debug, null, 2) + '\n')
     writeFileSync(out, encodePNG(result.width, result.height, Uint8Array.from(result.data)))

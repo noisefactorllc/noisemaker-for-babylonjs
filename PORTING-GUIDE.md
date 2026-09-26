@@ -190,6 +190,12 @@ vendored engine, except `media`/`text`/`roll` (external input the headless harne
 policy-skipped even though all three numerically pass on their no-input fallback) and `meshLoader`
 (no fixture at all).
 
+> **2026-09-26 update (GAP-004):** the paragraph above describes the historical round. Deterministic
+> host fixtures now exist for all four external-input effects and their real-input branches grade
+> byte-exact on both backends (`media_image`, `text_glyphs`, `roll_midi`, `mesh_obj` — see
+> `parity/external-input-grades.json` and `parity/coverage-map.json`; the fallbacks stay
+> policy-skipped with the skips retained).
+
 **Mint goldens and candidates in the same pass — don't grade a stale golden.** A handful of effects
 (`watercolor`, and the chaotic iterative solvers `navierStokes`/`target`/`reactionDiffusion`) are not
 perfectly stable pixel-for-pixel across *wall-clock time* — re-minting the reference golden hours
@@ -216,6 +222,11 @@ fallback). The one remaining feature:
 - **Host OBJ loading for `meshLoader`** — parse `share/meshes/*.obj` and upload to the mesh surfaces
   (a `NoisemakerRenderer` concern, like wiring an external texture for `media`). The triangle raster it
   feeds is already proven byte-identical, but **the `meshLoader` effect itself is not yet vetted**.
+
+> **2026-09-26 update (GAP-004):** the mesh upload path is now implemented
+> (`BabylonBackend.uploadMeshData`, mirroring `webgl2.js`) and vetted — the engine's own
+> `loadOBJFromString` parse/pack feeds it, and the real-input fixture `mesh_obj` grades byte-exact
+> on both backends (see `parity/external-input-grades.json`).
 
 The engine is fetched, not vendored-in: `vendor/fetch.sh` pulls the published distribution
 (`shaders.noisedeck.app`) into `vendor/noisemaker/` (gitignored, never committed — see the top of
