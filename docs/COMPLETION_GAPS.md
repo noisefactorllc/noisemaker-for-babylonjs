@@ -183,16 +183,18 @@ Original verification dates are 2026-09-22. Dated review notes identify subseque
 
 ### GAP-003: Authority selection is not reproducible by default
 
-- Status: open. Priority: P2. Category: authority.
+- Status: closed, pending publication of this record. Priority: P2. Category: authority.
 - Scope: `vendor/fetch.sh`, parity evidence, and STATUS.md authority records.
 - Expected: a documented source revision selects reproducible engine bytes.
 - Observed: the script defaults to rolling `/1`. STATUS.md records 1.0.167, while current upstream and CDN provide 1.0.168.
 - Evidence: E3, `authority-delta.json`, `engine-meta.json`, and `engine-hashes.json`.
-- Next action: define an explicit engine version and integrity record through existing configuration.
-- Dependencies: separate implementation authority.
-- Acceptance: two isolated installations resolve identical engine and effect hashes for the documented revision.
-- Required checks: check exact version metadata, all bundle hashes, and parity against preserved baselines.
-- Last verification: 2026-09-22.
+- Implementation evidence: `9f42b6f` (fix commit — `vendor/fetch.sh` no longer defaults to rolling `/1`; its default is the documented revision `1.0.183` (the STATUS.md "Vendor sync" record: upstream commit `8eeb7b5a`, 858616-byte core), overridable only as a deliberate authority bump that requires re-verification, and after each fetch it writes an integrity record into `vendor/noisemaker/`: `engine-meta.json` (exact version, core build tag, core bytes, effect count, manifest bytes, fetch URL) and `engine-hashes.json` (sha256 of the core bundle, the manifest, and every per-effect mini-bundle). The vendored bytes themselves stay gitignored by the existing policy — commit the fetch script and records, not the downloaded bytes — so the pin lives in the committed script.)
+- Reproducibility check, 2026-09-26: two isolated installations fetched the pinned revision independently from the CDN and produced byte-identical `engine-meta.json`, `engine-hashes.json`, and `effects/` trees (`diff -r` empty between the two installs and against the workspace's vendored tree); all 212 recorded hashes re-verified against the on-disk tree with 0 mismatches; version metadata is exact — v1.0.183, build `8eeb7b5a`, 858616-byte core, 210 effects, 39906-byte manifest — matching the STATUS.md vendor-sync record.
+- Parity against preserved baselines: this change alters no vendored bytes — the re-fetch reproduced the existing vendored tree byte for byte — so the preserved-baseline parity evidence in STATUS.md for this exact build (last verified 2026-09-25, same-pass golden/candidate byte-exact re-grade) applies unchanged. The port's own npm suite re-run in this container (65 pass / 5 fail) shows the same pre-existing host-environment failures with and without this change (4 real-WebGL2 browser tests and the packed-artifact test fail identically at the unmodified HEAD).
+- Next action: complete. Publication of the record needs the standing publication authority.
+- Acceptance: two isolated installations resolve identical engine and effect hashes for the documented revision. Satisfied by the reproducibility check above.
+- Required checks: exact version metadata checked (`engine-meta.json` matches the vendor-sync record), all bundle hashes checked (212/212), parity against preserved baselines carried by byte-identity to the verified revision. All executed and recorded above.
+- Last verification: 2026-09-26.
 
 ### GAP-004: Completion wording exceeds verified coverage
 
