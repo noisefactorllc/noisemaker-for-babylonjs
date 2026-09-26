@@ -70,7 +70,11 @@ export class NoisemakerRenderer {
     let effectiveSize = size
     const backend = new BabylonBackend(this.engine)
     const graph = reconstructGraph(fatGraph)
-    const pipeline = new this._Pipeline(graph, backend)
+    // Forward host options into the Pipeline (e.g. `texturePooling: true` consumes the
+    // analyzer's physical allocation plan — GAP-006). `Pipeline` is the only key the
+    // Pipeline constructor itself must not see.
+    const { Pipeline: _pipelineClass, ...pipelineOptions } = opts
+    const pipeline = new this._Pipeline(graph, backend, pipelineOptions)
 
     try {
       await pipeline.init(size, size)

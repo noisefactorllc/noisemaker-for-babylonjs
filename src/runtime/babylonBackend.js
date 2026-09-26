@@ -34,6 +34,52 @@ import { FrameExportQueue } from './frameExport.js'
 // reference fullscreen triangle, and v_texCoord spans [0,1] identically.
 const FULLSCREEN_VS = '#version 300 es\nprecision highp float;\nin vec2 position;\nout vec2 v_texCoord;\nvoid main(){ v_texCoord = position * 0.5 + 0.5; gl_Position = vec4(position, 0.0, 1.0); }\n'
 
+// One structured diagnostic union for backend shader/compiler failures (port of the
+// reference backends' diagnostics.js, GAP-007): every compile/link/missing-source
+// failure surfaces as a real `Error` carrying the legacy machine `code`, the
+// `backend` ('babylon'), the `stage`, the program id, the legacy `detail` string
+// (byte-identical to the previous thrown message so `err.detail || err.message`
+// consumers keep working), the parsed compiler `messages`, and the offending
+// `source`. `code`/`detail`/`program`/`source` stay enumerable own properties to
+// preserve the legacy thrown-object serialization shape.
+export class ShaderDiagnostic extends Error {
+  constructor (spec) {
+    const detail = spec.detail !== undefined && spec.detail !== null ? String(spec.detail) : ''
+    super(detail)
+    this.name = 'ShaderDiagnostic'
+    if (spec.code !== undefined) this.code = spec.code
+    this.backend = spec.backend
+    this.stage = spec.stage
+    this.detail = detail
+    this.messages = spec.messages || []
+    if (spec.program !== undefined) this.program = spec.program
+    if (spec.source !== undefined) this.source = spec.source
+  }
+}
+
+// Parse a GLSL info log into the structured diagnostic union: `ERROR: 0:LINE:` /
+// `WARNING: 0:LINE:` forms become error/warning entries with their line; unprefixed
+// driver prose is kept as an info entry so nothing is lost.
+export function parseGLSLInfoLog (log) {
+  if (typeof log !== 'string' || log.length === 0) return []
+  const messages = []
+  for (const line of log.split('\n')) {
+    if (line.length === 0) continue
+    const match = /^(ERROR|WARNING):\s*\d+:(\d+):\s*(.*)$/.exec(line)
+    if (match) {
+      messages.push({
+        severity: match[1].toLowerCase(),
+        line: parseInt(match[2], 10),
+        column: undefined,
+        message: match[3]
+      })
+    } else {
+      messages.push({ severity: 'info', line: undefined, column: undefined, message: line })
+    }
+  }
+  return messages
+}
+
 // rgba8/rgba16f/rgba32f/r8/r16f/r32f → Babylon { type, format } (mirrors webgl2 resolveFormat)
 function resolveFormat (format) {
   const RGBA = Constants.TEXTUREFORMAT_RGBA
@@ -151,7 +197,7 @@ export class BabylonBackend {
     // Pre-compile the blit/copy program so synchronous blit passes never no-op on a
     // not-yet-ready effect (EffectRenderer.render silently skips an unready effect).
     this._copyWrapper = this._buildCopyWrapper()
-    await this._whenReady(this._copyWrapper)
+    await this._whenReady(this._copyWrapper, this._copyWrapper.fragmentShader, this._copyWrapper.name)
   }
 
   _detectCapabilities () {
@@ -557,7 +603,15 @@ export class BabylonBackend {
     if (id === 'blit') return null
 
     const rawSource = spec.source || spec.glsl || spec.fragment
-    if (!rawSource) throw new Error(`Shader source missing for program '${id}'.`)
+    if (!rawSource) {
+      throw new ShaderDiagnostic({
+        code: 'ERR_SHADER_MISSING',
+        backend: 'babylon',
+        stage: 'missing-source',
+        program: id,
+        detail: `Shader source missing for program '${id}'.`
+      })
+    }
     // ensureVersion(): `#version 300 es` must be first so Babylon takes the GLSL ES3 path and
     // skips its ES1->ES3 migration (which mangles ES3 source + injects a conflicting glFragColor).
     const cleaned = ensureVersion(rawSource)
@@ -606,12 +660,12 @@ export class BabylonBackend {
       // Babylon's EffectRenderer already sets the RT's full-size viewport; no raw override.
     })
 
-    await this._whenReady(wrapper)
+    await this._whenReady(wrapper, cleaned, id)
     this.programs.set(id, rec)
     return rec
   }
 
-  _whenReady (wrapper) {
+  _whenReady (wrapper, source, programId) {
     // Runs in the browser (Date/setTimeout available). Babylon may compile via
     // KHR_parallel_shader_compile (async), so poll isReady() yielding to the event loop.
     return new Promise((resolve, reject) => {
@@ -620,7 +674,20 @@ export class BabylonBackend {
         const eff = wrapper.effect
         if (eff && eff.isReady && eff.isReady()) return resolve()
         const err = eff && typeof eff.getCompilationError === 'function' ? eff.getCompilationError() : null
-        if (err) return reject(new Error(`Shader compile failed (${wrapper.name}): ${err}`))
+        if (err) {
+          // Structured diagnostic union (GAP-007 port): the legacy detail string stays
+          // byte-identical; parsed compiler messages + the offending source ride along.
+          const detail = typeof err === 'string' ? err : String(err && err.message ? err.message : err)
+          return reject(new ShaderDiagnostic({
+            code: 'ERR_SHADER_COMPILE',
+            backend: 'babylon',
+            stage: 'compile',
+            program: programId,
+            detail,
+            messages: parseGLSLInfoLog(detail),
+            source
+          }))
+        }
         if (Date.now() > deadline) return reject(new Error(`Shader compile timeout (${wrapper.name})`))
         setTimeout(tick, 2)
       }

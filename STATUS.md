@@ -218,6 +218,78 @@ Source-side: `noisefactorllc/noisemaker` `246ff57f43cc..0ed489ec4684` (a tearoff
   candidate re-rendered and re-graded — **325/325 non-corpus programs (roster + mode matrix + the 4 new
   fixtures) byte-identical**, 3 skipped (`media`/`text`/`roll`, unchanged policy).
 
+## Vendor sync (8eeb7b5a..6a0af04d)
+
+Source-side: `noisefactorllc/noisemaker` `8eeb7b5ac14e..6a0af04d3c4f` (tearoff `ports-sync`
+job #577, flagged for a force-push / non-contiguous delivery — audited directly in a local
+checkout: `fca611fd` (the reported range start) is already covered by the `4891b995..240740dd`
+sync below, the observed `428ea29b..95743621` / `95743621..6a0af04d` sub-ranges are contiguous
+ancestors of `6a0af04d` (v1.0.185), and the sync's true start is `8eeb7b5a` = v1.0.183, the
+previous section's tip; the range's remaining commits (`0b2866dd`, `ad17fd02`, `93608f10`,
+`6a0af04d`, and post-range tip `a651c075`) are docs/register-only).
+Engine synced from upstream `noisefactorllc/noisemaker` commit `6a0af04d` (v1.0.185):
+
+- **Manifest: 210 effects** (unchanged count, 0 added, 0 removed).
+- **Engine core**: `noisemaker-shaders-core.esm.js` 870700 bytes (Build `6a0af04d`, v1.0.185).
+- **Upstream changes audit** (the `8eeb7b5a..6a0af04d` engine-src diff: `pipeline.js` +215, new
+  `backends/diagnostics.js` +185, `webgl2.js` +33, `webgpu.js` +95):
+  - Upstream commit `6113da00` (v1.0.184, GAP-006): the runtime now consumes the analyzer's
+    physical allocation plan (graph.allocations) behind an opt-in `texturePooling: true` —
+    `Pipeline.buildTexturePoolingPlan()`/`applyTextureAliases()` alias poolable group members
+    onto one backend texture under the group's primary id (persistent/mipmapped/3D, first-read,
+    self-sampled, and partially-written textures are never pooled), and
+    `Pipeline.getResourcePlan()` reports the materialized sharing.
+  - Upstream commit `95743621` (v1.0.184): a `viewport` pass without `clear: true` marks its
+    outputs partially written for pooling (sub-region writes expose a group-mate's previous
+    content; full clears stay poolable).
+  - Upstream commit `f83a427e` (v1.0.185, GAP-007): every WebGL2/WebGPU backend compile, link,
+    and missing-source failure throws a structured `ShaderDiagnostic` union
+    (`code`/`backend`/`stage`/`program`/`detail`/`messages`/`source`) built via
+    `parseGLSLInfoLog`/`parseWebGPUCompilationMessages`/`toDiagnostic`; the WebGPU bind-group
+    retry consumes the parsed `bindingIndex` instead of re-matching browser error strings.
+    Engine-bundle-internal (WebGL2/WebGPU backends and `Pipeline` live in the bundle; the
+    port's createPipeline passes options through), verified by symbol search in the re-vendored
+    core bundle (all of `ShaderDiagnostic`/`parseGLSLInfoLog`/`parseWebGPUCompilationMessages`/
+    `buildTexturePoolingPlan`/`getResourcePlan` present).
+- **Engine unchanged-elsewhere**: `cmp` of the vendored core bundle against a fresh
+  `shaders.noisedeck.app/1` fetch is byte-identical; manifest stays 210 effects (0 added, 0
+  removed — no effect catalog delta in this range).
+- **Babylon implementation & test coverage**:
+  - `BabylonBackend` (the port-side analog of the reference backends' compile paths): ported
+    the GAP-007 diagnostic union — `compileProgram()`'s missing-source throw and the
+    `_whenReady()` Babylon compilation-error/`init()` copy-wrapper paths now surface one
+    structured `ShaderDiagnostic` (real `Error` with `code: 'ERR_SHADER_MISSING'` /
+    `'ERR_SHADER_COMPILE'`, `backend: 'babylon'`, `stage`, `program`, byte-identical legacy
+    `detail`, parsed compiler `messages`, offending `source`), with a port of
+    `parseGLSLInfoLog()` for the `ERROR: 0:LINE:` info-log shape. The legacy thrown surface
+    (`detail`/`message`) is byte-identical, so `err.detail || err.message` consumers keep
+    working; compile **timeouts** intentionally stay plain `Error`s (upstream has no timeout
+    surface).
+  - `NoisemakerRenderer.loadGraph()`: forwards load options into the `Pipeline` constructor
+    (minus the renderer's own `Pipeline` key), enabling host-side `texturePooling: true` —
+    the engine Pipeline consumes the plan through `backend.textures`, which the Babylon
+    backend already exposes.
+  - `test/backend-diagnostics.test.js` (new): missing-source and Babylon compilation-error
+    failures surface a structured `ShaderDiagnostic` with the legacy detail byte-identical,
+    `parseGLSLInfoLog()` ERROR/WARNING/prose parsing, legacy-field serialization, and plain
+    Error compile timeouts.
+  - `test/resource-pooling.test.js` (new): mirrors the upstream `test_resource_pooling.js`
+    Pipeline cases against the vendored v1.0.185 Pipeline + recording backend — default no
+    pooling (each virtual id owns its record, `getResourcePlan()` reports pooling:false),
+    opt-in pooling shares records and never allocates pooled-member storage, the
+    95743621 viewport-without-clear guard blocks (and a full clear restores) pooling,
+    persistent members and mismatched dimensions fall back to standalone textures, and
+    first-read textures are never pooled.
+  - `test/renderer-sinks.test.js`: load options (e.g. `texturePooling`) forward into the
+    `Pipeline` constructor.
+- **Verification**: all 82 unit/integration tests pass cleanly (was 70; +11 new, +1 renderer
+  forwarding case). Parity spot checks against the re-vendored engine (`parity/run.sh`,
+  tol 2.001): `adjust`, `noise`, `blur` all byte-identical (max-abs-diff 0.000). Full-sweep
+  re-grading not rerun this round: the range's engine-src diff is pooling opt-in (default off,
+  so default renders are bit-path-identical) and backend failure diagnostics, with no shader or
+  effect-definition changes (goldens themselves were minted against the previous v1.0.183 tip;
+  the spot checks confirm the new tip renders identically).
+
 ## Vendor sync (240740dd..8eeb7b5a)
 
 Source-side: `noisefactorllc/noisemaker` `240740dd2d30..8eeb7b5ac14e` (tearoff `ports-sync` job #558).

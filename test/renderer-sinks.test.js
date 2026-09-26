@@ -125,6 +125,22 @@ class FakeObservable {
   notify () { for (const callback of [...this.observers]) callback() }
 }
 
+test('renderer forwards load options into the Pipeline constructor', async () => {
+  const seen = []
+  class OptionPipeline {
+    constructor (_graph, _backend, options) { seen.push({ ...options }) }
+    async init () {}
+    dispose () {}
+  }
+  const renderer = new NoisemakerRenderer(new NullEngine(), { Pipeline: OptionPipeline })
+  try {
+    await renderer.loadGraph({ textures: {} }, { size: 32, texturePooling: true })
+    assert.deepEqual(seen, [{ size: 32, texturePooling: true }])
+  } finally {
+    renderer.dispose()
+  }
+})
+
 test('renderer sink and export APIs require an active pipeline', () => {
   const renderer = new NoisemakerRenderer({}, {})
   const sink = { configure () {}, submit () {}, close () {} }
