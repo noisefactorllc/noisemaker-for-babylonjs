@@ -596,34 +596,26 @@ test('BabylonBackend createTexture tracks mipmaps and persistent flags and gener
   assert.doesNotThrow(() => backend.generateMipmaps(['nonexistent']))
   assert.doesNotThrow(() => backend.generateMipmaps(['plain_tex']))
 
-  // copyTexture sets __copyScale: [1, 1] for same-size, and [dst.w/src.w, dst.h/src.h] for resize
-  let renderedWrapper = null
+  // copyTexture sets __copyScale: [1, 1] for same-size, and [src.w/dst.w, src.h/dst.h] for resize
+  // (level-0 texelFetch with the blit NEAREST mapping — never chain-filtered sampling)
   backend._copyWrapper = { name: 'copy' }
-  backend.effectRenderer = {
-    render: (wrapper, rtw) => {
-      renderedWrapper = wrapper
-      assert.ok(backend._bindPass)
-    }
-  }
+  const bindPasses = []
+  backend._renderToTextureTarget = function () { bindPasses.push({ ...this._bindPass }) }
 
   // Same-size copy
   const dstSame = backend.createTexture('dst_same', { width: 64, height: 64, format: 'rgba16f' })
   backend.copyTexture('plain_tex', 'dst_same')
-  assert.equal(renderedWrapper, backend._copyWrapper)
+  assert.deepEqual(bindPasses[0].__copyScale, [1, 1])
 
   // Different-size copy (persistent texture resize)
   const dstDiff = backend.createTexture('dst_diff', { width: 128, height: 256, format: 'rgba16f' })
-  let recordedBindPass = null
-  backend.effectRenderer.render = (wrapper, rtw) => {
-    recordedBindPass = { ...backend._bindPass }
-  }
   backend.copyTexture('plain_tex', 'dst_diff')
-  assert.deepEqual(recordedBindPass.__copyScale, [2, 4])
+  assert.deepEqual(bindPasses[1].__copyScale, [0.5, 0.25])
 
   // _executeBlit passes __copyScale: [1, 1]
   backend._resolveInput = () => ({ id: 'srcThin' })
   backend._executeBlit({ inputs: { src: 'plain_tex' }, outputs: { color: 'dst_same' } }, {})
-  assert.deepEqual(recordedBindPass.__copyScale, [1, 1])
+  assert.deepEqual(bindPasses[2].__copyScale, [1, 1])
 })
 
 test('BabylonBackend _resolvePassViewportBox resolves dynamic and numeric viewport specifications', () => {

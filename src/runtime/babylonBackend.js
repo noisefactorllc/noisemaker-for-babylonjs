@@ -121,6 +121,7 @@ export class BabylonBackend {
     this._copyWrapper = null
     this._mipReadFbo = null // lazy — generateMipmaps NEAREST blit-chain FBO pair
     this._mipDrawFbo = null
+    this._rawFbos = new Map() // glTex → raw FBO for mipmapped-target pass rendering
     this._destroyed = false
   }
 
@@ -505,23 +506,24 @@ export class BabylonBackend {
     const src = this.textures.get(srcId)
     const dst = this.textures.get(dstId)
     if (!src || !dst) return
-    const sameSize = src.width === dst.width && src.height === dst.height
     this._bindPass = {
       __copySrc: src.thin,
-      // Same-size: the texelFetch branch is pixel-identical to the reference 1:1 NEAREST blit.
-      // Size-changing (persistent-texture preservation through resize): the texture() branch's
-      // NEAREST sample mapping floor((d+0.5)*src/dst) is exactly the reference
-      // blitFramebuffer(0,0,src → 0,0,dst) rule.
-      __copyScale: sameSize ? [1, 1] : [dst.width / src.width, dst.height / src.height]
+      // webgl2.js blitFramebuffer NEAREST rule, expressed as a level-0 texelFetch: dst pixel d
+      // (gl_FragCoord = d + 0.5) reads src texel floor(d_fragCoord * src/dst). Level-0 texelFetch
+      // is filter-independent — a mipmapped source must NOT be sampled through the
+      // LINEAR_MIPMAP_LINEAR chain on a resize copy (the reference blit reads level 0).
+      __copyScale: [src.width / dst.width, src.height / dst.height]
     }
     this.engine.setAlphaMode(Constants.ALPHA_DISABLE)
-    this.effectRenderer.render(this._copyWrapper, dst.rtw)
+    this._renderToTextureTarget(dst, { wrapper: this._copyWrapper, uniformTypes: {}, samplerSet: new Set(['src']), hasCustomVertex: false })
     this._bindPass = null
   }
 
   _buildCopyWrapper () {
-    // gl_FragCoord/texelFetch same-size copy (parity-equivalent to the reference blit),
-    // or v_texCoord texture sampling when resizing persistent textures.
+    // gl_FragCoord texelFetch copy at level 0 with the src/dst ratio — the exact
+    // webgl2.js blitFramebuffer NEAREST mapping for 1:1 AND size-changing copies
+    // (persistent-texture preservation through resize); filter-independent, so a
+    // mipmapped source is never blended through its chain.
     // MUST carry `#version 300 es` or Babylon runs its ES1->ES3 migration and the effect never compiles.
     const w = new EffectWrapper({
       engine: this.engine,
@@ -533,7 +535,7 @@ export class BabylonBackend {
       vertexShader: FULLSCREEN_VS,
       samplerNames: ['src'],
       uniformNames: ['uScale'],
-      fragmentShader: '#version 300 es\nprecision highp float;\nuniform sampler2D src;\nin vec2 v_texCoord;\nuniform vec2 uScale;\nout vec4 fragColor;\nvoid main(){\n  if (uScale.x == 1.0 && uScale.y == 1.0) {\n    fragColor = texelFetch(src, ivec2(gl_FragCoord.xy), 0);\n  } else {\n    fragColor = texture(src, v_texCoord);\n  }\n}\n'
+      fragmentShader: '#version 300 es\nprecision highp float;\nuniform sampler2D src;\nin vec2 v_texCoord;\nuniform vec2 uScale;\nout vec4 fragColor;\nvoid main(){\n  fragColor = texelFetch(src, ivec2(floor(gl_FragCoord.xy * uScale)), 0);\n}\n'
     })
     w.onApplyObservable.add(() => {
       if (this._bindPass) {
@@ -675,10 +677,42 @@ export class BabylonBackend {
     this.engine.setAlphaMode(this._resolveAlphaMode(effectivePass.blend))
     this._bindPass = effectivePass
     this._bindState = state
-    this.effectRenderer.render(prog.wrapper, outRec.rtw)
+    if (outRec.mipmaps) {
+      // A mipmapped output must not be rendered through EffectRenderer: the RTT unbind fires
+      // Babylon's auto-mipgen (gl.generateMipmap on the float chain — invalid/different from
+      // the reference). Raw FBO + full-size viewport + Babylon-managed draw instead.
+      this._renderToTextureTarget(outRec, prog)
+    } else {
+      this.effectRenderer.render(prog.wrapper, outRec.rtw)
+    }
     this._bindPass = null
     this._bindState = null
     this.engine.setAlphaMode(Constants.ALPHA_DISABLE)
+  }
+
+  // Render into a texture target through a RAW FBO (Babylon-managed draw, raw framebuffer
+  // binding). Used for every pass whose target is a mipmapped texture: EffectRenderer's RTT
+  // unbind would trigger Babylon's generateMipmap auto-fill, which neither the reference
+  // (NEAREST blit chain after the frame) nor this port uses. The full-size viewport is set
+  // explicitly because no Babylon RTT binding runs (webgl2.js viewportTex precedence).
+  _renderToTextureTarget (outRec, prog) {
+    if (!this._rawFbos) this._rawFbos = new Map()
+    const gl = this.gl
+    const glTex = this._glTexOf(outRec)
+    if (!gl || !glTex) { throw new Error(`BabylonBackend: raw render target unavailable (${outRec.id || 'unknown'})`) }
+    let fbo = this._rawFbos.get(glTex)
+    if (!fbo) {
+      fbo = gl.createFramebuffer()
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fbo)
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, glTex, 0)
+      this._rawFbos.set(glTex, fbo)
+    } else {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fbo)
+    }
+    gl.viewport(0, 0, outRec.width, outRec.height)
+    this._drawFullscreenInto(prog, this._bindPass, this._bindState)
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+    this.engine.wipeCaches(true)
   }
 
   // global_<name> output resolves to the current write buffer; non-global ids pass through.
@@ -733,9 +767,12 @@ export class BabylonBackend {
   }
 
   // Draw the fullscreen quad with prog's effect into the currently-bound framebuffer.
+  // Mirrors EffectRenderer.render: enableEffect THEN notify onApplyObservable (EffectRenderer
+  // fires it explicitly; without this the raw-FBO path would never bind samplers/uniforms).
   _drawFullscreenInto (prog, pass, state) {
     const effect = prog.wrapper.effect
     this.engine.enableEffect(prog.wrapper.drawWrapper)
+    if (prog.wrapper.onApplyObservable) prog.wrapper.onApplyObservable.notifyObservers({})
     this._bindInputs(pass, prog, effect, state)
     this._bindUniforms(pass, prog, effect, state)
     this._bindUniformBlocks(pass, prog, state)
@@ -888,7 +925,7 @@ export class BabylonBackend {
     const srcThin = this._resolveInput(pass.inputs?.src, state)
     this._bindPass = { __copySrc: srcThin, __copyScale: [1, 1] }
     this.engine.setAlphaMode(Constants.ALPHA_DISABLE)
-    this.effectRenderer.render(this._copyWrapper, dst.rtw)
+    this._renderToTextureTarget(dst, { wrapper: this._copyWrapper, uniformTypes: {}, samplerSet: new Set(['src']), hasCustomVertex: false })
     this._bindPass = null
   }
 
@@ -1179,6 +1216,8 @@ export class BabylonBackend {
 
     if (!abandonRawResources) {
       for (const buf of this.uniformBuffers.values()) { try { this.gl.deleteBuffer(buf) } catch { /* noop */ } }
+      for (const fbo of this._rawFbos?.values?.() || []) { try { this.gl.deleteFramebuffer(fbo) } catch { /* noop */ } }
+      this._rawFbos = new Map()
       for (const fbo of this._mrtFbos?.values?.() || []) { try { this.gl.deleteFramebuffer(fbo) } catch { /* noop */ } }
       for (const rb of this._depthRBs?.values?.() || []) { try { this.gl.deleteRenderbuffer(rb) } catch { /* noop */ } }
       try { if (this._emptyVAO) this.gl.deleteVertexArray(this._emptyVAO) } catch { /* noop */ }
@@ -1187,6 +1226,7 @@ export class BabylonBackend {
       }
       this._mipReadFbo = null
       this._mipDrawFbo = null
+    this._rawFbos = new Map() // glTex → raw FBO for mipmapped-target pass rendering
     }
     this.uniformBuffers.clear()
     this._mrtFbos?.clear?.()

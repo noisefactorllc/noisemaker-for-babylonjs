@@ -132,25 +132,80 @@ test('persistent textures preserve contents across recreation; plain textures do
   assert.ok(backend.textures.has('probe_scratch'), 'plain texture must exist after recreation')
 })
 
-test('copyTexture carries the blit-equivalent uScale mapping (1:1 same-size, src/dst ratio on resize)', () => {
+test('copyTexture carries the blit-equivalent level-0 texelFetch mapping (src/dst ratio, both directions)', () => {
   const backend = Object.create(BabylonBackend.prototype)
   const bindPasses = []
   backend.textures = new Map()
   backend._copyWrapper = { name: 'copy' }
   backend.engine = { setAlphaMode: () => {} }
-  backend.effectRenderer = { render: () => bindPasses.push({ ...backend._bindPass }) }
+  // copyTexture renders through the raw-FBO path (no EffectRenderer — an RTT unbind would
+  // fire Babylon's auto-mipgen on a mipmapped target); capture the bind-pass scratch it sets.
+  backend._renderToTextureTarget = function () { bindPasses.push({ ...this._bindPass }) }
   const src = { thin: {}, width: 64, height: 64 }
   const dstSame = { thin: {}, rtw: {}, width: 64, height: 64 }
   const dstBig = { thin: {}, rtw: {}, width: 128, height: 128 }
+  const dstSmall = { thin: {}, rtw: {}, width: 32, height: 32 }
   backend.textures.set('a', src)
   backend.textures.set('same', dstSame)
   backend.textures.set('big', dstBig)
+  backend.textures.set('small', dstSmall)
 
   backend.copyTexture('a', 'same')
   backend.copyTexture('a', 'big')
-  assert.deepEqual(bindPasses[0].__copyScale, [1, 1], 'same-size copy must use the 1:1 texelFetch branch')
-  assert.deepEqual(bindPasses[1].__copyScale, [2, 2], 'size-changing copy must carry the src/dst ratio')
+  backend.copyTexture('a', 'small')
+  assert.deepEqual(bindPasses[0].__copyScale, [1, 1], 'same-size copy must use the 1:1 texelFetch mapping')
+  assert.deepEqual(bindPasses[1].__copyScale, [0.5, 0.5], 'upscale copy must carry the src/dst ratio (blit NEAREST rule)')
+  assert.deepEqual(bindPasses[2].__copyScale, [2, 2], 'downscale copy must carry the src/dst ratio (blit NEAREST rule)')
   assert.equal(backend._bindPass, null, 'bind pass scratch must be cleared')
+})
+
+test('_renderToTextureTarget binds a raw FBO, sets the full-target viewport, and never routes through EffectRenderer', () => {
+  const backend = Object.create(BabylonBackend.prototype)
+  const GL = { FRAMEBUFFER: 0x8d40, COLOR_ATTACHMENT0: 0x8ce0, TEXTURE_2D: 0x0de1 }
+  const calls = { viewport: [], fboTex: 0 }
+  const gl = Object.assign({
+    createFramebuffer: () => ({ fbo: 1 }),
+    bindFramebuffer: () => {},
+    framebufferTexture2D: () => { calls.fboTex++ },
+    viewport: (...a) => calls.viewport.push(a),
+    getParameter: (p) => null
+  }, GL)
+  backend.gl = gl
+  backend.engine = { wipeCaches: () => {} }
+  const glTex = { tex: 1 }
+  const outRec = { id: 'mip0', internal: { _hardwareTexture: { underlyingResource: glTex } }, width: 32, height: 1024, mipmaps: true }
+  backend.textures = new Map([['mip0', outRec]])
+  backend._bindPass = { id: 'p' }
+  backend._bindState = {}
+  let drew = 0
+  backend._drawFullscreenInto = () => { drew++ }
+  backend.effectRenderer = { render: () => { throw new Error('EffectRenderer.render must not run for a mipmapped target') } }
+
+  backend._renderToTextureTarget(outRec, { wrapper: {} })
+  assert.equal(drew, 1)
+  assert.equal(calls.fboTex, 1)
+  assert.deepEqual(calls.viewport, [[0, 0, 32, 1024]], 'viewport must be the TARGET full size (viewportTex precedence)')
+  // second call reuses the cached FBO
+  backend._renderToTextureTarget(outRec, { wrapper: {} })
+  assert.equal(calls.fboTex, 1)
+})
+
+test('executePass renders mipmapped outputs through the raw path and plain outputs through EffectRenderer', () => {
+  const backend = Object.create(BabylonBackend.prototype)
+  backend.textures = new Map()
+  const routed = []
+  backend.programs = new Map([['prog', { wrapper: {}, uniformTypes: {}, samplerSet: new Set(), hasCustomVertex: false }]])
+  backend.engine = { setAlphaMode: () => {}, wipeCaches: () => {} }
+  backend._resolveAlphaMode = () => 0
+  const mkRec = (mipmaps) => ({ thin: {}, rtw: {}, width: 32, height: 32, mipmaps })
+  backend.textures.set('plain', mkRec(false))
+  backend.textures.set('mipped', mkRec(true))
+  backend.effectRenderer = { render: (w, rtw) => routed.push(['effect', rtw === undefined ? null : 'rtw']) }
+  backend._renderToTextureTarget = function (rec) { routed.push(['raw', rec.mipmaps]) }
+  const mkPass = (output) => ({ id: 'p', program: 'prog', outputs: { color: output }, inputs: {}, blend: 'none' })
+  backend.executePass(mkPass('plain'), {})
+  backend.executePass(mkPass('mipped'), {})
+  assert.deepEqual(routed, [['effect', 'rtw'], ['raw', true]], 'plain targets keep EffectRenderer; mipmapped targets go raw')
 })
 
 test('generateMipmaps blits each adjacent mip level pair and skips non-mipmapped textures', () => {

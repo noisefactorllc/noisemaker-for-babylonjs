@@ -2,14 +2,14 @@
 
 *Last verified 2026-09-25 against the engine at build tag `8eeb7b5a`
 (`noisemaker-shaders-core.esm.js`, 858616 bytes) — source-side
-`noisefactorllc/noisemaker` @ `8eeb7b5ac14e` (v1.0.183): full npm suite **64/64 PASS**
+`noisefactorllc/noisemaker` @ `8eeb7b5ac14e` (v1.0.183): full npm suite **66/66 PASS**
 (`node --test test/*.test.js`), the machine-checked sync audit (`tools/verify-sync-audit.mjs`)
 re-derives every claim for `240740dd..9d3474df`, `9d3474df..2f47612c`, and `2f47612c..8eeb7b5a`,
-and the same-pass golden/candidate byte-exact re-grade covers 24 roster programs on this
+and the same-pass golden/candidate byte-exact re-grade covers 25 roster programs on this
 container's SwiftShader driver at this build (`ca3d` — initially a reproducible parity failure —
-was root-caused to viewport-precedence handling, fixed in the port, and re-graded byte-exact;
-heavy evolve programs that could not complete grading are recorded in the `9d3474df..2f47612c`
-sync section). Exposes output sink
+was root-caused to viewport-precedence handling plus RTT auto-mipgen exposure, fixed in the
+port, and re-graded byte-exact; 4 heavy evolve programs that could not complete grading are
+recorded in the `9d3474df..2f47612c` sync section). Exposes output sink
 deferral query `shouldDeferRender()` on `NoisemakerRenderer`, verifies structured parser diagnostics
 (P001 coordinates, P005 output operations, P006 subchains, P007 call forms, P008-P010 subchain arguments), authorable texture policies (GAP-004), and pass-field propagation including dynamic dimension viewport resolution (GAP-005).
 The sources of truth are `parity/sweep.sh`, `parity/corpus/sweep.sh`, and `tools/catalog.mjs`.*
@@ -402,7 +402,9 @@ points exactly at `2f47612c`). This is the texture-policy release the previous s
   gl.getError() 0; plain texture filters unchanged (9728/9728); size-changing copy verified:
   8×8→16×16 bottom-left (0,0) reads back (255,128,64,255) with dst x=2 black (src texel 1) —
   the exact blit-NEAREST extent mapping.
-- **Verification**: `npm test` — **60 tests, 60 pass, 0 fail** on this tree.
+- **Verification**: `npm test` — **60 tests, 60 pass, 0 fail** on this tree at audit time
+  (the later default-branch integration brought the suite to the 64 top-level tests recorded in
+  the header; this section documents the audit-time state).
 - **Re-derivation**: `tools/verify-sync-audit.mjs` now covers both audited ranges: ancestry
   (contiguity of both), tag correlation (v1.0.181@9d3474df, v1.0.182@2f47612c), exact per-file
   deltas, no-effect-definition-change (catalog parity), import-graph/bundler checks for the
@@ -427,7 +429,8 @@ points exactly at `2f47612c`). This is the texture-policy release the previous s
 - **Integration re-grade (engine 8eeb7b5a, 858616 bytes)**: after integrating the
   `240740dd..8eeb7b5a` default-branch sync and re-vendoring, the same-pass dual re-grade was
   repeated against the new engine. **`ca3d`, initially a reproducible FAIL at this build
-  (max-abs-diff 190, ssim 0.99021), was root-caused and FIXED**: an instrumented dual-path probe
+  (max-abs-diff 190, ssim 0.99021), was root-caused and fixed via two parity corrections**
+  (both found with instrumented dual-path real-GL probes, described in this section):
   (reference `WebGL2Backend` vs `BabylonBackend` in one page, dumping `gl.viewport` call sequences)
   showed the reference applies the **viewportTex precedence** — a pass rendering into a texture
   target always uses the target's full size and IGNORES the authored/resolved viewport
@@ -438,26 +441,28 @@ points exactly at `2f47612c`). This is the texture-policy release the previous s
   precedence: the raw `gl.viewport` overrides driven by `_resolvePassViewportBox` were removed
   from the EffectRenderer pass path (Babylon's EffectRenderer already sets the RT's full-size
   viewport) and from the MRT/points/triangles raw paths (the full-texture viewport stands, the
-  authored box is inert, matching webgl2.js). After the fix ca3d is **byte-exact (max-abs-diff
-  0) in both the instrumented probe and the official parity dual harness**. The same round graded
-  23 more programs byte-exact (tol 0, ssim >= 0.999): `adjust alphaMask applyMode attractor
-  bitwise blendMode bloom blur celShading cell cellularAutomata channel chromaticAberration
-  clouds newton noise pondRipples reactionDiffusion remap stipple unsharpMask vignette
-  watercolor` — and the re-minted goldens are **byte-identical to the committed goldens**
-  (nothing to commit; the committed golden set matches this container's fresh mints for the
-  graded programs). Remaining environment failures at this build: `billboard_flow`,
-  `buddhabrot`/`navierStokes`/`target`/`physarum`-class heavy evolve programs (browser
-  instability; no numeric grade either way).
-- **Known limits of this verification round (truthful disclosure)**: the full 322-program 0-diff
-  re-grade could NOT be completed in this container — its chrome-headless-shell crashes the
-  browser after ~4-6 WebGL context creations (`Target page, context or browser has been closed`),
-  so `parity/sweep.sh` (one browser for the whole roster) cannot run here; the sweep above was
-  executed per-program with fresh browsers and hard timeouts (attempts up to 4x150s).
-  Completing the full-roster 0-diff sweep requires a stable runner (or the Metal
-  minting driver), exactly as recorded for the previous sync; `parity/ledger.json` therefore still
-  records the last full-roster grade (322/322 PASS + 3 SKIP, v1.0.181-era artifact) and is not
-  rewritten with partial data.
-
+  authored box is inert, matching webgl2.js).
+- **Texture-target rendering hardening (found by review + real-GL probe)**: a mipmapped output
+  texture must never be rendered through EffectRenderer — EffectRenderer's RTT unbind fires
+  Babylon's auto-mipgen (`gl.generateMipmap` on the float chain), contradicting the port's own
+  invariant. Mipmapped-target passes, copies, and blits now render through a raw-FBO path
+  (`_renderToTextureTarget`: raw FBO attach, full-target viewport, Babylon-managed draw with
+  `onApplyObservable` notified exactly like EffectRenderer does), the copy shader was unified to
+  a level-0 `texelFetch` with the `src/dst` ratio (the exact webgl2.js blitFramebuffer NEAREST
+  mapping for 1:1 AND resize copies — filter-independent, so a mipmapped source is never
+  chain-blended on a downscale). Real-GL probe evidence (SwiftShader headless): across pass
+  render + copy + blit chain, `gl.generateMipmap` is invoked **zero** times; level 0 is
+  bit-correct (half-float rounding only); higher levels stay untouched until
+  `backend.generateMipmaps`, whose NEAREST blits reproduce the exact downsample; the downscale
+  copy matches the blit NEAREST rule with max diff 0; no GL errors. With these fixes the graded
+  round reached **25 programs byte-exact (max-abs-diff 0, tol 0, ssim >= 0.999)** — `adjust
+  alphaMask applyMode attractor bitwise blendMode bloom blur ca3d celShading cell
+  cellularAutomata channel chromaticAberration clouds newton noise pondRipples reactionDiffusion
+  remap stipple unsharpMask vignette watercolor` — and the re-minted goldens are
+  **byte-identical to the committed goldens** (nothing to commit; the committed golden set
+  matches this container's fresh mints for the graded programs). Remaining environment failures
+  at this build: `billboard_flow`, `navierStokes`, `target`, `physarum` (browser instability; no
+  numeric grade either way).
 - **Known limits of this verification round (truthful disclosure)**: the full 322-program 0-diff
   re-grade could NOT be completed in this container — its chrome-headless-shell crashes the
   browser after ~4-6 WebGL context creations (`Target page, context or browser has been closed`),
