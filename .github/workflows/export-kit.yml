@@ -15,7 +15,6 @@ on:
       # LICENSE is shipped kit content (vendored into LICENSES/): a relicense must auto-publish.
       - "LICENSE"
       - "src/**"
-      - "package.json"
       - "package-lock.json"
 
 concurrency:
