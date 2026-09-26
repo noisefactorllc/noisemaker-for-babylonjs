@@ -13,6 +13,9 @@
   },
   "files": [
     "src/",
+    "tools/export-fat-graph.mjs",
+    "vendor/engine.mjs",
+    "vendor/fetch.sh",
     "README.md",
     "ARCHITECTURE.md",
     "PORTING-GUIDE.md"

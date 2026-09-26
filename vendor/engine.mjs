@@ -45,7 +45,10 @@ let _booted = null
 export async function bootEngine () {
   if (_booted) return _booted
   if (!existsSync(CORE)) {
-    throw new Error(`Vendored engine missing at ${CORE}.\nRun: bash vendor/fetch.sh   (fetches the published engine from shaders.noisedeck.app)`)
+    throw new Error(`Vendored engine missing at ${CORE}.\n` +
+      // Works from a repo checkout AND from an installed package (consumer cwd is arbitrary,
+      // so the instruction must use this file's own location, never a repo-relative path).
+      `Run: bash ${join(HERE, 'fetch.sh')}   (fetches the published engine from shaders.noisedeck.app)`)
   }
   installDomShim()
 
