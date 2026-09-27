@@ -177,6 +177,10 @@ jobs:
           merge-multiple: true
       - name: Fetch the pinned engine (the roster reads the vendored manifest)
         run: bash vendor/fetch.sh
+      - name: List downloaded files (diagnostics)
+        run: |
+          echo "::notice::downloaded: $(find "$RUNNER_TEMP" -maxdepth 3 -type f | sort | head -60 | tr '\n' ' ' | cut -c1-1500)"
+          find "$RUNNER_TEMP" -maxdepth 3 -type f | sort | head -60
       - name: Verify full-roster coverage and grades, merge the ledger
         run: |
           mapfile -t ROSTER < <(node parity/current-programs.mjs)
@@ -192,16 +196,20 @@ jobs:
           roster = sys.argv[2:]
           diag = {"ledger_files": {}, "roster": len(roster)}
           try:
-              for path in sorted(glob.glob(os.path.join(tmp, "ledger-shard-*.json"))):
+              ledger_paths = sorted(glob.glob(os.path.join(tmp, "ledger-shard-*.json"))
+                                    or glob.glob(os.path.join(tmp, "**", "ledger-shard-*.json"),
+                                                 recursive=True))
+              def rows_of(path):
                   data = json.load(open(path))
-                  rows = data if isinstance(data, list) else data.get("rows", [])
-                  diag["ledger_files"][os.path.basename(path)] = {
-                      "top_level": type(data).__name__, "rows": len(rows),
-                      "sample": rows[0] if rows else None}
+                  return data if isinstance(data, list) else data.get("rows", [])
+              for path in ledger_paths:
+                  data = rows_of(path)
+                  diag["ledger_files"][os.path.basename(os.path.dirname(path)) + "/" + os.path.basename(path)] = {
+                      "top_level": type(data).__name__, "rows": len(data),
+                      "sample": data[0] if data else None}
               def each_row():
-                  for path in sorted(glob.glob(os.path.join(tmp, "ledger-shard-*.json"))):
-                      data = json.load(open(path))
-                      for row in (data if isinstance(data, list) else data.get("rows", [])):
+                  for path in ledger_paths:
+                      for row in rows_of(path):
                           yield path, row
               rows = {}
               dups = []

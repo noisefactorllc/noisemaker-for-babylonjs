@@ -351,8 +351,15 @@ Original verification dates are 2026-09-22. Dated review notes identify subseque
   ledger file inventory, row counts, duplicates, missing/extra/non-passing
   lists, and skip set, emitted as an error annotation on failure) so the next
   failure, if any, names its cause; the merge validation itself is unchanged
-  in substance. The repaired workflow must produce a fully green exact-SHA
-  run before this record is final.
+  in substance. That run's diagnostics (36296400441 at `e7875bd`: suite,
+  public-host, and all 8 shards passed again) show zero ledger files present
+  at `$RUNNER_TEMP` when the merge step ran despite the shard artifacts
+  existing with the expected names and sizes — so the merge step now also
+  lists what the download actually extracted (as a notice annotation) and
+  falls back to a recursive ledger search; if the shard artifacts turn out
+  not to contain the ledger files, the shard upload paths are the next
+  correction. The repaired workflow must produce a fully green exact-SHA run
+  before this record is final.
 - Local verification at this commit (this container): `node --test
   test/*.test.js` — 90 pass / 0 fail (Node 26.5.1, Chromium headless-shell
   149 via SwiftShader, browsers from a `PLAYWRIGHT_BROWSERS_PATH` exec-mounted
