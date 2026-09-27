@@ -275,8 +275,7 @@ Original verification dates are 2026-09-22. Dated review notes identify subseque
 
 ### GAP-005: No CI evidence for the reviewed source
 
-- Status: closed, pending publication of this record and the exact-SHA CI run
-  that publishing this commit itself triggers. Priority: P2. Category: verification.
+- Status: closed. Priority: P2. Category: verification.
 - Scope: exact source SHA and `.github/workflows/ci.yml` (added in this commit;
   the existing `export-kit.yml` dispatch workflow is unchanged).
 - Expected: required checks qualify the exact source before a release-readiness claim.
@@ -360,6 +359,22 @@ Original verification dates are 2026-09-22. Dated review notes identify subseque
   not to contain the ledger files, the shard upload paths are the next
   correction. The repaired workflow must produce a fully green exact-SHA run
   before this record is final.
+- Final exact-SHA evidence: machine verification succeeded for
+  `226b9fe33af23f4d788167f456641085302ac4b5` — CI run 36297830362 at that
+  exact SHA concluded success with all eleven jobs green: installed package
+  and distribution contents (full 90-test suite + sync-audit re-derivation),
+  public host workflow (both examples pages), all 8 strict-parity shards at
+  tolerance 0 / SSIM 0.999, and the parity-merge coverage job (which asserts
+  every one of the 329 roster programs is graded exactly once across the
+  shards, no grade is FAIL, and the skip set is exactly the documented
+  `media`/`text`/`roll` policy skips, before publishing the merged ledger).
+  Eleven artifacts were uploaded for the exact SHA (suite, public-host, 8
+  shards, merged ledger), each carrying raw output, per-program comparison
+  reports, engine authority hashes, and a provenance record bound to the
+  commit SHA and run id. This satisfies the acceptance criterion: exact-SHA
+  checks retain raw test output, exclusions, authority hashes, and artifact
+  provenance.
+- Next action: complete.
 - Local verification at this commit (this container): `node --test
   test/*.test.js` — 90 pass / 0 fail (Node 26.5.1, Chromium headless-shell
   149 via SwiftShader, browsers from a `PLAYWRIGHT_BROWSERS_PATH` exec-mounted
@@ -378,9 +393,10 @@ Original verification dates are 2026-09-22. Dated review notes identify subseque
   confirmed during verification (runs, artifacts, and per-SHA check runs).
 - Required checks: installed package, public host workflow, strict parity, and
   distribution contents — all defined in `.github/workflows/ci.yml`.
-- Next action: complete after publication and verification of the exact-SHA run.
-- Last verification: 2026-09-27 (workflow added; suite, host checks, and
-  sync-audit executed at this commit; sweep gate exercised on live samples).
+- Next action: complete (satisfied — see "Final exact-SHA evidence" above).
+- Last verification: 2026-09-27 (exact-SHA CI run 36297830362 at `226b9fe`
+  fully green; local suite 90/90, host checks, sync-audit, and live strict
+  sweep samples at the implementation commits).
 
 ### GAP-006: Host and release qualification remain incomplete
 
