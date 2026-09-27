@@ -387,8 +387,17 @@ Original verification dates are 2026-09-22. Dated review notes identify subseque
   exact locally), while an absent-both tag passes as the historical record
   whose range end is independently re-verified by the ancestry + numstat
   checks. Tool re-run locally at this commit: all claims re-derived, exit 0.
-  All other jobs in run 36299592988 passed; the workflow must produce a fully
-  green exact-SHA run for this repaired commit before the record stands.
+  All other jobs in run 36299592988 passed.
+- Final exact-SHA evidence (supersedes the closure condition above): machine
+  verification succeeded for `3a70d2c31e1e59ad706e15e8d5482afb587cfdab` — CI
+  run 36301835680 at that exact SHA concluded success with all eleven jobs
+  green (installed package and distribution contents incl. the repaired
+  sync-audit re-derivation, public host workflow, all 8 strict-parity shards
+  at tolerance 0 / SSIM 0.999, and the parity-merge coverage gate over the
+  329-program roster), with the SHA-named artifact set (suite, public-host,
+  8 shards, merged ledger) retaining raw output, per-program reports, engine
+  authority hashes, and SHA/run-bound provenance. GAP-005 stands closed on
+  this evidence.
 - Next action: complete.
 - Local verification at this commit (this container): `node --test
   test/*.test.js` — 90 pass / 0 fail (Node 26.5.1, Chromium headless-shell
@@ -409,8 +418,9 @@ Original verification dates are 2026-09-22. Dated review notes identify subseque
 - Required checks: installed package, public host workflow, strict parity, and
   distribution contents — all defined in `.github/workflows/ci.yml`.
 - Next action: complete (satisfied — see "Final exact-SHA evidence" above).
-- Last verification: 2026-09-27 (exact-SHA CI run 36297830362 at `226b9fe`
-  fully green; local suite 90/90, host checks, sync-audit, and live strict
+- Last verification: 2026-09-27 (exact-SHA CI run 36301835680 at `3a70d2c`
+  fully green; earlier exact-SHA run 36297830362 at `226b9fe` also fully
+  green; local suite 90/90, host checks, sync-audit, and live strict
   sweep samples at the implementation commits).
 
 ### GAP-006: Host and release qualification remain incomplete
