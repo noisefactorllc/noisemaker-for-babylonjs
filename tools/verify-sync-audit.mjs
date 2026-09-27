@@ -189,8 +189,11 @@ check('bundler still disables effect validation by construction at v1.0.185',
 // 5d. The replacement-prediction range: 6a0af04d..403c2a4b (v1.0.186/v1.0.187; this sync).
 check('6a0af04d is an ancestor of 403c2a4b (prediction range contiguous)',
   git('merge-base', '--is-ancestor', END4, END5) === '' && git('merge-base', END4, END5) === END4)
-check('tag v1.0.187 points exactly at 403c2a4b',
-  git('rev-parse', 'v1.0.187^{commit}') === END5)
+// Historical release tag: upstream now deletes old tags (v1.0.181..185 pattern);
+// absence on BOTH the local clone and origin passes as the historical record
+// (the tag was verified against these SHAs in the recorded sync round), while
+// a tag that exists must still point exactly at the recorded SHA.
+tagCheck('v1.0.187', END5, '403c2a4b')
 const predNumstat = git('diff', '--numstat', `${END4}..${END5}`, '--', 'shaders/')
 check('shaders/ delta 6a0af04d..403c2a4b is exactly the GAP-008 replacement preflight prediction + param-alias reader + their new tests',
   predNumstat === PRED_DELTA, predNumstat.replace(/\n/g, ' | '))
@@ -220,10 +223,8 @@ check('the v1.0.188 tip (9f85687d, beyond the declared range end) changes no sha
 // uniform deltas + their tests + the harness/report wiring — test-only.
 check('403c2a4b is an ancestor of 7dc0f564 (uniforms range contiguous)',
   git('merge-base', '--is-ancestor', END5, END6) === '' && git('merge-base', END5, END6) === END5)
-check('tag v1.0.189 points exactly at 7dc0f564 (declared end)',
-  git('rev-parse', 'v1.0.189^{commit}') === END6)
-check('tag v1.0.188 points exactly at 9f85687d (GAP-010 mid-range tag)',
-  git('rev-parse', 'v1.0.188^{commit}') === '9f85687d1bafc445dcd38e28cf5f0c6dfba562f8')
+tagCheck('v1.0.189', END6, '7dc0f564')
+tagCheck('v1.0.188', '9f85687d1bafc445dcd38e28cf5f0c6dfba562f8', '9f85687d')
 const UNIF_DELTA = "64\t4\tshaders/tests/test-harness.js\n122\t0\tshaders/tests/test_uniform_deltas.js\n116\t0\tshaders/tests/test_uniform_status.js\n282\t0\tshaders/tests/uniform-deltas.js\n78\t0\tshaders/tests/uniform-status.js"
 const UNIF_FILES = "shaders/tests/test-harness.js\nshaders/tests/test_uniform_deltas.js\nshaders/tests/test_uniform_status.js\nshaders/tests/uniform-deltas.js\nshaders/tests/uniform-status.js"
 const unifNumstat = git('diff', '--numstat', `${END5}..${END6}`, '--', 'shaders/')

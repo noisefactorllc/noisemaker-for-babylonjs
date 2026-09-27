@@ -374,6 +374,21 @@ Original verification dates are 2026-09-22. Dated review notes identify subseque
   commit SHA and run id. This satisfies the acceptance criterion: exact-SHA
   checks retain raw test output, exclusions, authority hashes, and artifact
   provenance.
+- CI regression after closure (2026-09-27, run 36299592988 at `c9ae916`): the
+  suite job's sync-audit re-derivation failed because upstream
+  (noisefactorllc/noisemaker) deleted the `v1.0.187` release tag after the
+  recorded sync audit had verified it against `403c2a4b` — the same
+  upstream-deletion pattern the tool already documents for v1.0.181–185, but
+  the v1.0.187/v1.0.188/v1.0.189 checks still used a hard `git rev-parse`
+  that crashed (exit 128) on a missing tag. Fixed in this commit by routing
+  those three tag checks through the tool's existing `tagCheck` semantics:
+  a tag present locally or on origin must still point exactly at the recorded
+  SHA (v1.0.188 → `9f85687d`, v1.0.189 → `7dc0f564` re-verified present and
+  exact locally), while an absent-both tag passes as the historical record
+  whose range end is independently re-verified by the ancestry + numstat
+  checks. Tool re-run locally at this commit: all claims re-derived, exit 0.
+  All other jobs in run 36299592988 passed; the workflow must produce a fully
+  green exact-SHA run for this repaired commit before the record stands.
 - Next action: complete.
 - Local verification at this commit (this container): `node --test
   test/*.test.js` — 90 pass / 0 fail (Node 26.5.1, Chromium headless-shell
