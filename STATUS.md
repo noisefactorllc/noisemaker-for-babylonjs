@@ -1,13 +1,13 @@
 # Noisemaker for Babylon.js — status & parity
 
-*Last verified 2026-09-26 against the vendored engine **v1.0.187** (build `403c2a4b`,
+*Last verified 2026-09-27 against the vendored engine **v1.0.189** (build `7dc0f564`,
 `noisemaker-shaders-core.esm.js`, 879173 bytes): the recorded suite run at this
 sync is **90 tests, 90 pass / 0 fail** (`node --test test/*.test.js`;
 82 pre-GAP-004 + the 7 `test/coverage-map.test.js` gate tests + the v1.0.187
 replacement-prediction engine-API test — earlier recorded runs: 89/89 at the GAP-004
 implementation commit (`9ad880e`), 82/82 in the v1.0.185 sync section), the machine-checked sync audit
 (`tools/verify-sync-audit.mjs`)
-re-derives the `8eeb7b5a..6a0af04d` and `6a0af04d..403c2a4b` claims and the four external-input real-input fixtures
+re-derives the `8eeb7b5a..6a0af04d`, `6a0af04d..403c2a4b`, and `403c2a4b..7dc0f564` claims and the four external-input real-input fixtures
 grade byte-exact on both backends (see those sync sections and
 [`parity/external-input-grades.json`](parity/external-input-grades.json)). Those ranges changed no
 effect definitions (210 catalogued effects, 0 added / 0 removed), so the same-pass golden/candidate
@@ -36,10 +36,10 @@ Pick the command that matches the claim you are making — the gates differ:
 | `bash parity/corpus/sweep.sh` | **tolerance 2.001, SSIM 0.98** (hardcoded in the script — the same relaxed spot-check gate as `run.sh`, absorbing cross-driver driver noise), 1800-frame (~30 s) evolution per composition | the live corpus (historical denominator 40 raw / 39 gradeable + 1 reference-rejected, retained) | corpus grading. The recorded corpus grades in STATUS report the measured max-abs-diff per composition (the corpus evidence above is recorded **byte-identical outcomes**), but this gate does not itself enforce tolerance 0 — treat byte-exact corpus claims as recorded measured outcomes, not as an enforcement guarantee of this script |
 | `bash parity/run.sh <name>` | **defaults tolerance 2.001, SSIM 0.98** — a relaxed spot-check gate sized to cross-driver/cross-machine driver noise | one program | smoke check only. A PASS at these defaults is **not** byte-exact evidence (it can pass with a non-zero max-abs-diff). For the strict gate on one program: `bash parity/run.sh noise 0 0.999` |
 | `node --test test/*.test.js` | suite pass | **90 tests** at this tree (82 pre-GAP-004 + the 7 `test/coverage-map.test.js` gate tests + the `test/transform-prediction.test.js` engine v1.0.187 replacement-prediction API test); the recorded GAP-004 run was **89 pass / 0 fail** at commit `9ad880e` (docs/COMPLETION_GAPS.md GAP-004); the current run is **90 pass / 0 fail** (see the `6a0af04d..403c2a4b` sync section) | unit/integration incl. `test/coverage-map.test.js`, which re-derives `parity/coverage-map.json` |
-| `node tools/verify-sync-audit.mjs` | exit 0 = every recorded sync-audit claim re-derived | the pinned engine revision (`vendor/fetch.sh` default, currently 1.0.187 / `403c2a4b`) | authority / sync-audit re-derivation |
+| `node tools/verify-sync-audit.mjs` | exit 0 = every recorded sync-audit claim re-derived | the pinned engine revision (`vendor/fetch.sh` default, currently 1.0.189 / `7dc0f564`) | authority / sync-audit re-derivation |
 
 Denominator and coverage authority: [`parity/coverage-map.json`](parity/coverage-map.json)
-(210/210 catalogued effects bound to graded evidence at engine 1.0.187 / build `403c2a4b`, 0
+(210/210 catalogued effects bound to graded evidence at engine 1.0.189 / build `7dc0f564`, 0
 explicitly excluded; skipped and refused cases retained in the counts) and
 [`parity/ledger.json`](parity/ledger.json) (325 programs: 322 PASS, 3 SKIP, 0 FAIL — the
 v1.0.181-era full-roster artifact, retained verbatim; the fresh-sweep roster at this tree is
@@ -341,6 +341,74 @@ Engine synced from upstream `noisefactorllc/noisemaker` commit `403c2a4b` (v1.0.
   byte-unchanged — the 210 mini-bundles are sha256-identical to the previous fetch), so the
   committed goldens carry by byte-identity; the spot checks confirm the new tip renders
   identically.
+
+## Vendor sync (403c2a4b..7dc0f564)
+
+Source-side: `noisefactorllc/noisemaker` `403c2a4bf2cb..7dc0f5640534` (tearoff `ports-sync`,
+flagged for a force-push / non-contiguous delivery — audited directly in a local checkout:
+`403c2a4b` is the previous section's tip and an exact ancestor of `7dc0f564` (the range is
+contiguous; the observed `407eb7a7..7dc0f564` sub-range is a strict suffix of it — the two
+commits before `407eb7a7`, `0ac52500` and `9f85687d`, sit between `403c2a4b` and `407eb7a7`)),
+release tags **v1.0.188** points exactly at `9f85687d` and **v1.0.189** points exactly at
+`7dc0f564` (both re-derived by `node tools/verify-sync-audit.mjs`). The range is five commits:
+`0ac52500` (docs: AI contract checkpoint through GAP-008/009), `9f85687d` (GAP-010), `7730ea4a`
+(docs), `407eb7a7` (docs), `7dc0f564` (GAP-011). Engine synced from upstream
+`noisefactorllc/noisemaker` commit `7dc0f564` (v1.0.189):
+
+- **Manifest: 210 effects** (unchanged count, 0 added, 0 removed).
+- **Engine core**: `noisemaker-shaders-core.esm.js` 879173 bytes (Build `7dc0f564`, v1.0.189) —
+  **the same 879173 bytes as the v1.0.187 build except its Build/Date banner lines**: the two
+  pinned CDN artifacts (`1.0.187` vs `1.0.189`) are byte-identical once the banner lines are
+  stripped (re-derived by `node tools/verify-sync-audit.mjs`).
+- **Upstream changes audit** (the `403c2a4b..7dc0f564` shaders/ diff, per `--numstat`:
+  `tests/test-harness.js` +64/−4, new `tests/test_uniform_status.js` +116, new
+  `tests/uniform-status.js` +78, new `tests/test_uniform_deltas.js` +122, new
+  `tests/uniform-deltas.js` +282 — plus `llms-full.txt` and `scripts/run-js-tests.js` outside
+  `shaders/`; **no `shaders/src` module — runtime, backend, compiler, lang, or effect
+  definition — changed** (catalog parity); re-derived by
+  `node tools/verify-sync-audit.mjs`):
+  - Upstream commit `9f85687d` (GAP-010, v1.0.188): truthful uniform-responsiveness
+    aggregation behind the harness `--strict-uniforms` flag — `shaders/tests/*` harness
+    modules only, outside the published bundle.
+  - Upstream commit `7dc0f564` (GAP-011, v1.0.189): auditable measured uniform deltas in the
+    harness uniforms report — `shaders/tests/*` harness modules only, outside the published
+    bundle.
+- **Engine unchanged-elsewhere**: no runtime/backend/compiler/lang/effect module changed in the
+  range, so the published core bundle's only delta is its banner and every one of the 210 effect
+  mini-bundles is byte-identical between the v1.0.187 and v1.0.189 fetches (fresh CDN fetch of
+  all 210 mini-bundles at both revisions compared directly, `diff -rq` clean; manifest
+  byte-identical) — the render path is bit-identical, so committed goldens carry by
+  byte-identity.
+- **Vendoring pin bumped (authority change, per fetch.sh's own rule)**: `vendor/fetch.sh`'s
+  default `VERSION` and `tools/verify-sync-audit.mjs`'s published-bundle check moved from
+  `1.0.187` (build `403c2a4b`, 879173 bytes) to the pinned documented revision **1.0.189**
+  (build `7dc0f564`, 879173-byte core, banner-only delta). The vendored tree was produced by the
+  documented script itself (`bash vendor/fetch.sh` → `vendor/noisemaker/engine-meta.json`:
+  version 1.0.189, coreBuild 7dc0f564, coreBytes 879173, effectCount 210). The audit tool gained
+  the 5e uniforms-range checks (contiguity ancestry, `v1.0.188`/`v1.0.189` tag identity, exact
+  numstat delta, catalog parity, bundler flag) and the banner-only bundle-diff check; its
+  historical `v1.0.185` tag check now records upstream tag deletion (absent from origin
+  `git ls-remote`, verified during this round — the tag itself was verified against the recorded
+  SHA in its published sync round) instead of failing on a missing tag.
+- **Babylon implementation & test coverage**: no port change is needed — this range's engine
+  delta is `shaders/tests/*` harness tooling only (test-uniform responsiveness/delta reporting),
+  outside the published bundle; the port's render path, public surface, and effect catalog are
+  untouched, and no WGSL/GLSL/HLSL translation is affected.
+- **`parity/coverage-map.json`** regenerated via `node tools/coverage-map.mjs` (engine metadata
+  only — version 1.0.189 / build `7dc0f564` / 879173 bytes; all counts, grades, and bindings
+  unchanged: 210/210 effects with fixture evidence, ledger 322 PASS / 3 SKIP / 0 FAIL over 325
+  programs, choice surface 257 params / 132 effects / 1460 choices; the gate test re-derives the
+  committed JSON).
+- **Verification**: all **90 unit/integration tests pass** via the documented fetch path
+  (`bash vendor/fetch.sh` at the pinned 1.0.189 revision + `npm test`), and
+  `node tools/verify-sync-audit.mjs` re-derives every recorded claim and exits 0 ("All recorded
+  sync-audit claims re-derived from source: audit stands."; its in-suite check reports `90/90
+  tests, 0 fail`). Parity spot checks against the re-vendored engine (`parity/run.sh`, tol
+  2.001): `noise`, `blur`, `adjust` all byte-identical (max-abs-diff 0.000, ssim 1.0).
+  Full-sweep re-grading not rerun this round: the range's engine-src diff is empty (the 210
+  mini-bundles are byte-identical to the previous fetch and the core differs only in its
+  banner), so the committed goldens carry by byte-identity; the spot checks confirm the new tip
+  renders identically.
 
 ## Vendor sync (8eeb7b5a..6a0af04d)
 

@@ -1,7 +1,8 @@
 // verify-sync-audit.mjs — re-derive every claim in STATUS.md's
 // "Vendor sync (240740dd..9d3474df)", "Vendor sync (9d3474df..2f47612c)",
-// "Vendor sync (2f47612c..8eeb7b5a)", "Vendor sync (8eeb7b5a..6a0af04d)" and
-// "Vendor sync (6a0af04d..403c2a4b)" audits directly from source, so the
+// "Vendor sync (2f47612c..8eeb7b5a)", "Vendor sync (8eeb7b5a..6a0af04d)",
+// "Vendor sync (6a0af04d..403c2a4b)" and "Vendor sync (403c2a4b..7dc0f564)"
+// audits directly from source, so the
 // recorded audits are an executable contract instead of prose.
 //
 //   node tools/verify-sync-audit.mjs
@@ -27,9 +28,16 @@
 //      is exactly the GAP-006 runtime pooling plan + the viewport-without-clear
 //      guard + the GAP-007 backend diagnostic union + their new tests, and no
 //      effect definition changed (catalog parity);
+//   6. the v1.0.188/v1.0.189 incremental range (this sync): 403c2a4b is an
+//      ancestor of 7dc0f564, tags v1.0.188/v1.0.189 point exactly at
+//      9f85687d/7dc0f564, the shaders/ delta is exactly the GAP-010
+//      uniform-status aggregation + GAP-011 measured uniform deltas + their
+//      tests + the harness wiring, and no shaders/src module (incl. effect
+//      definitions) changed (catalog parity);
 //   7. the published core bundle at the pinned documented revision
-//      (shaders.noisedeck.app/1.0.187, same pin as vendor/fetch.sh) is the
-//      recorded 879173-byte 403c2a4b build and carries the
+//      (shaders.noisedeck.app/1.0.189, same pin as vendor/fetch.sh) is the
+//      recorded 879173-byte 7dc0f564 build, differs from the 1.0.187 build
+//      only in its Build/Date banner lines, and carries the
 //      GAP-006/GAP-007/GAP-008 symbols but no validator symbols;
 //   8. the port's own test suite (`npm test`) exits with 0 failing tests —
 //      required in a prepared environment, an explicit SKIP (with preparation
@@ -50,7 +58,8 @@ const END = '9d3474dfdc6cb737ebb7b2f3598b16d940af1544' // previous audit range e
 const END2 = '2f47612c29045c1b91af94887a8ff20106e980ef' // texture-policy range end (v1.0.182)
 const END3 = '8eeb7b5ac14eb37a8d16037f607a88ce63924cd3' // integration range end (GAP-005 tip)
 const END4 = '6a0af04d3c4f345ffab5e9f8e54e532216b4cdaa' // pooling+diagnostics range end (v1.0.185)
-const END5 = '403c2a4bf2cb56307448ea2fc1d6fa3cd74b7d6e' // replacement-prediction range end (v1.0.187, this sync)
+const END5 = '403c2a4bf2cb56307448ea2fc1d6fa3cd74b7d6e' // replacement-prediction range end (v1.0.187)
+const END6 = '7dc0f5640534855d73f8c812ca071fe6b1e09197' // uniforms-report range end (v1.0.189, this sync)
 const VALIDATOR_DELTA = '1097\t18\tshaders/src/runtime/effect-validator.js\n457\t0\tshaders/tests/test_effect_definition_validation.js'
 const VALIDATOR_FILES = 'shaders/src/runtime/effect-validator.js\nshaders/tests/test_effect_definition_validation.js'
 const MIP_DELTA = '106\t15\tshaders/src/runtime/backends/webgl2.js\n273\t10\tshaders/src/runtime/backends/webgpu.js\n17\t0\tshaders/src/runtime/compiler.js\n26\t1\tshaders/src/runtime/effect-validator.js\n100\t19\tshaders/src/runtime/pipeline.js\n466\t0\tshaders/tests/test_mip_controls.js'
@@ -59,8 +68,9 @@ const POOL_DELTA = '185\t0\tshaders/src/runtime/backends/diagnostics.js\n26\t7\t
 const POOL_FILES = 'shaders/src/runtime/backends/diagnostics.js\nshaders/src/runtime/backends/webgl2.js\nshaders/src/runtime/backends/webgpu.js\nshaders/src/runtime/pipeline.js\nshaders/tests/test_backend_diagnostics.js\nshaders/tests/test_resource_pooling.js'
 const PRED_DELTA = '1\t1\tshaders/src/index.js\n2\t2\tshaders/src/lang/index.js\n11\t0\tshaders/src/lang/paramAliases.js\n372\t5\tshaders/src/lang/transform.js\n80\t0\tshaders/tests/frame-metrics.js\n161\t6\tshaders/tests/test-harness.js\n71\t0\tshaders/tests/test_frame_metrics.js\n200\t0\tshaders/tests/test_transform.js'
 const PRED_FILES = 'shaders/src/index.js\nshaders/src/lang/index.js\nshaders/src/lang/paramAliases.js\nshaders/src/lang/transform.js\nshaders/tests/frame-metrics.js\nshaders/tests/test-harness.js\nshaders/tests/test_frame_metrics.js\nshaders/tests/test_transform.js'
-const BUNDLE_URL = 'https://shaders.noisedeck.app/1.0.187/noisemaker-shaders-core.esm.js' // pinned documented revision (see vendor/fetch.sh), not the rolling /1 alias
-const BUNDLE_BYTES = 879173 // documented published build (403c2a4b tip, v1.0.187)
+const BUNDLE_URL = 'https://shaders.noisedeck.app/1.0.189/noisemaker-shaders-core.esm.js' // pinned documented revision (see vendor/fetch.sh), not the rolling /1 alias
+const BUNDLE_BYTES = 879173 // documented published build (7dc0f564 tip, v1.0.189)
+const PREV_BUNDLE_URL = 'https://shaders.noisedeck.app/1.0.187/noisemaker-shaders-core.esm.js' // previous pinned revision (403c2a4b) — the banner-only-diff witness
 
 let repo = process.env.NM_UPSTREAM || ''
 let cleaned = ''
@@ -161,8 +171,7 @@ check('no effect definition changed in 2f47612c..8eeb7b5a (catalog parity)', eff
 // 5c. The pooling+diagnostics range: 8eeb7b5a..6a0af04d (v1.0.184/v1.0.185; this sync).
 check('8eeb7b5a is an ancestor of 6a0af04d (pooling range contiguous)',
   git('merge-base', '--is-ancestor', END3, END4) === '' && git('merge-base', END3, END4) === END3)
-check('tag v1.0.185 points exactly at 6a0af04d',
-  git('rev-parse', 'v1.0.185^{commit}') === END4)
+tagCheck('v1.0.185', END4, '6a0af04d')
 const poolNumstat = git('diff', '--numstat', `${END3}..${END4}`, '--', 'shaders/')
 check('shaders/ delta 8eeb7b5a..6a0af04d is exactly the GAP-006 pooling plan + viewport guard + GAP-007 diagnostic union + their new tests',
   poolNumstat === POOL_DELTA, poolNumstat.replace(/\n/g, ' | '))
@@ -203,14 +212,53 @@ try {
 } catch { /* git exits 0 with empty output for no changes */ }
 check('the v1.0.188 tip (9f85687d, beyond the declared range end) changes no shaders/src module', postRange === '')
 
+// 5e. The uniforms-report range: 403c2a4b..7dc0f564 (v1.0.188/v1.0.189; this sync).
+// The delivery was force-push-flagged (observed 407eb7a7..7dc0f564) — audited
+// directly: 403c2a4b is an exact ancestor of 7dc0f564 (contiguous), tag
+// v1.0.189 points exactly at the declared end, and the shaders/ delta is
+// exactly the GAP-010 uniform-status aggregation + the GAP-011 measured
+// uniform deltas + their tests + the harness/report wiring — test-only.
+check('403c2a4b is an ancestor of 7dc0f564 (uniforms range contiguous)',
+  git('merge-base', '--is-ancestor', END5, END6) === '' && git('merge-base', END5, END6) === END5)
+check('tag v1.0.189 points exactly at 7dc0f564 (declared end)',
+  git('rev-parse', 'v1.0.189^{commit}') === END6)
+check('tag v1.0.188 points exactly at 9f85687d (GAP-010 mid-range tag)',
+  git('rev-parse', 'v1.0.188^{commit}') === '9f85687d1bafc445dcd38e28cf5f0c6dfba562f8')
+const UNIF_DELTA = "64\t4\tshaders/tests/test-harness.js\n122\t0\tshaders/tests/test_uniform_deltas.js\n116\t0\tshaders/tests/test_uniform_status.js\n282\t0\tshaders/tests/uniform-deltas.js\n78\t0\tshaders/tests/uniform-status.js"
+const UNIF_FILES = "shaders/tests/test-harness.js\nshaders/tests/test_uniform_deltas.js\nshaders/tests/test_uniform_status.js\nshaders/tests/uniform-deltas.js\nshaders/tests/uniform-status.js"
+const unifNumstat = git('diff', '--numstat', `${END5}..${END6}`, '--', 'shaders/')
+check('shaders/ delta 403c2a4b..7dc0f564 is exactly the GAP-010/GAP-011 uniforms-report modules + tests + harness wiring',
+  unifNumstat === UNIF_DELTA, unifNumstat.replace(/\n/g, ' | '))
+const unifNames = git('diff', '--name-only', `${END5}..${END6}`, '--', 'shaders/').split('\n').sort().join('\n')
+check('no other shaders/ file changed in the uniforms range', unifNames === UNIF_FILES)
+let effectChanges6 = 'none'
+try {
+  effectChanges6 = git('diff', '--name-only', `${END5}..${END6}`, '--', 'shaders/src')
+} catch { /* no changes → git exits 0 with empty output */ }
+check('no shaders/src module (incl. effect definitions) changed in 403c2a4b..7dc0f564 (catalog parity)', effectChanges6 === '')
+const bundler6 = git('show', `${END6}:scripts/bundle.js`)
+check('bundler still disables effect validation by construction at v1.0.189',
+  bundler6.includes('NOISEMAKER_DISABLE_EFFECT_VALIDATION'))
+
 // 6. Published bundle (pinned documented revision). A validator symbol remains a FAIL;
 //    a size move past the recorded build is a WARN pointing at a new ports-sync.
 const bundle = Buffer.from(await (await fetch(BUNDLE_URL)).arrayBuffer())
+const stripBanner = (b) => {
+  const text = b.toString('utf8')
+  return text.replace(/^ \* Build: .*\n/m, '').replace(/^ \* Date: .*\n/m, '')
+}
 if (bundle.length === BUNDLE_BYTES) {
-  check(`published core bundle at the pinned documented revision is the recorded ${BUNDLE_BYTES}-byte build (403c2a4b tip, v1.0.187)`, true)
+  check(`published core bundle at the pinned documented revision is the recorded ${BUNDLE_BYTES}-byte build (7dc0f564 tip, v1.0.189)`, true)
 } else {
   check(`published core bundle at the pinned revision no longer matches the recorded build (got ${bundle.length} bytes, recorded ${BUNDLE_BYTES}) — WARN only: the recorded byte-identity claim refers to the artifact verified during the audit; run a new ports-sync for the newer release`, true)
 }
+// The v1.0.187→v1.0.189 published core differs ONLY in its Build/Date banner
+// lines (the range changed no engine-src module) — re-derived from the two
+// pinned CDN artifacts, this is what carries the committed goldens by
+// byte-identity without a re-mint.
+const prevBundle = Buffer.from(await (await fetch(PREV_BUNDLE_URL)).arrayBuffer())
+check('the 1.0.189 core differs from the 1.0.187 core only in its Build/Date banner lines',
+  stripBanner(bundle) === stripBanner(prevBundle))
 check('published bundle carries the texture-policy + pass-field runtime symbols',
   bundle.includes('recreateTexturePreserving') && bundle.includes('refreshMipTargets') &&
   bundle.includes('generateMipmaps') && bundle.includes('resolvePassViewport'))

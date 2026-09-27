@@ -149,7 +149,7 @@ engine in the same pass.
 - **Every mode of every artistic filter**, not just its default — a 101-row (effect, mode)
   matrix across 19 effects, each graded byte-exact. See [STATUS.md](STATUS.md) for the full
   matrix. This is representative coverage, not the full parameter-interaction Cartesian product:
-  ~257 choice-bearing parameters across 132 effects (~1,460 named choices at engine 1.0.187) are
+  ~257 choice-bearing parameters across 132 effects (~1,460 named choices at engine 1.0.189) are
   schema counts, **explicitly not a tested combination count**.
 - **Particle/agent sims and fluid (navier–stokes)** render and match the reference, evolved to a
   bit-identical steady state (~30 s per program via the `EVOLVE` map) — including the perspective
@@ -220,7 +220,7 @@ bash parity/run.sh noise                # just one program
   `bash parity/run.sh noise 0 0.999`.
 
 Current counts and coverage denominators are machine-re-derivable: 210 catalogued effects
-(engine v1.0.187, build `403c2a4b`), 210/210 bound in
+(engine v1.0.189, build `7dc0f564`), 210/210 bound in
 [`parity/coverage-map.json`](parity/coverage-map.json) with skipped/refused cases retained;
 [`parity/ledger.json`](parity/ledger.json) retains the v1.0.181-era full-roster grade verbatim
 (322 PASS / 3 SKIP / 0 FAIL). STATUS.md's [verification-commands table](STATUS.md) lists every
