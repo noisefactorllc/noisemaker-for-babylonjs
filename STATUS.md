@@ -348,8 +348,9 @@ Engine synced from upstream `noisefactorllc/noisemaker` commit `403c2a4b` (v1.0.
 
 Source-side: `noisefactorllc/noisemaker` `7443f6e6..a912749f` (tearoff `ports-sync`, flagged for a
 force-push / non-contiguous delivery — audited directly in a local checkout: the declared start
-`7443f6e6` is the previous previous section's covered tip and an exact ancestor of `a912749f`,
-while one observed trigger range tip, `296e0138`, is a DESCENDANT of the declared end, so the
+`7443f6e6` (v1.0.190) lies inside the already-covered `7dc0f564..12b4d74f` range and is an exact
+ancestor of the port's covered tip `12b4d74f`, while one observed trigger range tip, `296e0138`,
+is a DESCENDANT of the declared end, so the
 delivery was ordered, not rewritten). The port's covered tip entering this round is `93229933`
 (the previous section), so the uncovered delta is exactly `93229933..296e0138` (4 commits,
 contiguous), landing on upstream main tip `296e0138`; release tags **v1.0.194** (`93229933`),
@@ -379,7 +380,10 @@ engine pin stays at v1.0.193 / build `12b4d74f`**:
   `passthrough-input` / `frame-resolution` / `definition-schema` in the 1.0.196 core: no
   matches), so the vendored engine already matches upstream tip; no re-vendor, no parity
   re-grade, and no generated-artifact refresh are needed.
-- **Verification**: all **97 unit/integration tests pass, 0 fail** (`npm test` = `node --test
+- **Verification**: `node tools/verify-sync-audit.mjs` exit 0 re-derives every recorded claim
+  including this range (ancestry/contiguity, the three release tags, the exact shaders/ numstat,
+  the empty upstream `shaders/src` diff, and the banner-stripped CDN core byte-identity). All
+  **97 unit/integration tests pass, 0 fail** (`npm test` = `node --test
   test/*.test.js`; pass count is 94 + the 3 GAP-006 qualification cases added by the
   intervening local commit `c84adde`, not by this range — all 97 pass); the range introduces no new behavior to mirror — the only
   import-graph-adjacent upstream artifacts are dev-only harness tooling that this port's

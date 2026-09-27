@@ -35,13 +35,24 @@
 //      uniform-status aggregation + GAP-011 measured uniform deltas + their
 //      tests + the harness wiring, and no shaders/src module (incl. effect
 //      definitions) changed (catalog parity);
-//   7. the v1.0.190–v1.0.193 incremental range (this sync): 7dc0f564 is an
-//      ancestor of 12b4d74f, tags v1.0.190–v1.0.193 point exactly at
+//   7. the v1.0.190–v1.0.193 incremental range: 7dc0f564 is an ancestor of
+//      12b4d74f, tags v1.0.190–v1.0.193 point exactly at
 //      7443f6e6/c2252f0c/e73a44a3/12b4d74f, the shaders/ delta is exactly the
 //      GAP-016 static preflight runtime (pipeline.js delegation + new
 //      preflight.js) plus the GAP-012/014/015 harness and test modules, and no
 //      effect definition changed (catalog parity);
-//   8. the published core bundle at the pinned documented revision
+//   8. the v1.0.194 range (no code change): 12b4d74f is an ancestor of
+//      93229933, tag v1.0.194 points exactly at it, and the shaders/ delta is
+//      exactly the GAP-017 definition-schema module + its test + harness
+//      wiring (test-only);
+//   9. the v1.0.195/v1.0.196 range (this sync, no code change): the declared
+//      start 7443f6e6 is an ancestor of the declared end a912749f, 93229933 is
+//      an ancestor of 296e0138, tags v1.0.195/v1.0.196 point exactly at
+//      a912749f/296e0138, and the shaders/ delta is exactly the GAP-019
+//      passthrough-input + GAP-021 frame-resolution modules + tests + harness
+//      wiring (test-only); the published 1.0.196 core is banner-stripped
+//      byte-identical to the pinned 1.0.193 core with no new harness symbols;
+//  10. the published core bundle at the pinned documented revision
 //      (shaders.noisedeck.app/1.0.193, same pin as vendor/fetch.sh) is the
 //      recorded 884620-byte 12b4d74f build, adds the GAP-016 preflight runtime
 //      over the 1.0.189 build (mini-bundles unchanged), and carries the
@@ -67,7 +78,9 @@ const END3 = '8eeb7b5ac14eb37a8d16037f607a88ce63924cd3' // integration range end
 const END4 = '6a0af04d3c4f345ffab5e9f8e54e532216b4cdaa' // pooling+diagnostics range end (v1.0.185)
 const END5 = '403c2a4bf2cb56307448ea2fc1d6fa3cd74b7d6e' // replacement-prediction range end (v1.0.187)
 const END6 = '7dc0f5640534855d73f8c812ca071fe6b1e09197' // uniforms-report range end (v1.0.189)
-const END7 = '12b4d74fb4f28d5f00bb1dde107fa8673814d8b9' // preflight range end (v1.0.193, this sync)
+const END7 = '12b4d74fb4f28d5f00bb1dde107fa8673814d8b9' // preflight range end (v1.0.193)
+const END8 = '93229933b102ba82e713402be19db57207698850' // introspection range end (v1.0.194)
+const END9 = '296e0138c4744ed485b2e95de3eeb466c17629ee' // frame-resolution range end (v1.0.196, this sync)
 const VALIDATOR_DELTA = '1097\t18\tshaders/src/runtime/effect-validator.js\n457\t0\tshaders/tests/test_effect_definition_validation.js'
 const VALIDATOR_FILES = 'shaders/src/runtime/effect-validator.js\nshaders/tests/test_effect_definition_validation.js'
 const MIP_DELTA = '106\t15\tshaders/src/runtime/backends/webgl2.js\n273\t10\tshaders/src/runtime/backends/webgpu.js\n17\t0\tshaders/src/runtime/compiler.js\n26\t1\tshaders/src/runtime/effect-validator.js\n100\t19\tshaders/src/runtime/pipeline.js\n466\t0\tshaders/tests/test_mip_controls.js'
@@ -287,6 +300,54 @@ try {
 } catch { /* git exits 0 with empty output for no changes */ }
 check('the upstream main tip (ec457c2e, beyond the synced range end) changes no shaders/ file', postRange7 === '')
 
+// 5g. The introspection range: 12b4d74f..93229933 (v1.0.194; this sync, no code change).
+// The delivery was force-push-flagged with a declared start (7443f6e6 = v1.0.190) older
+// than the port's covered tip — audited directly: the uncovered delta is exactly the
+// contiguous 12b4d74f..93229933, tag v1.0.194 points exactly at the tip, and the
+// shaders/ delta is exactly the GAP-017 definition-schema introspection module + its
+// test + the harness wiring — test-only, no shaders/src change.
+check('12b4d74f is an ancestor of 93229933 (introspection range contiguous)',
+  git('merge-base', '--is-ancestor', END7, END8) === '' && git('merge-base', END7, END8) === END7)
+check('the declared range start 7443f6e6 is an ancestor of the covered tip 12b4d74f',
+  git('merge-base', '--is-ancestor', '7443f6e6180300a45c5b97608459e5094504659d', END7) === '')
+tagCheck('v1.0.194', END8, '93229933')
+const SCHEMA_DELTA = '220\t0\tshaders/tests/definition-schema.js\n58\t2\tshaders/tests/test-harness.js\n161\t0\tshaders/tests/test_definition_schema.js'
+const schemaNumstat = git('diff', '--numstat', `${END7}..${END8}`, '--', 'shaders/')
+check('shaders/ delta 12b4d74f..93229933 is exactly the GAP-017 definition-schema module + its test + harness wiring',
+  schemaNumstat === SCHEMA_DELTA, schemaNumstat.replace(/\n/g, ' | '))
+let effectChanges8 = 'none'
+try {
+  effectChanges8 = git('diff', '--name-only', `${END7}..${END8}`, '--', 'shaders/src')
+} catch { /* no changes → git exits 0 with empty output */ }
+check('no shaders/src module changed in 12b4d74f..93229933 (catalog parity)', effectChanges8 === '')
+
+// 5h. The frame-resolution range: 93229933..296e0138 (v1.0.195/v1.0.196; this sync, no
+// code change). The delivery was force-push-flagged with a declared range
+// 7443f6e6..a912749f (v1.0.190..v1.0.195) and one observed trigger tip (296e0138 =
+// v1.0.196) beyond the declared end — audited directly: the declared start is an
+// ancestor of the declared end (ordered, not rewritten), the uncovered delta is exactly
+// the contiguous 93229933..296e0138 (4 commits), and the shaders/ delta is exactly the
+// GAP-019 passthrough-input probe + GAP-021 frame-resolution reporting + their tests +
+// the harness wiring — test-only, no shaders/src change.
+check('the declared range start 7443f6e6 is an ancestor of the declared range end a912749f',
+  git('merge-base', '--is-ancestor', '7443f6e6180300a45c5b97608459e5094504659d', 'a912749fab5c3819e56a8abde664ff30e40870f4') === '')
+check('93229933 is an ancestor of 296e0138 (frame-resolution range contiguous)',
+  git('merge-base', '--is-ancestor', END8, END9) === '' && git('merge-base', END8, END9) === END8)
+tagCheck('v1.0.195', 'a912749fab5c3819e56a8abde664ff30e40870f4', 'a912749f')
+tagCheck('v1.0.196', END9, '296e0138')
+const HARNESS_DELTA = '95\t0\tshaders/tests/frame-resolution.js\n489\t0\tshaders/tests/passthrough-input.js\n103\t1\tshaders/tests/test-harness.js\n189\t0\tshaders/tests/test_frame_resolution.js\n259\t0\tshaders/tests/test_passthrough_input.js'
+const HARNESS_FILES = 'shaders/tests/frame-resolution.js\nshaders/tests/passthrough-input.js\nshaders/tests/test-harness.js\nshaders/tests/test_frame_resolution.js\nshaders/tests/test_passthrough_input.js'
+const harnessNumstat = git('diff', '--numstat', `${END8}..${END9}`, '--', 'shaders/')
+check('shaders/ delta 93229933..296e0138 is exactly the GAP-019 passthrough-input + GAP-021 frame-resolution modules + tests + harness wiring',
+  harnessNumstat === HARNESS_DELTA, harnessNumstat.replace(/\n/g, ' | '))
+const harnessNames = git('diff', '--name-only', `${END8}..${END9}`, '--', 'shaders/').split('\n').sort().join('\n')
+check('no other shaders/ file changed in the harness range', harnessNames === HARNESS_FILES)
+let effectChanges9 = 'none'
+try {
+  effectChanges9 = git('diff', '--name-only', `${END8}..${END9}`, '--', 'shaders/src')
+} catch { /* no changes → git exits 0 with empty output */ }
+check('no shaders/src module changed in 93229933..296e0138 (catalog parity)', effectChanges9 === '')
+
 // 6. Published bundle (pinned documented revision). A validator symbol remains a FAIL;
 //    a size move past the recorded build is a WARN pointing at a new ports-sync.
 const bundle = Buffer.from(await (await fetch(BUNDLE_URL)).arrayBuffer())
@@ -322,6 +383,16 @@ check('published bundle carries the GAP-008 replacement-prediction symbols (v1.0
   bundle.includes('predictReplacement') && bundle.includes('getCompatibleReplacements') &&
   bundle.includes('getParamAliases'))
 check('published bundle contains no validator symbols', !bundle.includes('validateEffectDefinition'))
+// The this-sync claim (no code change required): the published 1.0.196 core (v1.0.196,
+// build 296e0138) is banner-stripped byte-identical to the pinned 1.0.193 core, and the
+// new dev-only harness modules' symbols are absent from the published bundle.
+const bundle196 = Buffer.from(await (await fetch('https://shaders.noisedeck.app/1.0.196/noisemaker-shaders-core.esm.js')).arrayBuffer())
+check('the published 1.0.196 core is banner-stripped byte-identical to the pinned 1.0.193 core',
+  Buffer.from(stripBanner(bundle196)).equals(Buffer.from(stripBanner(bundle))))
+check('the published 1.0.196 core contains none of the new dev-only harness modules\' symbols',
+  !bundle196.toString('utf8').includes('passthrough-input') &&
+  !bundle196.toString('utf8').includes('frame-resolution') &&
+  !bundle196.toString('utf8').includes('definition-schema'))
 
 // 7. The port's own test suite (`npm test`). In a prepared environment this check is
 //    REQUIRED: any failing test breaks the audit ("an absent run is not success"). In an
