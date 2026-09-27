@@ -77,7 +77,9 @@ async function main () {
   }
 
   await ensureBundle(false)
-  const browser = await chromium.launch({ headless: true, args: ['--disable-gpu-sandbox', '--use-angle=metal'] })
+  const browser = await chromium.launch({ headless: true, args: process.platform === 'darwin'
+  ? ['--disable-gpu-sandbox', '--use-angle=metal']
+  : ['--disable-gpu-sandbox', '--enable-unsafe-swiftshader', '--use-gl=angle', '--use-angle=swiftshader'] })
   let ok = 0; let err = 0; const failed = []
   try {
     const page = await browser.newPage()

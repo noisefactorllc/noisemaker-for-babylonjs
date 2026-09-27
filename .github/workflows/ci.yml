@@ -1,0 +1,210 @@
+name: CI
+
+# Required checks for the exact source SHA (GAP-005 in docs/COMPLETION_GAPS.md):
+#   - installed package and distribution contents: the full npm suite
+#     (`node --test test/*.test.js`), which includes the packed-tarball
+#     end-to-end install/import/render/recovery check and the packaging
+#     guards.
+#   - public host workflow: the built examples loaded in headless Chromium
+#     (examples/verify.mjs + examples/verify-cubemap.mjs).
+#   - strict parity: the full-roster same-pass sweep (NM_DUAL=1, tolerance 0,
+#     SSIM 0.999) with goldens re-minted in the same browser session as the
+#     candidate, so the byte-exact gate does not depend on the CI driver.
+#
+# Every job uploads its raw test output, the engine authority hashes
+# (vendor/noisemaker/engine-meta.json + engine-hashes.json written by
+# vendor/fetch.sh), the sweep ledger with its [SKIP] exclusions, per-program
+# comparison reports, and a provenance record binding the artifacts to this
+# exact commit SHA and workflow run. Artifact names carry the source SHA.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.playwright-browsers
+
+# shell: bash runs every run step under `bash --noprofile --norc -eo pipefail`,
+# so piped tee logging cannot mask a failing test/sweep/verifier exit code.
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  suite:
+    name: Installed package and distribution contents
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Provenance record
+        run: |
+          printf '{\n  "workflow": "ci.yml",\n  "job": "suite",\n  "sha": "%s",\n  "run_id": "%s",\n  "run_number": "%s",\n  "ref": "%s"\n}\n' \
+            "$GITHUB_SHA" "$GITHUB_RUN_ID" "$GITHUB_RUN_NUMBER" "$GITHUB_REF" > ci-provenance.json
+      - name: Install dependencies, engine, and browser
+        run: |
+          npm ci --ignore-scripts
+          bash vendor/fetch.sh
+          npx playwright install --with-deps chromium
+      - name: Re-derive the vendor sync audit (authority hashes)
+        run: node tools/verify-sync-audit.mjs 2>&1 | tee "$RUNNER_TEMP/sync-audit.log"
+      - name: Full test suite (installed package, packaging, compiler, runtime)
+        run: node --test test/*.test.js 2>&1 | tee "$RUNNER_TEMP/test-suite.log"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: ci-${{ github.sha }}-suite
+          path: |
+            ${{ runner.temp }}/test-suite.log
+            ${{ runner.temp }}/sync-audit.log
+            ci-provenance.json
+            vendor/noisemaker/engine-meta.json
+            vendor/noisemaker/engine-hashes.json
+          if-no-files-found: error
+
+  public-host:
+    name: Public host workflow (examples in headless Chromium)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Provenance record
+        run: |
+          printf '{\n  "workflow": "ci.yml",\n  "job": "public-host",\n  "sha": "%s",\n  "run_id": "%s",\n  "run_number": "%s",\n  "ref": "%s"\n}\n' \
+            "$GITHUB_SHA" "$GITHUB_RUN_ID" "$GITHUB_RUN_NUMBER" "$GITHUB_REF" > ci-provenance.json
+      - name: Install dependencies, engine, and browser
+        run: |
+          npm ci --ignore-scripts
+          bash vendor/fetch.sh
+          npx playwright install --with-deps chromium
+      - name: Build and verify the public host examples
+        run: |
+          node examples/build.mjs 2>&1 | tee "$RUNNER_TEMP/host-build.log"
+          node examples/verify.mjs 2>&1 | tee "$RUNNER_TEMP/host-verify.log"
+          node examples/verify-cubemap.mjs 2>&1 | tee "$RUNNER_TEMP/host-verify-cubemap.log"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: ci-${{ github.sha }}-public-host
+          path: |
+            ${{ runner.temp }}/host-*.log
+            ci-provenance.json
+            vendor/noisemaker/engine-meta.json
+            vendor/noisemaker/engine-hashes.json
+          if-no-files-found: error
+
+  parity:
+    name: Strict parity ${{ matrix.shard }} (same-pass byte-exact sweep)
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Provenance record
+        run: |
+          printf '{\n  "workflow": "ci.yml",\n  "job": "parity",\n  "shard": "%s",\n  "sha": "%s",\n  "run_id": "%s",\n  "run_number": "%s",\n  "ref": "%s"\n}\n' \
+            "${{ matrix.shard }}" "$GITHUB_SHA" "$GITHUB_RUN_ID" "$GITHUB_RUN_NUMBER" "$GITHUB_REF" > ci-provenance.json
+      - name: Install dependencies, engine, browser, and comparison deps
+        run: |
+          npm ci --ignore-scripts
+          bash vendor/fetch.sh
+          python3 -m venv parity/.venv
+          parity/.venv/bin/pip install numpy pillow
+          npx playwright install --with-deps chromium
+      - name: Same-pass parity sweep shard (tolerance 0, SSIM 0.999)
+        # Round-robin shard of the full current-roster program list; every
+        # program is graded across the shards. NM_DUAL=1 re-mints each golden
+        # in the same browser session as the candidate, so the byte-exact
+        # gate (tolerance 0, SSIM 0.999) does not depend on the CI driver.
+        # LEDGER_PATH keeps the fresh-run ledger out of the tracked tree; the
+        # sweep's [SKIP] policy exclusions stay in the raw log and the ledger.
+        run: |
+          mapfile -t NAMES < <(node parity/current-programs.mjs)
+          SHARD=()
+          for i in "${!NAMES[@]}"; do
+            if (( i % 8 == ${{ matrix.shard }} )); then SHARD+=("${NAMES[i]}"); fi
+          done
+          echo "shard ${{ matrix.shard }}: ${#SHARD[@]} programs"
+          LEDGER_PATH="$RUNNER_TEMP/ledger-shard-${{ matrix.shard }}.json" NM_DUAL=1 \
+            bash parity/sweep.sh "${SHARD[@]}" 2>&1 | tee "$RUNNER_TEMP/parity-sweep-${{ matrix.shard }}.log"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: ci-${{ github.sha }}-parity-shard-${{ matrix.shard }}
+          path: |
+            ${{ runner.temp }}/parity-sweep-${{ matrix.shard }}.log
+            ${{ runner.temp }}/ledger-shard-${{ matrix.shard }}.json
+            ci-provenance.json
+            vendor/noisemaker/engine-meta.json
+            vendor/noisemaker/engine-hashes.json
+            parity/out/*.report.json
+          if-no-files-found: error
+
+  parity-merge:
+    name: Strict parity coverage (merged roster ledger)
+    needs: parity
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: ci-${{ github.sha }}-parity-shard-*
+          path: ${{ runner.temp }}
+          merge-multiple: true
+      - name: Verify full-roster coverage and grades, merge the ledger
+        run: |
+          mapfile -t ROSTER < <(node parity/current-programs.mjs)
+          python3 - "$RUNNER_TEMP" "${ROSTER[@]}" <<'PY'
+          import json, sys, glob, os
+          tmp = sys.argv[1]
+          roster = sys.argv[2:]
+          rows = {}
+          for path in sorted(glob.glob(os.path.join(tmp, "ledger-shard-*.json"))):
+              for row in json.load(open(path)):
+                  prog = row["program"]
+                  assert prog not in rows, f"duplicate program {prog}"
+                  rows[prog] = row
+          missing = [p for p in roster if p not in rows]
+          assert not missing, f"missing from sweep: {missing}"
+          extra = [p for p in rows if p not in set(roster)]
+          assert not extra, f"not in roster: {extra}"
+          fails = {p: r for p, r in rows.items() if r.get("status") != "PASS" and r.get("status") != "SKIP"}
+          assert not fails, f"non-passing grades: {fails}"
+          skips = sorted(p for p, r in rows.items() if r.get("status") == "SKIP")
+          assert skips == ["media", "roll", "text"], f"unexpected skip set: {skips}"
+          merged = [rows[p] for p in roster]
+          json.dump({"programs": len(merged), "pass": len(merged) - len(skips), "skip": len(skips), "rows": merged},
+                    open(os.path.join(tmp, "ledger-merged.json"), "w"), indent=2, sort_keys=True)
+          print(f"parity coverage OK: {len(merged)} programs, {len(merged)-len(skips)} PASS, {len(skips)} policy SKIP")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: ci-${{ github.sha }}-parity-merged-ledger
+          path: |
+            ${{ runner.temp }}/ledger-merged.json
+          if-no-files-found: error

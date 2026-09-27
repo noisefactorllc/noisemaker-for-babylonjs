@@ -275,16 +275,86 @@ Original verification dates are 2026-09-22. Dated review notes identify subseque
 
 ### GAP-005: No CI evidence for the reviewed source
 
-- Status: blocked. Priority: P2. Category: verification.
-- Scope: exact source SHA and `.github/workflows/export-kit.yml`.
+- Status: closed, pending publication of this record and the exact-SHA CI run
+  that publishing this commit itself triggers. Priority: P2. Category: verification.
+- Scope: exact source SHA and `.github/workflows/ci.yml` (added in this commit;
+  the existing `export-kit.yml` dispatch workflow is unchanged).
 - Expected: required checks qualify the exact source before a release-readiness claim.
-- Observed: zero runs, checks, or statuses exist for the reviewed SHA. The existing workflow dispatches export-kit publication.
+- Observed (historical, 2026-09-22): zero runs, checks, or statuses exist for the reviewed SHA. The existing workflow dispatches export-kit publication.
 - Evidence: E7. The latest successful dispatch belongs to kit source `13efbfdc8e2cca7c96d1d320d4b271bf0f3eada2`.
-- Next action: define required checks through the existing CI system in the separately authorized job.
-- Dependencies: workflow changes and dispatches lack authority in this audit.
-- Acceptance: exact-SHA checks retain raw test output, exclusions, authority hashes, and artifact provenance.
-- Required checks: installed package, public host workflow, strict parity, and distribution contents.
-- Last verification: 2026-09-22.
+- Blocker re-verification (2026-09-27): the recorded blocker "workflow changes
+  and dispatches lack authority in this audit" no longer holds — this job's
+  recipe explicitly authorizes `.github/workflows/` changes for this
+  repository (`allow_workflow_changes`), so the gap is reopened and
+  implemented. Dispatches are not invoked manually: the workflow's own
+  push trigger creates the runs when the supervisor publishes to main.
+- Implementation (this commit): `.github/workflows/ci.yml` defines the required
+  checks through the existing CI system (GitHub Actions), triggered on every
+  push to main (and `workflow_dispatch`), so publication of this commit itself
+  produces the exact-SHA runs:
+  - Installed package and distribution contents — job `suite`: the full
+    `node --test test/*.test.js` suite (including
+    `test/installed-package.test.js`'s packed-tarball install, import of all
+    three advertised entry points, first render, missing-engine recovery, and
+    uninstall, plus `test/packaging.test.js`'s tarball guards) and
+    `node tools/verify-sync-audit.mjs` re-deriving the vendor-sync authority
+    claims; raw suite and audit output retained as workflow artifacts.
+  - Public host workflow — job `public-host`: `node examples/build.mjs`, then
+    both host pages verified in headless Chromium (`examples/verify.mjs`,
+    `examples/verify-cubemap.mjs`); raw logs retained.
+  - Strict parity — job `parity` (8 round-robin shards over
+    `parity/current-programs.mjs`'s live roster — 329 programs at this commit:
+    332 committed DSL fixtures minus the 3 retired `bc`/`hs`/`colorspace`; the
+    tracked `parity/ledger.json` retains its 325-row v1.0.181-era artifact and
+    is not rewritten — `parity-merge` re-derives the live roster at runtime and
+    enforces coverage against it) runs the full-roster
+    sweep at the strict policy (tolerance 0, SSIM 0.999) with `NM_DUAL=1`,
+    re-minting each golden in the same browser session as the candidate so the
+    byte-exact gate does not depend on the CI driver. Job `parity-merge` fails
+    unless every roster program is graded exactly once across the shards, no
+    grade is FAIL, and the skip set is exactly the documented
+    `media`/`text`/`roll` policy skips, then uploads the merged ledger.
+  - Retention and provenance — every job uploads a provenance record
+    (workflow, job, exact SHA, run id, run number, ref), its raw output, the
+    engine authority hashes (`vendor/noisemaker/engine-meta.json` +
+    `engine-hashes.json` as written by `vendor/fetch.sh`), and the per-program
+    comparison reports; artifact names carry the source SHA. The fresh-run
+    ledger is written to `$RUNNER_TEMP`, never to the tracked
+    `parity/ledger.json`.
+- Review findings fixed in this candidate: every piped-tee step now runs under
+  `bash -eo pipefail` (workflow-default `shell: bash`), so a failing suite,
+  sync-audit, host verifier, or sweep can no longer leave its job green; the
+  suite job installs Playwright Chromium (its `test/installed-package.test.js`
+  and browser tests launch it); the hardcoded `--use-angle=metal` launch args
+  in `examples/verify.mjs`, `examples/verify-cubemap.mjs`, and
+  `parity/render-batch.mjs` are now OS-conditional (Metal on darwin, unchanged
+  on the golden-minting macOS host; `--use-gl=angle --use-angle=swiftshader` —
+  the same SwiftShader set as `test/installed-package.test.js` — elsewhere), so
+  public-host and parity results no longer depend on undocumented Chromium
+  fallback behavior on the ubuntu runners; and the roster count in this record
+  is stated with its derivation and its runtime enforcement instead of as a
+  bare number.
+- Local verification at this commit (this container): `node --test
+  test/*.test.js` — 90 pass / 0 fail (Node 26.5.1, Chromium headless-shell
+  149 via SwiftShader, browsers from a `PLAYWRIGHT_BROWSERS_PATH` exec-mounted
+  volume because `/tmp` mounts `noexec`); `node examples/build.mjs` +
+  `examples/verify.mjs` + `examples/verify-cubemap.mjs` pass on the same
+  browser; `node tools/verify-sync-audit.mjs` exits 0 ("All recorded
+  sync-audit claims re-derived from source"); the strict NM_DUAL sweep gate
+  exercised on live samples (e.g. `noise blur` PASS at max-abs-diff 0, SSIM
+  1.0; full-shard results are the CI jobs' own evidence on the runner).
+- Dependencies: publication needs the standing publication authority (the
+  supervisor's push); workflow edits and the push-triggered runs are authorized
+  by this job's recipe. No manual dispatch is used.
+- Acceptance: exact-SHA checks retain raw test output, exclusions, authority
+  hashes, and artifact provenance. Implemented as above; the runs for the
+  exact published SHA are created by the publication push itself and are
+  confirmed during verification (runs, artifacts, and per-SHA check runs).
+- Required checks: installed package, public host workflow, strict parity, and
+  distribution contents — all defined in `.github/workflows/ci.yml`.
+- Next action: complete after publication and verification of the exact-SHA run.
+- Last verification: 2026-09-27 (workflow added; suite, host checks, and
+  sync-audit executed at this commit; sweep gate exercised on live samples).
 
 ### GAP-006: Host and release qualification remain incomplete
 

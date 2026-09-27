@@ -2,7 +2,9 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { chromium } from 'playwright'
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const browser = await chromium.launch({ headless: true, args: ['--disable-gpu-sandbox', '--use-angle=metal'] })
+const browser = await chromium.launch({ headless: true, args: process.platform === 'darwin'
+  ? ['--disable-gpu-sandbox', '--use-angle=metal']
+  : ['--disable-gpu-sandbox', '--enable-unsafe-swiftshader', '--use-gl=angle', '--use-angle=swiftshader'] })
 const page = await browser.newPage({ viewport: { width: 400, height: 400 } })
 const errs = []
 page.on('pageerror', e => errs.push(String(e)))
