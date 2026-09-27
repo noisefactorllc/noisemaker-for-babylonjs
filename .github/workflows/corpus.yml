@@ -1,0 +1,314 @@
+name: Corpus
+# GAP-008 (docs/COMPLETION_GAPS.md): every fetched live-corpus composition is
+# graded against the reference backend on a stable long-session runner.
+#
+#   fetch:  run parity/corpus/fetch.sh against the live NoiseBLASTER! feed and
+#           re-derive the gradeable manifest exactly as corpus/sweep.sh does
+#           (compositions the reference compiler rejects are recorded as SKIP
+#           with the compiler's cause). The raw third-party art stays an
+#           ephemeral runner-local fixture: it is never committed or vendored.
+#   grade:  one job per gradeable composition. Each job re-fetches the feed and
+#           re-derives the manifest itself (no raw fixture ever leaves a
+#           runner), then renders the 1800-frame golden (vendored WebGL2Backend,
+#           NM_GOLDEN=1) and Babylon candidate in separate sessions exactly as
+#           corpus/sweep.sh does, and grades at tolerance 2.001 / SSIM 0.98.
+#   report: verify every fetched composition has a measured outcome (PASS or a
+#           recorded cause) and merge the per-composition corpus ledger.
+#
+# Live-feed caveat: the RSS feed lists the 20 most recent shares, so a later
+# run grades whatever that run fetched; outcomes are keyed by share code and
+# recorded per run in the merged corpus ledger artifact.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: corpus-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.playwright-browsers
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  fetch:
+    name: Corpus fetch (live feed + manifest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      matrix: ${{ steps.manifest.outputs.matrix }}
+      count: ${{ steps.manifest.outputs.count }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies, engine, and browser
+        run: |
+          npm ci --ignore-scripts
+          bash vendor/fetch.sh
+      - name: Fetch the live corpus feed
+        run: |
+          bash parity/corpus/fetch.sh 2>&1 | tee "$RUNNER_TEMP/corpus-fetch.log"
+          test "$(ls parity/corpus/raw/*.json 2>/dev/null | wc -l)" -gt 0 \
+            || { echo "::error::live feed fetch returned no compositions"; exit 1; }
+      - name: Re-derive the gradeable manifest (same rule as corpus/sweep.sh)
+        id: manifest
+        run: |
+          node -e '
+          const fs = require("fs");
+          import("./tools/export-fat-graph.mjs").then(async ({exportFatGraph}) => {
+            const dir = "parity/corpus/raw";
+            const lines = [], skipped = [], entries = [];
+            for (const f of fs.readdirSync(dir).filter(x => x.endsWith(".json"))) {
+              const c = JSON.parse(fs.readFileSync(dir + "/" + f));
+              const dsl = c.dsl || "";
+              const name = "corpus_" + c.code.replace(/[^A-Za-z0-9]/g, "_");
+              try {
+                await exportFatGraph(dsl);
+                fs.writeFileSync(`parity/programs/${name}.dsl`, dsl);
+                lines.push(name);
+                entries.push({ program: name, code: c.code, title: c.title || "" });
+              } catch (e) {
+                const cause = (e && e.diagnostics && e.diagnostics[0] && e.diagnostics[0].message)
+                  || String(e && e.message || e).split("\n")[0];
+                skipped.push({ program: name, code: c.code, title: c.title || "",
+                               status: "SKIP", cause: "reference rejects: " + cause.slice(0, 200) });
+              }
+            }
+            fs.writeFileSync("parity/_corpus.manifest", lines.join("\n") + "\n");
+            fs.writeFileSync("parity/_corpus.outcomes.json", JSON.stringify(skipped, null, 2));
+            console.error(`[corpus] ${lines.length} gradeable, ${skipped.length} skipped`);
+            skipped.forEach(s => console.error("  SKIP " + s.program + ": " + s.cause));
+          })'
+          COUNT=$(grep -c . parity/_corpus.manifest || true)
+          echo "count=$COUNT" >> "$GITHUB_OUTPUT"
+          # Single JSON encoding: fromJSON(...) in the grade matrix decodes
+          # exactly one level, so the output must be a JSON array of names.
+          echo "matrix=$(node -e '
+            const names = require("fs").readFileSync("parity/_corpus.manifest", "utf8")
+              .split("\n").map(s => s.trim()).filter(Boolean);
+            console.log(JSON.stringify(names))')" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: corpus-${{ github.sha }}-fetch
+          path: |
+            ${{ runner.temp }}/corpus-fetch.log
+            parity/_corpus.manifest
+            parity/_corpus.outcomes.json
+          if-no-files-found: error
+
+  grade:
+    name: Grade ${{ matrix.name }}
+    needs: fetch
+    if: needs.fetch.outputs.count > 0
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    strategy:
+      fail-fast: false
+      matrix:
+        name: ${{ fromJSON(needs.fetch.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies, engine, browser, and comparison deps
+        run: |
+          npm ci --ignore-scripts
+          bash vendor/fetch.sh
+          python3 -m venv parity/.venv
+          parity/.venv/bin/pip install numpy pillow
+          npx playwright install --with-deps chromium
+      - name: Fetch the live corpus feed and re-derive the manifest
+        id: feed
+        run: |
+          bash parity/corpus/fetch.sh 2>&1 | tee "$RUNNER_TEMP/corpus-fetch.log"
+          node -e '
+          const fs = require("fs");
+          import("./tools/export-fat-graph.mjs").then(async ({exportFatGraph}) => {
+            const dir = "parity/corpus/raw";
+            const lines = [];
+            for (const f of fs.readdirSync(dir).filter(x => x.endsWith(".json"))) {
+              const c = JSON.parse(fs.readFileSync(dir + "/" + f));
+              const dsl = c.dsl || "";
+              const name = "corpus_" + c.code.replace(/[^A-Za-z0-9]/g, "_");
+              try { await exportFatGraph(dsl); fs.writeFileSync(`parity/programs/${name}.dsl`, dsl);
+                    lines.push(name); }
+              catch (e) { console.error("  SKIP " + name + " (reference rejects)"); }
+            }
+            fs.writeFileSync("parity/_corpus.manifest", lines.join("\n") + "\n");
+          })'
+          NAME="${{ matrix.name }}"
+          grep -qx "$NAME" parity/_corpus.manifest \
+            || { echo "status=SKIP" >> "$GITHUB_OUTPUT";
+                 echo "cause=assigned composition absent from this run's live fetch or reference now rejects it" >> "$GITHUB_OUTPUT";
+                 exit 0; }
+      - name: Golden (vendored WebGL2Backend, 1800-frame evolution)
+        if: steps.feed.outputs.status != 'SKIP'
+        run: |
+          NM_GOLDEN=1 node parity/render-batch.mjs "${{ matrix.name }}" \
+            --size 256 --time 0.25 --frames 1800 --timestep 0.0016667 \
+            2>&1 | tee "$RUNNER_TEMP/golden.log"
+          test -f "parity/out/${{ matrix.name }}.golden.png"
+      - name: Candidate (Babylon backend, 1800-frame evolution)
+        if: steps.feed.outputs.status != 'SKIP'
+        run: |
+          node parity/render-batch.mjs "${{ matrix.name }}" \
+            --size 256 --time 0.25 --frames 1800 --timestep 0.0016667 \
+            2>&1 | tee "$RUNNER_TEMP/candidate.log"
+          test -f "parity/out/${{ matrix.name }}.candidate.png"
+      - name: Grade (tolerance 2.001, SSIM 0.98 — corpus/sweep.sh gates)
+        if: steps.feed.outputs.status != 'SKIP'
+        id: grade
+        # A FAIL is recorded with its cause (see the record step + merged
+        # ledger) instead of failing the job silently; the report job
+        # aggregates outcomes and fails only on missing/causeless rows.
+        continue-on-error: true
+        run: |
+          parity/.venv/bin/python parity/compare.py \
+            "parity/out/${{ matrix.name }}.golden.png" \
+            "parity/out/${{ matrix.name }}.candidate.png" \
+            --name "${{ matrix.name }}" --tolerance 2.001 --ssim-min 0.98 \
+            --report "parity/out/${{ matrix.name }}.report.json" \
+            2>&1 | tee "$RUNNER_TEMP/compare.log"
+      - name: Record per-composition outcome
+        if: always()
+        run: |
+          node -e '
+          const fs = require("fs");
+          const status = process.env.GRADE_STATUS || (fs.existsSync(process.env.REPORT)
+            ? (JSON.parse(fs.readFileSync(process.env.REPORT)).passed ? "PASS" : "FAIL")
+            : "SKIP");
+          const report = fs.existsSync(process.env.REPORT)
+            ? JSON.parse(fs.readFileSync(process.env.REPORT)) : null;
+          let row;
+          if (status === "FAIL" && !report) {
+            // compare.py never produced a report: a failed run, not a measured divergence
+            row = { program: process.env.NAME, status: "FAILED", max_abs_diff: null, ssim: null,
+                    cause: "grade step failed before a report was written; see grade job log" };
+          } else {
+            row = {
+              program: process.env.NAME,
+              status,
+              max_abs_diff: report ? report.max_abs_diff : null,
+              ssim: report ? report.ssim : null,
+              cause: status === "PASS" ? ""
+                : (process.env.CAUSE || (status === "FAIL"
+                    ? "grade exceeded tolerance 2.001 / SSIM 0.98" : "grade job failed; see job log"))
+            };
+          }
+          fs.writeFileSync("grade.json", JSON.stringify(row, null, 2));
+          console.log(JSON.stringify(row));'
+        env:
+          NAME: ${{ matrix.name }}
+          REPORT: parity/out/${{ matrix.name }}.report.json
+          GRADE_STATUS: ${{ steps.grade.outcome == 'success' && 'PASS' || steps.grade.outcome == 'failure' && 'FAIL' || '' }}
+          CAUSE: ${{ steps.feed.outputs.cause }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: corpus-${{ github.sha }}-grade-${{ matrix.name }}
+          path: |
+            grade.json
+            ${{ runner.temp }}/corpus-fetch.log
+            ${{ runner.temp }}/golden.log
+            ${{ runner.temp }}/candidate.log
+            ${{ runner.temp }}/compare.log
+            parity/out/${{ matrix.name }}.report.json
+          # warn: SKIP-grade jobs legitimately lack golden/candidate/compare logs;
+          # grade.json itself is mandatory (the record step fails the job if it
+          # cannot write it) and coverage is enforced in the report job.
+          if-no-files-found: warn
+
+  report:
+    name: Corpus coverage (merged per-composition ledger)
+    needs: [fetch, grade]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # Coverage is enforced against the FETCH-TIME baseline, not a report-time
+      # re-fetch: the live feed lists only the 20 most-recent shares, so a share
+      # posted while the 1800-frame grade jobs run rotates an oldest composition
+      # out of any later snapshot and would silently drop it from the ledger.
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: corpus-${{ github.sha }}-*
+          path: ${{ runner.temp }}
+          merge-multiple: false
+      - name: Verify full corpus coverage and merge the per-composition ledger
+        run: |
+          python3 - "$RUNNER_TEMP" <<'PY'
+          import json, sys, glob, os
+          tmp = sys.argv[1]
+          manifest_paths = sorted(glob.glob(os.path.join(tmp, "**", "_corpus.manifest"), recursive=True))
+          assert manifest_paths, "fetch artifact with _corpus.manifest not found"
+          # one fetch baseline
+          assert len(manifest_paths) == 1, f"expected one fetch manifest, got {len(manifest_paths)}"
+          manifest = [s for s in open(manifest_paths[0]).read().split("\n") if s]
+          assert manifest, "fetch-time manifest is empty"
+          rows = {}
+          for p in glob.glob(os.path.join(tmp, "**", "grade.json"), recursive=True):
+              row = json.load(open(p))
+              prog = row.get("program")
+              assert prog not in rows, f"duplicate grade row: {prog}"
+              rows[prog] = row
+          # compiler-rejected compositions arrive from the fetch artifact's outcomes file
+          outcome_paths = sorted(glob.glob(os.path.join(tmp, "**", "_corpus.outcomes.json"), recursive=True))
+          assert len(outcome_paths) == 1, f"expected one outcomes file, got {len(outcome_paths)}"
+          outcomes = json.load(open(outcome_paths[0]))
+          for row in outcomes:
+              rows.setdefault(row["program"], row)
+          missing = [m for m in manifest if m not in rows]
+          causeless = [m for m in rows
+                       if rows[m]["status"] not in ("PASS", "SKIP")
+                       and not (rows[m].get("cause") or "").strip()]
+          bad_skip = [o["program"] for o in outcomes
+                      if rows.get(o["program"], {}).get("status") != "SKIP"
+                      or not rows.get(o["program"], {}).get("cause")]
+          diag = {"manifest": len(manifest), "rows": len(rows), "missing": missing[:10],
+                  "causeless": causeless[:10], "skipped": [o["program"] for o in outcomes]}
+          assert not missing, f"missing grades ({len(missing)}): {missing[:10]}"
+          assert not causeless, f"failed grades without recorded cause: {causeless[:10]}"
+          assert not bad_skip, f"compiler-skips without recorded cause: {bad_skip[:10]}"
+          merged = [rows[m] for m in manifest] + [rows[m] for m in rows
+                                                  if m not in manifest]
+          passed = sum(1 for r in merged if r["status"] == "PASS")
+          failed = [r for r in merged if r["status"] not in ("PASS", "SKIP")]
+          json.dump({"compositions_fetched": len(manifest) + len(outcomes),
+                     "gradeable": len(manifest), "pass": passed,
+                     "skip": len(outcomes), "failed": failed, "rows": merged},
+                    open(os.path.join(tmp, "corpus-merged.json"), "w"), indent=2, sort_keys=True)
+          print(f"corpus coverage OK: fetched {len(manifest)+len(outcomes)}, "
+                f"{passed} PASS, {len(outcomes)} compiler-SKIP with cause")
+          for r in failed:
+              print(f"  FAILED {r['program']}: {r.get('cause')}")
+          PY
+      - name: Show per-composition outcomes
+        run: |
+          python3 -c '
+          import json, glob, os
+          p = glob.glob(os.path.join(os.environ["RUNNER_TEMP"], "**", "corpus-merged.json"), recursive=True)
+          d = json.load(open(p[0]))
+          for r in d["rows"]:
+              print(r["status"], r["program"], r.get("max_abs_diff"), r.get("ssim"), r.get("cause", ""))'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: corpus-${{ github.sha }}-merged-ledger
+          path: |
+            ${{ runner.temp }}/corpus-merged.json
+            ${{ runner.temp }}/corpus-fetch.log
+          if-no-files-found: error
