@@ -1,7 +1,8 @@
 // verify-sync-audit.mjs — re-derive every claim in STATUS.md's
 // "Vendor sync (240740dd..9d3474df)", "Vendor sync (9d3474df..2f47612c)",
 // "Vendor sync (2f47612c..8eeb7b5a)", "Vendor sync (8eeb7b5a..6a0af04d)",
-// "Vendor sync (6a0af04d..403c2a4b)" and "Vendor sync (403c2a4b..7dc0f564)"
+// "Vendor sync (6a0af04d..403c2a4b)", "Vendor sync (403c2a4b..7dc0f564)" and
+// "Vendor sync (7dc0f564..12b4d74f)"
 // audits directly from source, so the
 // recorded audits are an executable contract instead of prose.
 //
@@ -34,12 +35,18 @@
 //      uniform-status aggregation + GAP-011 measured uniform deltas + their
 //      tests + the harness wiring, and no shaders/src module (incl. effect
 //      definitions) changed (catalog parity);
-//   7. the published core bundle at the pinned documented revision
-//      (shaders.noisedeck.app/1.0.189, same pin as vendor/fetch.sh) is the
-//      recorded 879173-byte 7dc0f564 build, differs from the 1.0.187 build
-//      only in its Build/Date banner lines, and carries the
+//   7. the v1.0.190–v1.0.193 incremental range (this sync): 7dc0f564 is an
+//      ancestor of 12b4d74f, tags v1.0.190–v1.0.193 point exactly at
+//      7443f6e6/c2252f0c/e73a44a3/12b4d74f, the shaders/ delta is exactly the
+//      GAP-016 static preflight runtime (pipeline.js delegation + new
+//      preflight.js) plus the GAP-012/014/015 harness and test modules, and no
+//      effect definition changed (catalog parity);
+//   8. the published core bundle at the pinned documented revision
+//      (shaders.noisedeck.app/1.0.193, same pin as vendor/fetch.sh) is the
+//      recorded 884620-byte 12b4d74f build, adds the GAP-016 preflight runtime
+//      over the 1.0.189 build (mini-bundles unchanged), and carries the
 //      GAP-006/GAP-007/GAP-008 symbols but no validator symbols;
-//   8. the port's own test suite (`npm test`) exits with 0 failing tests —
+//   9. the port's own test suite (`npm test`) exits with 0 failing tests —
 //      required in a prepared environment, an explicit SKIP (with preparation
 //      steps) otherwise, so an absent run can never read as success.
 //
@@ -59,7 +66,8 @@ const END2 = '2f47612c29045c1b91af94887a8ff20106e980ef' // texture-policy range 
 const END3 = '8eeb7b5ac14eb37a8d16037f607a88ce63924cd3' // integration range end (GAP-005 tip)
 const END4 = '6a0af04d3c4f345ffab5e9f8e54e532216b4cdaa' // pooling+diagnostics range end (v1.0.185)
 const END5 = '403c2a4bf2cb56307448ea2fc1d6fa3cd74b7d6e' // replacement-prediction range end (v1.0.187)
-const END6 = '7dc0f5640534855d73f8c812ca071fe6b1e09197' // uniforms-report range end (v1.0.189, this sync)
+const END6 = '7dc0f5640534855d73f8c812ca071fe6b1e09197' // uniforms-report range end (v1.0.189)
+const END7 = '12b4d74fb4f28d5f00bb1dde107fa8673814d8b9' // preflight range end (v1.0.193, this sync)
 const VALIDATOR_DELTA = '1097\t18\tshaders/src/runtime/effect-validator.js\n457\t0\tshaders/tests/test_effect_definition_validation.js'
 const VALIDATOR_FILES = 'shaders/src/runtime/effect-validator.js\nshaders/tests/test_effect_definition_validation.js'
 const MIP_DELTA = '106\t15\tshaders/src/runtime/backends/webgl2.js\n273\t10\tshaders/src/runtime/backends/webgpu.js\n17\t0\tshaders/src/runtime/compiler.js\n26\t1\tshaders/src/runtime/effect-validator.js\n100\t19\tshaders/src/runtime/pipeline.js\n466\t0\tshaders/tests/test_mip_controls.js'
@@ -68,9 +76,9 @@ const POOL_DELTA = '185\t0\tshaders/src/runtime/backends/diagnostics.js\n26\t7\t
 const POOL_FILES = 'shaders/src/runtime/backends/diagnostics.js\nshaders/src/runtime/backends/webgl2.js\nshaders/src/runtime/backends/webgpu.js\nshaders/src/runtime/pipeline.js\nshaders/tests/test_backend_diagnostics.js\nshaders/tests/test_resource_pooling.js'
 const PRED_DELTA = '1\t1\tshaders/src/index.js\n2\t2\tshaders/src/lang/index.js\n11\t0\tshaders/src/lang/paramAliases.js\n372\t5\tshaders/src/lang/transform.js\n80\t0\tshaders/tests/frame-metrics.js\n161\t6\tshaders/tests/test-harness.js\n71\t0\tshaders/tests/test_frame_metrics.js\n200\t0\tshaders/tests/test_transform.js'
 const PRED_FILES = 'shaders/src/index.js\nshaders/src/lang/index.js\nshaders/src/lang/paramAliases.js\nshaders/src/lang/transform.js\nshaders/tests/frame-metrics.js\nshaders/tests/test-harness.js\nshaders/tests/test_frame_metrics.js\nshaders/tests/test_transform.js'
-const BUNDLE_URL = 'https://shaders.noisedeck.app/1.0.189/noisemaker-shaders-core.esm.js' // pinned documented revision (see vendor/fetch.sh), not the rolling /1 alias
-const BUNDLE_BYTES = 879173 // documented published build (7dc0f564 tip, v1.0.189)
-const PREV_BUNDLE_URL = 'https://shaders.noisedeck.app/1.0.187/noisemaker-shaders-core.esm.js' // previous pinned revision (403c2a4b) — the banner-only-diff witness
+const BUNDLE_URL = 'https://shaders.noisedeck.app/1.0.193/noisemaker-shaders-core.esm.js' // pinned documented revision (see vendor/fetch.sh), not the rolling /1 alias
+const BUNDLE_BYTES = 884620 // documented published build (12b4d74f tip, v1.0.193)
+const PREV_BUNDLE_URL = 'https://shaders.noisedeck.app/1.0.189/noisemaker-shaders-core.esm.js' // previous pinned revision (7dc0f564)
 
 let repo = process.env.NM_UPSTREAM || ''
 let cleaned = ''
@@ -241,6 +249,44 @@ const bundler6 = git('show', `${END6}:scripts/bundle.js`)
 check('bundler still disables effect validation by construction at v1.0.189',
   bundler6.includes('NOISEMAKER_DISABLE_EFFECT_VALIDATION'))
 
+// 5f. The preflight range: 7dc0f564..12b4d74f (v1.0.190–v1.0.193; this sync).
+// The delivery was force-push-flagged with a declared end (7443f6e6 = v1.0.190)
+// older than two observed trigger tips (e73a44a3 = v1.0.192, 12b4d74f = v1.0.193)
+// — audited directly: the range 7dc0f564..12b4d74f is contiguous, all four
+// release tags point exactly at their recorded SHAs, and the shaders/ delta is
+// exactly the GAP-012/014/015 harness + test modules plus the GAP-016 static
+// preflight runtime (pipeline.js delegation + new preflight.js). Upstream main
+// has since advanced one docs-only commit (ec457c2e) with an empty shaders/
+// delta, so v1.0.193 IS upstream's current shaders/ tree.
+check('7dc0f564 is an ancestor of 12b4d74f (preflight range contiguous)',
+  git('merge-base', '--is-ancestor', END6, END7) === '' && git('merge-base', END6, END7) === END6)
+tagCheck('v1.0.190', '7443f6e6180300a45c5b97608459e5094504659d', '7443f6e6')
+tagCheck('v1.0.191', 'c2252f0caa66b7c5e133a2aad3328e832564b567', 'c2252f0c')
+tagCheck('v1.0.192', 'e73a44a37f0c99bd3779c5fb26c7bba65a46a379', 'e73a44a3')
+tagCheck('v1.0.193', END7, '12b4d74f')
+const PREFLIGHT_DELTA = '30\t10\tshaders/src/runtime/pipeline.js\n191\t0\tshaders/src/runtime/preflight.js\n83\t0\tshaders/tests/frame-readback.js\n61\t0\tshaders/tests/frame-warmup.js\n283\t0\tshaders/tests/image-metrics.js\n18\t8\tshaders/tests/test-harness.js\n183\t0\tshaders/tests/test_frame_readback.js\n144\t0\tshaders/tests/test_frame_warmup.js\n164\t0\tshaders/tests/test_image_metrics.js\n267\t0\tshaders/tests/test_preflight.js'
+const PREFLIGHT_FILES = 'shaders/src/runtime/pipeline.js\nshaders/src/runtime/preflight.js\nshaders/tests/frame-readback.js\nshaders/tests/frame-warmup.js\nshaders/tests/image-metrics.js\nshaders/tests/test-harness.js\nshaders/tests/test_frame_readback.js\nshaders/tests/test_frame_warmup.js\nshaders/tests/test_image_metrics.js\nshaders/tests/test_preflight.js'
+const preflightNumstat = git('diff', '--numstat', `${END6}..${END7}`, '--', 'shaders/')
+check('shaders/ delta 7dc0f564..12b4d74f is exactly the GAP-016 preflight runtime + the GAP-012/014/015 harness and test modules',
+  preflightNumstat === PREFLIGHT_DELTA, preflightNumstat.replace(/\\n/g, ' | '))
+const preflightNames = git('diff', '--name-only', `${END6}..${END7}`, '--', 'shaders/').split('\\n').sort().join('\\n')
+check('no other shaders/ file changed in the preflight range', preflightNames === PREFLIGHT_FILES)
+let effectChanges7 = 'none'
+try {
+  effectChanges7 = git('diff', '--name-only', `${END6}..${END7}`, '--', 'shaders/src/effects')
+} catch { /* no changes → git exits 0 with empty output */ }
+check('no effect definition changed in 7dc0f564..12b4d74f (catalog parity)', effectChanges7 === '')
+const bundler7 = git('show', `${END7}:scripts/bundle.js`)
+check('bundler still disables effect validation by construction at v1.0.193',
+  bundler7.includes('NOISEMAKER_DISABLE_EFFECT_VALIDATION'))
+// Beyond this sync's end (upstream main tip ec457c2e): docs-only — no shaders/
+// change, so v1.0.193 IS upstream's current shaders/ tree.
+let postRange7 = 'x'
+try {
+  postRange7 = git('diff', '--name-only', `${END7}..ec457c2eec695427fdbf026bd5ce5db04456a151`, '--', 'shaders/')
+} catch { /* git exits 0 with empty output for no changes */ }
+check('the upstream main tip (ec457c2e, beyond the synced range end) changes no shaders/ file', postRange7 === '')
+
 // 6. Published bundle (pinned documented revision). A validator symbol remains a FAIL;
 //    a size move past the recorded build is a WARN pointing at a new ports-sync.
 const bundle = Buffer.from(await (await fetch(BUNDLE_URL)).arrayBuffer())
@@ -249,17 +295,22 @@ const stripBanner = (b) => {
   return text.replace(/^ \* Build: .*\n/m, '').replace(/^ \* Date: .*\n/m, '')
 }
 if (bundle.length === BUNDLE_BYTES) {
-  check(`published core bundle at the pinned documented revision is the recorded ${BUNDLE_BYTES}-byte build (7dc0f564 tip, v1.0.189)`, true)
+  check(`published core bundle at the pinned documented revision is the recorded ${BUNDLE_BYTES}-byte build (12b4d74f tip, v1.0.193)`, true)
 } else {
   check(`published core bundle at the pinned revision no longer matches the recorded build (got ${bundle.length} bytes, recorded ${BUNDLE_BYTES}) — WARN only: the recorded byte-identity claim refers to the artifact verified during the audit; run a new ports-sync for the newer release`, true)
 }
-// The v1.0.187→v1.0.189 published core differs ONLY in its Build/Date banner
-// lines (the range changed no engine-src module) — re-derived from the two
-// pinned CDN artifacts, this is what carries the committed goldens by
-// byte-identity without a re-mint.
+// The v1.0.189→v1.0.193 published core delta is exactly the GAP-016 addition:
+// the new internal preflight module, the mrtFormatBytes delegation, and the
+// Pipeline.preflight() method — re-derived against the previous pinned CDN
+// artifact (no rendering-path behavior change; effect mini-bundles unchanged).
 const prevBundle = Buffer.from(await (await fetch(PREV_BUNDLE_URL)).arrayBuffer())
-check('the 1.0.189 core differs from the 1.0.187 core only in its Build/Date banner lines',
-  stripBanner(bundle) === stripBanner(prevBundle))
+check('the previous pinned core (1.0.189) does NOT contain the GAP-016 preflight module',
+  !prevBundle.includes('preflightEffect'))
+check('the 1.0.193 core adds the GAP-016 preflight runtime (internal preflightEffect + shared mrtFormatBytes)',
+  bundle.includes('preflightEffect') && bundle.includes('mrtFormatBytes') &&
+  bundle.includes('maxColorBytesPerSample') && bundle.includes('maxTextureSize'))
+check('the 1.0.193 Pipeline.mrtFormatBytes() delegates to the shared preflight implementation',
+  /mrtFormatBytes\(format\) \{\s*return mrtFormatBytes\(format\);/.test(bundle.toString('utf8')))
 check('published bundle carries the texture-policy + pass-field runtime symbols',
   bundle.includes('recreateTexturePreserving') && bundle.includes('refreshMipTargets') &&
   bundle.includes('generateMipmaps') && bundle.includes('resolvePassViewport'))

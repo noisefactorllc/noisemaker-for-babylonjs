@@ -1,13 +1,15 @@
 # Noisemaker for Babylon.js — status & parity
 
-*Last verified 2026-09-27 against the vendored engine **v1.0.189** (build `7dc0f564`,
-`noisemaker-shaders-core.esm.js`, 879173 bytes): the recorded suite run at this
-sync is **90 tests, 90 pass / 0 fail** (`node --test test/*.test.js`;
+*Last verified 2026-09-27 against the vendored engine **v1.0.193** (build `12b4d74f`,
+`noisemaker-shaders-core.esm.js`, 884620 bytes): the recorded suite run at this
+sync is **94 tests, 94 pass / 0 fail** (`node --test test/*.test.js`;
 82 pre-GAP-004 + the 7 `test/coverage-map.test.js` gate tests + the v1.0.187
-replacement-prediction engine-API test — earlier recorded runs: 89/89 at the GAP-004
+replacement-prediction engine-API test + the v1.0.193 static-preflight engine-API test
+(`test/preflight.test.js`) — earlier recorded runs: 94/94 at the v1.0.193 sync, 90/90 at the
+v1.0.189 sync, 89/89 at the GAP-004
 implementation commit (`9ad880e`), 82/82 in the v1.0.185 sync section), the machine-checked sync audit
 (`tools/verify-sync-audit.mjs`)
-re-derives the `8eeb7b5a..6a0af04d`, `6a0af04d..403c2a4b`, and `403c2a4b..7dc0f564` claims and the four external-input real-input fixtures
+re-derives the `8eeb7b5a..6a0af04d`, `6a0af04d..403c2a4b`, `403c2a4b..7dc0f564`, and `7dc0f564..12b4d74f` claims and the four external-input real-input fixtures
 grade byte-exact on both backends (see those sync sections and
 [`parity/external-input-grades.json`](parity/external-input-grades.json)). Those ranges changed no
 effect definitions (210 catalogued effects, 0 added / 0 removed), so the same-pass golden/candidate
@@ -35,11 +37,11 @@ Pick the command that matches the claim you are making — the gates differ:
 | `bash parity/sweep.sh` | **tolerance 0, SSIM 0.999** (flat byte-exact policy — the per-effect relaxed map was retired, see Parity below) | every current-roster program with a golden: **329 programs at this tree** (332 committed DSL fixtures minus the 3 retired `bc`/`hs`/`colorspace`, per `parity/current-programs.mjs`'s vendored-manifest roster) — the 325 committed-ledger programs (322 PASS / 3 policy skips retained: the `media`/`text`/`roll` no-input fallbacks) **plus the 4 GAP-004 real-input fixtures** (`media_image`, `text_glyphs`, `roll_midi`, `mesh_obj`), which are graded here, not skipped | the acceptance evidence for parity claims. Note the distinction: `parity/ledger.json` still records only its 325 v1.0.181-era rows (it was not rewritten with the 4 newer fixtures); 325 is the ledger artifact, 329 is what a fresh sweep grades |
 | `bash parity/corpus/sweep.sh` | **tolerance 2.001, SSIM 0.98** (hardcoded in the script — the same relaxed spot-check gate as `run.sh`, absorbing cross-driver driver noise), 1800-frame (~30 s) evolution per composition | the live corpus (historical denominator 40 raw / 39 gradeable + 1 reference-rejected, retained) | corpus grading. The recorded corpus grades in STATUS report the measured max-abs-diff per composition (the corpus evidence above is recorded **byte-identical outcomes**), but this gate does not itself enforce tolerance 0 — treat byte-exact corpus claims as recorded measured outcomes, not as an enforcement guarantee of this script |
 | `bash parity/run.sh <name>` | **defaults tolerance 2.001, SSIM 0.98** — a relaxed spot-check gate sized to cross-driver/cross-machine driver noise | one program | smoke check only. A PASS at these defaults is **not** byte-exact evidence (it can pass with a non-zero max-abs-diff). For the strict gate on one program: `bash parity/run.sh noise 0 0.999` |
-| `node --test test/*.test.js` | suite pass | **90 tests** at this tree (82 pre-GAP-004 + the 7 `test/coverage-map.test.js` gate tests + the `test/transform-prediction.test.js` engine v1.0.187 replacement-prediction API test); the recorded GAP-004 run was **89 pass / 0 fail** at commit `9ad880e` (docs/COMPLETION_GAPS.md GAP-004); the current run is **90 pass / 0 fail** (see the `6a0af04d..403c2a4b` sync section) | unit/integration incl. `test/coverage-map.test.js`, which re-derives `parity/coverage-map.json` |
-| `node tools/verify-sync-audit.mjs` | exit 0 = every recorded sync-audit claim re-derived | the pinned engine revision (`vendor/fetch.sh` default, currently 1.0.189 / `7dc0f564`) | authority / sync-audit re-derivation |
+| `node --test test/*.test.js` | suite pass | **94 tests** at this tree (82 pre-GAP-004 + the 7 `test/coverage-map.test.js` gate tests + the `test/transform-prediction.test.js` engine v1.0.187 replacement-prediction API test + the `test/preflight.test.js` engine v1.0.193 static-preflight API test); the recorded GAP-004 run was **89 pass / 0 fail** at commit `9ad880e` (docs/COMPLETION_GAPS.md GAP-004); the current run is **94 pass / 0 fail** (see the `7dc0f564..12b4d74f` sync section) | unit/integration incl. `test/coverage-map.test.js`, which re-derives `parity/coverage-map.json` |
+| `node tools/verify-sync-audit.mjs` | exit 0 = every recorded sync-audit claim re-derived | the pinned engine revision (`vendor/fetch.sh` default, currently 1.0.193 / `12b4d74f`) | authority / sync-audit re-derivation |
 
 Denominator and coverage authority: [`parity/coverage-map.json`](parity/coverage-map.json)
-(210/210 catalogued effects bound to graded evidence at engine 1.0.189 / build `7dc0f564`, 0
+(210/210 catalogued effects bound to graded evidence at engine 1.0.193 / build `12b4d74f`, 0
 explicitly excluded; skipped and refused cases retained in the counts) and
 [`parity/ledger.json`](parity/ledger.json) (325 programs: 322 PASS, 3 SKIP, 0 FAIL — the
 v1.0.181-era full-roster artifact, retained verbatim; the fresh-sweep roster at this tree is
@@ -341,6 +343,68 @@ Engine synced from upstream `noisefactorllc/noisemaker` commit `403c2a4b` (v1.0.
   byte-unchanged — the 210 mini-bundles are sha256-identical to the previous fetch), so the
   committed goldens carry by byte-identity; the spot checks confirm the new tip renders
   identically.
+
+## Vendor sync (7dc0f564..12b4d74f)
+
+Source-side: `noisefactorllc/noisemaker` `7dc0f5640534..12b4d74fb4f2` (tearoff `ports-sync`,
+flagged for a force-push / non-contiguous delivery with a declared end `7443f6e6` — audited
+directly in a local checkout: the declared end is v1.0.190, while two observed trigger tips
+(`e73a44a3` = v1.0.192, `12b4d74f` = v1.0.193) are exact DESCENDANTS of it, so the delivery was
+ordered, not rewritten; the previous sync section's tip `7dc0f564` is an exact ancestor of
+`12b4d74f` and the range `7dc0f564..12b4d74f` is contiguous). Release tags **v1.0.190**
+(`7443f6e6`), **v1.0.191** (`c2252f0c`), **v1.0.192** (`e73a44a3`), and **v1.0.193**
+(`12b4d74f`) each point exactly at their recorded SHA (all re-derived by
+`node tools/verify-sync-audit.mjs`). The range is four commits, all touching `shaders/`:
+`7443f6e6` (GAP-012 harness readback pin + tests), `c2252f0c` (GAP-015 metric mirror tests),
+`e73a44a3` (GAP-014 harness frame warm-up + tests), `12b4d74f` (GAP-016 static effect
+preflight). The declared range `403c2a4b..7443f6e6` was already fully covered by the two
+preceding sections (`403c2a4b..7dc0f564` plus this one). Upstream main has since advanced one
+docs-only commit (`ec457c2e`, empty `shaders/` delta — re-derived by the sync audit), so this
+sync lands the port on upstream's current `shaders/` tree. Engine synced from upstream
+`noisefactorllc/noisemaker` commit `12b4d74f` (v1.0.193):
+
+- **Manifest: 210 effects** (unchanged count, 0 added, 0 removed); all 210 effect mini-bundles
+  are sha256-identical to the previous fetch.
+- **Engine core**: `noisemaker-shaders-core.esm.js` 879173 → 884620 bytes (Build `12b4d74f`).
+- **Upstream changes audit**:
+  - Upstream commit `12b4d74f` (GAP-016) added `shaders/src/runtime/preflight.js` — a shared
+    static preflight (`preflightEffect(definition, capabilities, shaders)`) that reports, before
+    any program is compiled: per-backend authorability (WebGL2 needs a GLSL source, WebGPU needs
+    WGSL), predicted MRT `rgba32f → rgba16f` demotions when attachments exceed
+    `maxColorBytesPerSample` (exactly what `Pipeline.applyMrtFormatBudget()` does at runtime),
+    predicted `maxTextureSize` clamps, and `maxDrawBuffers` overflows. `Pipeline.mrtFormatBytes()`
+    now delegates to the shared `mrtFormatBytes()` (identical mapping), and a new read-only
+    `Pipeline.preflight(capabilities?)` method exposes the report over the live graph.
+  - Commits `7443f6e6`/`c2252f0c`/`e73a44a3` changed only `shaders/tests/` (frame-readback,
+    frame-warm-up, image-metrics, uniform-deltas/status modules, their tests, and
+    test-harness wiring) — dev-only, outside the published bundle's import graph.
+  - The published bundle delta against v1.0.189 is exactly the preflight addition (new internal
+    `preflightEffect`/`mrtFormatBytes` module + the `Pipeline.preflight()` method + the
+    `mrtFormatBytes` delegation) — no rendering-path behavior change; `preflightEffect` is NOT on
+    the published export surface (re-verified: the export list is byte-identical to v1.0.189's),
+    so the analysis is reachable as `Pipeline.prototype.preflight`.
+- **Babylon test coverage**:
+  - Added `test/preflight.test.js` mirroring the upstream `Pipeline`-level preflight cases
+    against the vendored engine: the predicted MRT demotion agrees with the runtime budget
+    applied by `createSurfaces()`; without shader specs source availability is not judged;
+    `maxDrawBuffers` overflows and `maxTextureSize` clamps are reported with reasons; and
+    `preflight()` never mutates the graph.
+- **Babylon-side generated artifact**: `parity/coverage-map.json` re-derived with
+  `node tools/coverage-map.mjs` against the pinned v1.0.193 engine (engine block now records
+  version 1.0.193 / build `12b4d74f` / 884620 bytes; all effect-evidence counts unchanged at
+  210/210 with 0 exclusions).
+- **Verification**: All 94 unit and integration tests pass cleanly (`node --test test/*.test.js`:
+  90 + the 4 new preflight tests); `node tools/verify-sync-audit.mjs` exit 0 re-derives every
+  recorded claim including this range. Parity spot checks (`parity/run.sh`, tol 2.001): `noise`,
+  `bloom`, `blur`, `adjust` all byte-identical (max-abs-diff 0.000, ssim 1.0); `highPass` and
+  `extrude` grade within 1 LSB (max-abs-diff 1.000, ssim ≥ 0.99993). Four further programs
+  (`cnd_kaleido`, `tetraColorArray`, `dither_bayer4x4`, `directionalBlur`) show high
+  max-abs-diff against the macOS-Metal-minted goldens on this container's SwiftShader driver —
+  **byte-for-byte identical measurements at the previous pinned v1.0.189 build**, so they are
+  pre-existing container driver noise, unchanged by this sync (the range's engine-src diff is
+  additive-only preflight code; the 210 mini-bundles are sha256-identical to the previous
+  fetch). Full-sweep re-grading not rerun this round for the same reason; the committed goldens
+  carry by the unchanged rendering path.
 
 ## Vendor sync (403c2a4b..7dc0f564)
 
