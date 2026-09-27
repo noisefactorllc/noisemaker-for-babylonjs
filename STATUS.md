@@ -344,6 +344,38 @@ Engine synced from upstream `noisefactorllc/noisemaker` commit `403c2a4b` (v1.0.
   committed goldens carry by byte-identity; the spot checks confirm the new tip renders
   identically.
 
+## Vendor sync (12b4d74f..93229933)
+
+Source-side: `noisefactorllc/noisemaker` `7443f6e6..93229933` (tearoff `ports-sync`, flagged for
+a force-push / non-contiguous delivery — audited directly in a local checkout: the declared start
+`7443f6e6` is the previous section's covered tip and an exact ancestor of `12b4d74f`, so the
+uncovered delta is exactly `12b4d74f..93229933`, which is contiguous; upstream `main` tips at
+`93229933` and release tag **v1.0.194** points exactly at it). Two commits, both outside the
+published bundle's import graph — **no code change required; engine pin stays at v1.0.193 /
+build `12b4d74f`**:
+
+- `8fe3ccaf` (docs): `LEDGER.md` +14/−7, `llms-full.txt` +1/−1 — no `shaders/src` or `shaders/`
+  effect changes.
+- `93229933` (GAP-017): adds `shaders/tests/definition-schema.js` (+220),
+  `shaders/tests/test_definition_schema.js` (+161), `shaders/tests/test-harness.js` +58/−2, and
+  `scripts/run-js-tests.js` +1/−0 (`llms-full.txt` +8/−1) — test-harness-only wiring; no effect
+  definitions, DSL, runtime, or renderer changes. Range diffstat (`git diff --stat 12b4d74f..93229933`): 6 files, +553/−10
+  (`LEDGER.md`, `llms-full.txt`, `scripts/run-js-tests.js`, the three `shaders/tests/` files).
+- **Engine unchanged, verified against the live CDN**: the published
+  `https://shaders.noisedeck.app/1.0.194/noisemaker-shaders-core.esm.js` (884620 bytes, banner
+  `Build: 93229933`) is byte-identical to the vendored v1.0.193 core (884620 bytes, banner
+  `Build: 12b4d74f`) once the two banner lines (`* Build:` / `* Date:`) are stripped (`cmp`
+  empty). The upstream `shaders/src` diff across the range is empty. The new module's symbol is
+  absent from the published bundle (string search for `definition-schema` /
+  `test_definition_schema` in the vendored core: no matches), so the vendored engine already
+  matches upstream tip; no re-vendor, no parity re-grade, and no generated-artifact refresh are
+  needed.
+- **Verification**: all **94 unit/integration tests pass, 0 fail** (`npm test` =
+  `node --test test/*.test.js`, pass count unchanged from the previous round); the range
+  introduces no new behavior to mirror — the only import-graph-adjacent upstream artifact is
+  dev-only harness tooling that this port's browser-bundled engine does not (and must not)
+  consume.
+
 ## Vendor sync (7dc0f564..12b4d74f)
 
 Source-side: `noisefactorllc/noisemaker` `7dc0f5640534..12b4d74fb4f2` (tearoff `ports-sync`,
