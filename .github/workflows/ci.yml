@@ -175,6 +175,8 @@ jobs:
           pattern: ci-${{ github.sha }}-parity-shard-*
           path: ${{ runner.temp }}
           merge-multiple: true
+      - name: Fetch the pinned engine (the roster reads the vendored manifest)
+        run: bash vendor/fetch.sh
       - name: Verify full-roster coverage and grades, merge the ledger
         run: |
           mapfile -t ROSTER < <(node parity/current-programs.mjs)

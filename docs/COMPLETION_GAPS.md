@@ -334,6 +334,17 @@ Original verification dates are 2026-09-22. Dated review notes identify subseque
   fallback behavior on the ubuntu runners; and the roster count in this record
   is stated with its derivation and its runtime enforcement instead of as a
   bare number.
+- Exact-SHA run evidence: publish pushed `17e0f3d`, which triggered CI run
+  36292164493 at that SHA. Ten of eleven jobs passed on the first attempt
+  (suite, public-host, and all 8 strict-parity shards — the suite and host
+  checks are therefore real passing runs at the exact source). The
+  `parity-merge` coverage job failed closed, as designed: its roster query
+  (`node parity/current-programs.mjs`) reads the vendored engine manifest
+  (`vendor/noisemaker/effects/manifest.json`), which the merge job had not
+  fetched, so it exited nonzero before asserting coverage. Fixed in this
+  commit by fetching the pinned engine in `parity-merge` before the merge;
+  the repaired workflow must produce a fully green exact-SHA run before this
+  record is final.
 - Local verification at this commit (this container): `node --test
   test/*.test.js` — 90 pass / 0 fail (Node 26.5.1, Chromium headless-shell
   149 via SwiftShader, browsers from a `PLAYWRIGHT_BROWSERS_PATH` exec-mounted
