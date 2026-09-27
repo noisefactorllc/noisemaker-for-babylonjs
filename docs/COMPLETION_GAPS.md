@@ -4,11 +4,27 @@ Current compatibility matrix: [compatibility report](COMPATIBILITY.md).
 
 ## 1. Scope and source revisions
 
-Daily review: 2026-09-25. Current inspected source: [`8a39787a7c3564c4a331047e727a7b372d68c16b`](https://github.com/noisefactorllc/noisemaker-for-babylonjs/commit/8a39787a7c3564c4a331047e727a7b372d68c16b).
-Full rendered parity remains **unverified**. No release approval or new closure follows from this review.
-Current upstream discovery: `bbdeb56c4b75cf33379766c3e87b0f5a18bcbba8`. Published Noisemaker authority: `1.0.179`, source `fca611fd8f91424661d4e531d39313d24ea21134`, 210 effect IDs.
+Audit date: 2026-09-27 UTC. Run: `audit-20260927-182000`.
+Current inspected source: [`b44f41eb9d12621d31906698e9984bb5e623518d`](https://github.com/noisefactorllc/noisemaker-for-babylonjs/commit/b44f41eb9d12621d31906698e9984bb5e623518d).
+At audit time, before this documentation commit, local and remote `main` both equaled this SHA. The checkout was clean.
+Roster parity is verified at this source within its measured scope. Full parity stays open: the `media`, `roll`, and `text` fallback programs remain policy-skipped. See the compatibility report, section 3.
+Upstream authority: `noisefactorllc/noisemaker` at `296e0138c4744ed485b2e95de3eeb466c17629ee`, release `v1.0.196`.
+CPU authority: `noisefactorllc/noisemaker-for-cpu` at `b61b658399f18b5a93abd0020c02fff3be9630f5`.
+Vendored engine pin: `1.0.193`, build `12b4d74f`, 884620-byte core, 210 effects.
+The sync audit re-derives the ranges through `296e0138`. The published `1.0.196` core equals the vendored core after stripping the two banner lines.
+Current served kit: `0.1.11`, source `9ad880e779c361fc6846399520e244d74ba2a935`. All 15 served files match their published hashes.
+The adapter, template, and license files are byte-identical to the current tree. Only the kit compiler overlay differs.
+Exact-source CI exists. Run `36337051664` at the inspected source finished with all eleven jobs green.
+The contract is a Babylon.js WebGL2 adapter for the published Noisemaker Pipeline.
+Useful tasks include animated material textures, cubemap baking, and compiled Noisedeck exports.
+This audit does not apply a CPU renderer contract or claim native WebGPU support.
 The observations below retain their original source and authority identities. They do not qualify later updates.
-Current served kit: `0.1.5`, source `e6aa0732ff7962f4a3ce044384581dbc75b632a1`. [Retrieved inventory and hashes](/Users/alex/.codex/automations/noisemaker-port-completion-audit/review-20260925-053200/current-served-inventories.json). Artifact identity does not establish host qualification.
+
+### Daily review, 2026-09-25
+
+Reviewed source: [`8a39787a7c3564c4a331047e727a7b372d68c16b`](https://github.com/noisefactorllc/noisemaker-for-babylonjs/commit/8a39787a7c3564c4a331047e727a7b372d68c16b).
+Full rendered parity was unverified at that revision. The upstream discovery then was `bbdeb56c4b75cf33379766c3e87b0f5a18bcbba8`, authority `1.0.179` at `fca611fd8f91424661d4e531d39313d24ea21134`.
+The served kit then was `0.1.5` at `e6aa0732ff7962f4a3ce044384581dbc75b632a1`. [Retrieved inventory and hashes](/Users/alex/.codex/automations/noisemaker-port-completion-audit/review-20260925-053200/current-served-inventories.json). Artifact identity does not establish host qualification.
 
 ### Earlier source observations
 
@@ -61,9 +77,46 @@ The review does not qualify every upstream change after the recorded port author
 | CLAIM-008 | Actual distribution and workflow | Release readiness | unverified | Kit files match hashes, but its source is older. No checks exist for the reviewed SHA. Distribution gaps remain. |
 | CLAIM-009 | STATUS.md corpus section | 39 gradeable compositions match, one excluded | unverified | The isolated source lacks the local-only raw corpus. No corpus test ran. The excluded composition remains in the historical denominator. |
 
+### Audit pass claims, 2026-09-27
+
+The table above retains the 2026-09-22 findings. The rows below record current findings at `b44f41e`.
+
+| Claim ID | Claim source | Claimed scope | Finding | Evidence |
+| --- | --- | --- | --- | --- |
+| CLAIM-001 | Remote STATUS.md introduction | Graded fixtures pass exactly | supported | Exact-SHA CI run `36337051664` graded 329 roster programs. 326 PASS, 3 policy SKIP, 0 FAIL. Local probes `noise`, `blur`, `bloom` graded byte-exact at tolerance 0. |
+| CLAIM-002 | README, What works today | Whole catalog works with measured scope | supported | All 210 effects carry graded fixture evidence. The exact-SHA sweep graded every roster program. Stated exclusions remain: corpus re-grade and non-Cartesian parameter coverage. |
+| CLAIM-003 | README and STATUS.md mode coverage | Every artistic-filter mode | supported | The 101 mode-matrix rows are roster programs. The exact-SHA sweep graded them all. |
+| CLAIM-004 | README first render and scene examples | Texture and cubemap workflows | supported | CI `public-host` rendered both example pages. Zero page errors at the exact source. The assembled served-kit artifact rendered non-uniform output. |
+| CLAIM-005 | README, own project installation | Installable package with usable compiler | supported | Suite 97/97. It packs and installs the tarball in an empty consumer. All three entry points import. The README program compiles and renders. |
+| CLAIM-006 | Runtime API and export template | Errors and recovery support real use | partial | Suite checks green. They cover context loss, restore, resize, and missing engine. The kit page shows its alert region on boot failure. In-browser restore stays unqualified. |
+| CLAIM-007 | package.json and kit metadata | Ecosystem fit | supported | Peer cells qualified at Babylon 9.13.0 and 9.28.0. ES-module imports work. The package is not on npm. The README documents git install. |
+| CLAIM-008 | Actual distribution and workflow | Release readiness | partial | The packed artifact and served kit 0.1.11 passed their checks. No npm release exists. Registry E404. Real-GPU and other-platform cells stay unqualified. |
+| CLAIM-009 | STATUS.md corpus section | 39 gradeable compositions match | unverified | The raw corpus is local-only and absent from this checkout. Historical grades stay retained. The 2026-09-26 refetch found 20/20 compositions compileable. No fresh re-grade ran. See GAP-008. |
+
 ## 3. Methods and evidence
 
-Review CI boundary: No workflow run exists at the inspected source SHA. A passing export dispatch does not qualify rendered parity. Current complete-render enforcement remains an open verification requirement. [Exact-source responses and workflows](/Users/alex/.codex/automations/noisemaker-port-completion-audit/review-20260925-053200/noisemaker-for-babylonjs-remote-evidence.json).
+### Audit pass, 2026-09-27
+
+Environment: Linux 6.8.0-134-generic x64, Node 26.5.1, npm 11.17.0, Chromium headless-shell 149.0.7827.55 over SwiftShader WebGL2.
+Browsers load from an exec-mounted volume because `/tmp` mounts noexec. Test launch arguments are unchanged.
+
+| Evidence | Method and command | Exit | Result and limits |
+| --- | --- | --- | --- |
+| A1 | `git fetch origin`. Compare `HEAD` with `origin/main`. Query the branch SHA through `gh api`. | 0 | At audit time, local and remote `main` both equaled `b44f41e`. Checkout clean. |
+| A2 | `bash vendor/fetch.sh` | 0 | Engine 1.0.193, build `12b4d74f`, 884620-byte core, 210/210 mini-bundles. |
+| A3 | `node --test test/*.test.js` | 0 | 97 tests, 97 pass, 0 fail, 0 skipped. Covers packed-artifact install, imports, first render, recovery, and uninstall. |
+| A4 | `node tools/verify-sync-audit.mjs` | 0 | All recorded sync-audit claims re-derived. The tool cloned upstream itself. The read-only noisemaker checkout is shallow and lacks pinned history. |
+| A5 | `bash parity/run.sh noise 0 0.999`. Repeat for `blur` and `bloom`. | 0 | All three PASS at max-abs-diff 0, SSIM 1.0, against committed goldens. |
+| A6 | Download `kits.noisedeck.app/babylonjs/0/kit.json` and all listed files | 0 | Kit 0.1.11: 15/15 files match published sha256 values and byte counts. Adapter, template, and license files are byte-identical to the tree. |
+| A7 | Assemble the served kit bytes, the pinned engine min bundle, and a fresh README fatgraph. Load in headless Chromium. | 0 | Status `running`. Zero page errors. Alert region hidden with `role="alert"`. 88,647 distinct colors in the canvas crop. |
+| A8 | `npm view noisemaker-for-babylonjs` | 1 | Registry returns E404. No npm release exists, as the README states. |
+| A9 | Exact-SHA Actions queries. Artifact downloads for run `36337051664`. | 0 | Eleven jobs success at `b44f41e`. Suite log 97/97. Merged ledger: 329 programs, 326 PASS, 3 SKIP (`media`, `roll`, `text`), 0 FAIL. |
+| A10 | Live `gh api` inventory for all eligible ports | 0 | 16 live ports, 15 eligible, C++ excluded by name and ID. `noisemaker-for-tty` is absent from the live inventory. |
+
+Raw outputs: `/series/evidence-audit-20260927-182000`. The directory holds command records and result excerpts.
+The historical E-numbered evidence below retains its original provenance.
+
+Historical CI boundary, 2026-09-25: no workflow run existed at the then-inspected source SHA. Superseded by the exact-SHA evidence above. [Exact-source responses and workflows](/Users/alex/.codex/automations/noisemaker-port-completion-audit/review-20260925-053200/noisemaker-for-babylonjs-remote-evidence.json).
 
 ### Daily review, 2026-09-25
 
@@ -153,10 +206,13 @@ The original installation, scene, recovery, and kit evidence supports only its r
 P1 means false completion, major correctness failure, unusable primary workflow, or invalid artifact.
 P2 means coverage or integration gaps. P3 means documentation inconsistency.
 Original verification dates are 2026-09-22. Dated review notes identify subsequent checks.
+Audit re-verification, 2026-09-27: the GAP-001 through GAP-007 closures were re-checked at `b44f41e`. Per-gap bases:
+GAP-001 A3, GAP-002 A6, GAP-003 A2 and A4 (pin mechanism, not the two-installation check. See the GAP-003 note below), GAP-004 A3 and A9, GAP-005 A9, GAP-006 A3, A6, and A7, GAP-007 not re-verified. New stale evidence reopened GAP-007. See its dated note.
+GAP-008 opens below.
 
 ### GAP-001: Compiler missing from packed distribution
 
-- Status: closed, pending publication of this record. Priority: P1. Category: release.
+- Status: closed. Priority: P1. Category: release.
 - Scope: `package.json`, `src/compiler/index.js`, compiler tools, and vendor setup.
 - Expected: every advertised package entry point loads after normal installation.
 - Observed: the compiler imports excluded `tools/export-fat-graph.mjs`. The package also omits `vendor/fetch.sh` and engine setup files.
@@ -169,11 +225,11 @@ Original verification dates are 2026-09-22. Dated review notes identify subseque
 - Dependencies: publishing needs separate publication authority.
 - Acceptance: a clean installed artifact compiles the documented program and produces a visible Babylon texture without repository-relative patches. Satisfied by the recorded run.
 - Required checks: pack, install, import all exports, first render, error recovery, and uninstall. All executed in `test/installed-package.test.js` (recorded above).
-- Last verification: 2026-09-26 for the installed-artifact checks at `fae8a26`. Historical package and CI checks remain dated 2026-09-23; other runtime evidence remains dated 2026-09-22.
+- Last verification: 2026-09-26 for the installed-artifact checks at `fae8a26`. Re-verified 2026-09-27 at `b44f41e` (A3). Historical package and CI checks remain dated 2026-09-23; other runtime evidence remains dated 2026-09-22.
 
 ### GAP-002: Published kit lacks Babylon license text
 
-- Status: closed, pending publication of this record. Priority: P1. Category: release.
+- Status: closed. Priority: P1. Category: release.
 - Scope: `export-kit/kit.config.json` and published kit inventory.
 - Expected: the distribution includes applicable licenses and dependency attribution.
 - Observed: the kit bundles Babylon but lists only two MIT license files. Its bundle lacks the Apache license text.
@@ -183,11 +239,11 @@ Original verification dates are 2026-09-22. Dated review notes identify subseque
 - Next action: complete. Publication of the record needs the standing publication authority.
 - Acceptance: every bundled dependency has its required license and applicable notices in the actual downloadable artifact. Satisfied by the published-artifact check above.
 - Required checks: inspect the final inventory, check hashes, and compare notices with the exact dependency distribution. All executed and recorded above.
-- Last verification: 2026-09-26.
+- Last verification: 2026-09-26. Re-verified 2026-09-27 at `b44f41e`.
 
 ### GAP-003: Authority selection is not reproducible by default
 
-- Status: closed, pending publication of this record. Priority: P2. Category: authority.
+- Status: closed. Priority: P2. Category: authority.
 - Scope: `vendor/fetch.sh`, parity evidence, and STATUS.md authority records.
 - Expected: a documented source revision selects reproducible engine bytes.
 - Observed: the script defaults to rolling `/1`. STATUS.md records 1.0.167, while current upstream and CDN provide 1.0.168.
@@ -198,7 +254,7 @@ Original verification dates are 2026-09-22. Dated review notes identify subseque
 - Next action: complete. Publication of the record needs the standing publication authority.
 - Acceptance: two isolated installations resolve identical engine and effect hashes for the documented revision. Satisfied by the reproducibility check above.
 - Required checks: exact version metadata checked (`engine-meta.json` matches the vendor-sync record), all bundle hashes checked (212/212), parity against preserved baselines carried by byte-identity to the verified revision. All executed and recorded above.
-- Last verification: 2026-09-26.
+- Last verification: 2026-09-26. Not re-verified 2026-09-27: the recorded two-installation acceptance check did not run again this pass. A2 fetched the pinned 1.0.193 engine, and A4 re-derived the pinned-bundle identity claims. Those checks confirm the pin mechanism, not the full acceptance criterion.
 - Follow-up authority note: the 2026-09-26 vendor sync `8eeb7b5a..6a0af04d` (STATUS.md "Vendor
   sync (8eeb7b5a..6a0af04d)") deliberately bumped the documented pin from `1.0.183` to `1.0.185`
   as its authority change, re-deriving the full range audit with `node tools/verify-sync-audit.mjs`
@@ -208,7 +264,7 @@ Original verification dates are 2026-09-22. Dated review notes identify subseque
 
 ### GAP-004: Completion wording exceeds verified coverage
 
-- Status: closed, pending publication of this record. Priority: P1. Category: verification.
+- Status: closed. Priority: P1. Category: verification.
 - Scope: README completion claims, mode coverage, corpus, and external inputs.
 - Expected: each claim states its measured scope, exclusions, and acceptance rules.
 - Observed: four external-input gaps are not the only gaps. The sweep covers 325 fixtures, not every runtime combination.
@@ -271,7 +327,7 @@ Original verification dates are 2026-09-22. Dated review notes identify subseque
   exclusion stated.
 - Next action: complete. Publication of the record needs the standing publication authority.
 - Review evidence: the historical audit observations above retain their 2026-09-22 provenance.
-- Last verification: 2026-09-26 (coverage map + fixture grades + suite run at this commit).
+- Last verification: 2026-09-26 (coverage map + fixture grades + suite run at this commit). Re-verified 2026-09-27 at `b44f41e` (A3, A9).
 
 ### GAP-005: No CI evidence for the reviewed source
 
@@ -421,11 +477,12 @@ Original verification dates are 2026-09-22. Dated review notes identify subseque
 - Last verification: 2026-09-27 (exact-SHA CI run 36301835680 at `3a70d2c`
   fully green; earlier exact-SHA run 36297830362 at `226b9fe` also fully
   green; local suite 90/90, host checks, sync-audit, and live strict
-  sweep samples at the implementation commits).
+  sweep samples at the implementation commits). Re-verified 2026-09-27 at
+  `b44f41e`: exact-SHA CI run `36337051664` fully green (A9).
 
 ### GAP-006: Host and release qualification remain incomplete
 
-- Status: closed, pending publication of this record. Priority: P2. Category: ecosystem.
+- Status: closed. Priority: P2. Category: ecosystem.
 - Scope: supported Babylon versions, browsers, platforms, lifecycle behavior, and export integration.
 - Expected: release claims identify qualified versions and useful supported workflows.
 - Observed (original audit): real runtime evidence covers Chromium/Metal with Babylon 9.13.0. The peer range admits later 9.x versions.
@@ -437,11 +494,11 @@ Original verification dates are 2026-09-22. Dated review notes identify subseque
 - Remaining unqualified (recorded truthfully in `docs/COMPATIBILITY.md` §2): real-GPU browsers, Firefox/Safari, macOS/Windows/mobile platforms, and browser-level context-loss restoration — the headless SwiftShader driver does not deliver `webglcontextrestored` (recorded: `webglcontextlost` fires, restore never does, across repeated runs), so the renderer's loss/restore lifecycle rests on the deterministic unit suite (`test/renderer-sinks.test.js`, runs in CI) rather than an in-browser probe.
 - Next action: complete. Publication of this record needs the standing publication authority.
 - Acceptance: each supported cell passes installation, first output, host integration, lifecycle recovery, and removal. Satisfied for every cell the supported matrix names as qualified (lifecycle recovery via the unit suite plus the installed-artifact teardown/rebuild probe); the matrix names no qualified cell that lacks any of the five.
-- Last verification: 2026-09-27.
+- Last verification: 2026-09-27. Re-verified 2026-09-27 at `b44f41e` (A6, A7).
 
 ### GAP-007: Current documentation contains stale counts and gates
 
-- Status: closed, pending publication of this record. Priority: P3. Category: usability.
+- Status: reopened. Priority: P3. Category: usability.
 - Scope: README, STATUS.md, and documented parity commands.
 - Expected: developers can distinguish current evidence from historical results and select the correct verification command.
 - Observed: STATUS.md retains 209 byte-verifiable effects beside a current 210-effect total and four external-input exclusions.
@@ -526,22 +583,37 @@ Original verification dates are 2026-09-22. Dated review notes identify subseque
 - Required checks: compare prose with manifests, ledgers, command defaults, and installed-package instructions. Executed (above).
 - Next action: complete. Publication of the record needs the standing publication authority.
 - Last verification: 2026-09-26.
+- Audit note, 2026-09-27: not re-verified. New stale evidence at `b44f41e` reopened this gap.
+  STATUS.md line 5 and the suite row at line 40 still claim **94 tests** at this tree. The tree holds **97**. The GAP-006 commit `c84adde` added `test/qualification.test.js` (3 tests). That commit updated only its own sync section, at STATUS.md lines 386-389. The header and the command-gate table kept the old count. The suite run at this source is 97 pass, 0 fail. Evidence: A3 and CI `36337051664`. STATUS.md understates the current suite by three tests.
+  Fixing STATUS.md belongs to the implementation job. This audit's commit authority covers only this register and the compatibility report.
+- Reopen scope: the stale 94-count claims in STATUS.md lines 5 and 40. Every other GAP-007 claim was satisfied at its 2026-09-26 closure commit and is not contradicted.
+- Acceptance for reclosure: STATUS.md's suite counts match the tree's 97-test suite at the fix commit, verified by a fresh `node --test test/*.test.js` run.
+
+### GAP-008: Fresh corpus re-grade unexecuted
+
+- Status: open. Priority: P2. Category: verification.
+- Scope: `parity/corpus/` sweep and its live-feed fixtures.
+- Expected: every fetched corpus composition receives a measured grade against the reference backend.
+- Observed: the historical 40-composition grade stays retained. A 2026-09-26 refetch found 20/20 compositions compileable. No fresh grade ran.
+- Evidence: README corpus section and `parity/external-input-grades.json`.
+- Blocker: the raw corpus is local-only and absent from this checkout. The same-pass 1800-frame evolution per composition needs a stable long-session browser runner. This container's headless browser is unstable across many WebGL contexts.
+- Next action: run `bash parity/corpus/fetch.sh` and `bash parity/corpus/sweep.sh` on a stable runner. Record per-composition outcomes.
+- Dependencies: stable long-session runner. Raw inputs stay local-only by policy.
+- Acceptance: each fetched composition grades byte-identical, or fails with a recorded cause.
+- Required checks: corpus fetch, sweep, and per-comparison reports.
+- Last verification: 2026-09-26 compileability refetch. No grade ran since.
 
 ## 5. Ordered next actions
 
-Current first action: After the implementation job repairs GAP-001, run npm pack. Install the tarball in an empty consumer. Import the compiler. Render its compiled graph in Babylon. Require a successful import and a measured reference comparison before broader parity. Then check kit notices and the supported Babylon version range.
-Subsequent historical actions remain dependent on that evidence. No implementation is authorized by this audit.
+Current actions, ordered. Implementation belongs to the separate authorized job. This audit does not implement or publish them.
 
-These actions belong to the separate authorized job. This audit does not implement or publish them.
+1. Reclose GAP-007: update STATUS.md lines 5 and 40 to the 97-test suite the tree holds. Prove it with a fresh suite run.
+2. Execute GAP-008 on a stable long-session runner. Fetch the live corpus. Grade every composition. Record byte-identical outcomes or failures with causes.
+3. Qualify real-GPU Chromium, Firefox, and Safari cells when hosts become available. Record the qualified matrix in `docs/COMPATIBILITY.md` section 2.
+4. Probe in-browser context restoration on a driver that delivers `webglcontextrestored`. The unit suite stays the current evidence until then.
+5. Decide the npm publication path with the release job. Test git-based installation in an isolated consumer before any release claim.
 
-1. Address GAP-001 in `package.json` and `src/compiler/index.js`. Run `npm pack --ignore-scripts --json` after the authorized correction.
-   Install the tarball in an empty project. Import every exported entry point. Require successful compilation and a visible material texture.
-2. Resolve GAP-002 through the existing kit configuration. Require complete dependency notices in the downloadable artifact.
-3. Resolve GAP-003 through existing authority configuration. Require repeated installations with identical engine hashes.
-4. Address GAP-004 with current manifests and existing harnesses. Require explicit coverage and retained exclusions for every completion claim.
-5. Address GAP-005 through existing CI. Require exact-source evidence before release qualification.
-6. Address GAP-006 through existing host qualification. Require successful developer workflows for every supported release target.
-7. Address GAP-007 in existing documentation. Require counts and command gates to match accepted evidence.
+The historical first action, repairing GAP-001, is complete. Its recorded evidence stands in GAP-001.
 
 Do not infer implementation, publication, or workflow authority from this list.
 
@@ -558,6 +630,7 @@ Do not infer implementation, publication, or workflow authority from this list.
 | 2026-09-26 | `gap-004-implementation` (this commit) | GAP-004 record updated with the implementation and recorded run (this row). | `node --test test/*.test.js`: 89 tests pass, 0 fail (7 new coverage-map gate tests). Four real-input fixture programs (`media_image`, `text_glyphs`, `roll_midi`, `mesh_obj`) dual-minted and graded byte-exact (max-abs-diff 0, SSIM 1.0) on engine 1.0.185; `parity/coverage-map.json` re-derives 210/210 effects bound; fresh corpus refetch 20/20 reference-compileable; historical corpus 40 (39+1) retained. | Full fresh-corpus re-grade excluded (stable-runner limitation, recorded); full-roster ledger grade remains the v1.0.181-era artifact (0 FAIL retained). |
 | 2026-09-26 | `gap-007-docs` (this commit) | GAP-007 record updated with the reconciliation (this row); STATUS.md header/coverage corrections and the new verification-commands gate table; README command-gates and roster-denominator statements; clarification of the recorded-run "82/82" evidence strings in `parity/external-input-grades.json`/`parity/coverage-map.json` plus the matching generator `_comment`; reconciliation note for the dated 264/1,816 choice counts. No fixture, golden, ledger, or manifest bytes changed; no measured value or count in the JSON records altered. | Prose re-checked against `parity/coverage-map.json` (210/210 @ v1.0.185/`6a0af04d`, 4/4 external-input fixtured, 3 fallback skips retained), `parity/mode-coverage.json` (101 rows), `parity/ledger.json` (325 = 322 PASS + 3 SKIP + 0 FAIL), the fresh-sweep roster (332 DSL − 3 retired = 329; the 4 GAP-004 real-input fixtures graded, not skipped), and the actual command gates: `parity/sweep.sh` `tol_for` (0/0.999, media/text/roll skips), `parity/corpus/sweep.sh` hardcoded `--tolerance 2.001 --ssim-min 0.98`, `parity/run.sh` defaults (2.001/0.98); suite denominator 89 (82 + 7 coverage-map gate tests, recorded 89/89 at `9ad880e`). Review findings fixed from the first and second candidates (corpus gate misstated; stale 82 count; unqualified "314"; sweep denominator 325 vs 329; "never hand-edited" header; 264/1,816 note). Historical statements retained and dated, not deleted. | No new execution: vendored engine is gitignored by policy and was not re-fetched (so `parity/current-programs.mjs`'s roster count is derived from the committed fixture set and the reviewer-verified retirement rule, not re-run here); the gate table describes existing command behavior. GAP-005/006 remain open. |
 | 2026-09-27 | `gap-006-qualification` (this commit) | GAP-006 reopened after blocker re-verification and closed with the supported-matrix qualification (this row); `docs/COMPATIBILITY.md` §2 replaced with the qualified matrix. | Blockers re-verified (GAP-001/002 closed; Chromium/SwiftShader host now available). New `test/qualification.test.js`: packed-artifact cells for Babylon floor 9.13.0 and the current 9.x (9.28.0 via in-place peer upgrade), resource cleanup (GL `isTexture` deletion), teardown + rebuild, kit page template guards (`role="alert"`, view-only surface); full suite 97/97 (twice for the qualification file). Recorded exported-artifact check: published kit 0.1.11 (source `9ad880e7`) — all 15 served files sha256-verified, adapter + template byte-identical to this tree, assembled artifact renders (status `running`, non-uniform canvas, 0 errors), boot failure un-hides the `role="alert"` region, interactive surface empty. | Real-GPU browsers, Firefox/Safari, macOS/Windows/mobile, and in-browser context-loss restoration stay unqualified (recorded in `docs/COMPATIBILITY.md` §2); the headless SwiftShader driver never delivers `webglcontextrestored` — loss/restore lifecycle rests on the unit suite (`test/renderer-sinks.test.js`). Publication of this record remains a supervisor action. |
+| 2026-09-27 | `audit-20260927-182000`, `b44f41eb9d12621d31906698e9984bb5e623518d` | Updated both reports to the current source. Re-verified GAP-001, GAP-002, GAP-004, GAP-005, and GAP-006. Reopened GAP-007 on the stale STATUS.md suite counts. Opened GAP-008 for the unexecuted corpus re-grade. | Suite 97/97 locally and in exact-SHA CI run `36337051664` (all eleven jobs green). Sync-audit exit 0. Strict probes `noise`, `blur`, `bloom` byte-exact at tolerance 0. Kit 0.1.11 byte-verified. The assembled artifact rendered non-uniform output with zero page errors. Registry E404 confirmed. | GAP-007 STATUS.md 94-vs-97 staleness (implementation job). GAP-008 corpus re-grade. Real-GPU, Firefox, Safari, macOS, Windows, mobile hosts. In-browser context restoration. npm publication and git-based install. |
 
 No gap closed during this first audit. Successful checks do not establish whole-port completion or release approval.
 The worker stopped at the requested audit checkpoint. Publication of audit documents does not authorize implementation.
