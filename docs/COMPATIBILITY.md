@@ -6,7 +6,7 @@ Daily review: 2026-09-25. Current inspected source: [`8a39787a7c3564c4a331047e72
 Full rendered parity remains **unverified**. No release approval or new closure follows from this review.
 Current upstream discovery: `bbdeb56c4b75cf33379766c3e87b0f5a18bcbba8`. Published Noisemaker authority: `1.0.179`, source `fca611fd8f91424661d4e531d39313d24ea21134`, 210 effect IDs.
 The observations below retain their original source and authority identities. They do not qualify later updates.
-Current served kit: `0.1.5`, source `e6aa0732ff7962f4a3ce044384581dbc75b632a1`. [Retrieved inventory and hashes](/Users/alex/.codex/automations/noisemaker-port-completion-audit/review-20260925-053200/current-served-inventories.json). Artifact identity does not establish host qualification.
+Current served kit: `0.1.11`, source `9ad880e779c361fc6846399520e244d74ba2a935` (all 15 served files sha256-verified against `kits.noisedeck.app/babylonjs/0/kit.json`, 2026-09-27; adapter and page template byte-identical to the current tree — see [GAP-006](COMPLETION_GAPS.md)). [Earlier inventory](https://kits.noisedeck.app/babylonjs/0/deployment-meta.json). Artifact identity does not establish host qualification by itself; the qualified matrix is in [section 2](#2-host-and-distribution-matrix).
 
 ### Earlier source observations
 
@@ -29,21 +29,21 @@ Historical measurements remain bound to their original revisions in [completion 
 
 ## 2. Host and distribution matrix
 
-Current tests and qualification limits are in [section 3](#3-parity-coverage).
-The matrix below retains the earlier measured scope. A historical verified row is not a current-source or full-platform certification.
+The supported matrix below is defined and qualified by the recorded GAP-006 run
+(2026-09-27, `test/qualification.test.js` + the recorded exported-artifact check in the
+[gap register](COMPLETION_GAPS.md)). Each qualified cell passed installation, first output,
+host integration, lifecycle teardown/rebuild, and removal, against the packed tarball
+installed into an empty consumer. A cell not listed as qualified is unqualified — it is
+neither supported nor tested.
 
-| Dimension | Status | Measured scope or limit |
+| Cell | Status | Evidence |
 |---|---|---|
-| Source-level checks | unverified | Historical audit: packed compiler failure, missing Babylon notice, and incomplete host qualification. |
-| Actual host rendering | unverified | No new complete native or browser workflow qualified by this report. |
-| Minimum and current host versions | unverified | Declared requirements are not a tested version matrix. |
-| Supported operating systems and backends | unverified | This pass does not establish Windows, Linux, and macOS coverage. |
-| Installed package and first useful result | unverified | Complete isolated installation was not qualified for this source. |
-| Parameters, external inputs, state, and chains | unverified | Full current-authority combinations remain unmeasured. |
-| Invalid input and recovery | unverified | Unit checks do not establish every installed public entry point. |
-| Upgrade, removal, and resource cleanup | unverified | Prior defects and missing workflows remain in the gap register. |
-| Accessibility of provided controls | unverified | Keyboard, focus, labels, and diagnostics need host observations where applicable. |
-| Release readiness | blocked | Full parity, installation, host, and artifact evidence remain incomplete. |
+| Babylon.js floor `9.13.0` (peer range `^9.13.0`) | qualified | Install from the packed tarball into an empty consumer, all three advertised entry points import, the documented program compiles through the installed compiler, renders a visibly non-uniform Babylon texture in headless Chromium, `dispose()` releases the stable output texture (GL-level deletion verified), teardown + rebuild renders again, uninstall clean. |
+| Babylon.js current 9.x (`9.28.0`, latest published at run time; the peer range admits `9.13.0`–`9.28.0`) | qualified | Same cell checks after an in-place peer upgrade (`npm install @babylonjs/core@^9.13.0`) with the port kept installed — first output, resource cleanup, teardown + rebuild. A new Babylon major fails this check by design (a `major === 9` assertion) and needs fresh qualification. |
+| Browser: desktop Chromium 149.0.7827.55, Linux, headless, WebGL2 over SwiftShader/ANGLE | qualified | The driver for every recorded cell above. |
+| Browser: real-GPU Chromium, Firefox, Safari; macOS/Windows/mobile platforms | unqualified | Not executable in the automation harness; no claim is made. |
+| Lifecycle: WebGL context loss + restoration in a real browser | unqualified in-browser, qualified by unit suite | `WEBGL_lose_context` restore events are not delivered by this headless SwiftShader driver (recorded: `webglcontextlost` fires, `webglcontextrestored` never does, across repeated runs). The renderer's loss/restore lifecycle is qualified by the deterministic unit suite (`test/renderer-sinks.test.js`: context loss tears down, restoration rebuilds, resize survives restore, stale initializations are abandoned), which runs in CI. |
+| Export integration: published kit `0.1.11` (source `9ad880e7`) | qualified | All 15 served files sha256-verified against `kits.noisedeck.app/babylonjs/0/kit.json`; the adapter and page template are byte-identical to the current tree; the assembled user artifact (kit bytes + pinned CDN engine min bundle `dc417b14…`, 418861 bytes + a freshly compiled README-program fatgraph) reaches status `running`, renders a non-uniform canvas, zero page errors; a boot failure (engine import 404) un-hides the `role="alert"` error region with status `failed`; the page's interactive surface is empty (view-only, no keyboard traps). |
 
 ## 3. Parity coverage
 
@@ -295,7 +295,10 @@ A successful dispatch or unit-test summary does not establish a full rendered ga
 
 ## 5. Open compatibility limits
 
-Next bounded check: After the implementation job repairs GAP-001, run npm pack. Install the tarball in an empty consumer. Import the compiler. Render its compiled graph in Babylon. Require a successful import and a measured reference comparison before broader parity. Then check kit notices and the supported Babylon version range.
+The GAP-006 bounded check below is now executed: `npm pack` → empty-consumer install →
+compiler import → Babylon render → kit notices (`GAP-002`) → supported Babylon range
+(`GAP-006`, closed 2026-09-27 with the matrix in [section 2](#2-host-and-distribution-matrix)).
+
 See the stable entries in [completion gaps](COMPLETION_GAPS.md).
 
 See [GAP-001 and the complete gap register](COMPLETION_GAPS.md#4-known-gaps) for evidence, dependencies, and acceptance criteria.
