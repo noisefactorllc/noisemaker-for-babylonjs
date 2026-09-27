@@ -344,6 +344,47 @@ Engine synced from upstream `noisefactorllc/noisemaker` commit `403c2a4b` (v1.0.
   committed goldens carry by byte-identity; the spot checks confirm the new tip renders
   identically.
 
+## Vendor sync (93229933..296e0138)
+
+Source-side: `noisefactorllc/noisemaker` `7443f6e6..a912749f` (tearoff `ports-sync`, flagged for a
+force-push / non-contiguous delivery — audited directly in a local checkout: the declared start
+`7443f6e6` is the previous previous section's covered tip and an exact ancestor of `a912749f`,
+while one observed trigger range tip, `296e0138`, is a DESCENDANT of the declared end, so the
+delivery was ordered, not rewritten). The port's covered tip entering this round is `93229933`
+(the previous section), so the uncovered delta is exactly `93229933..296e0138` (4 commits,
+contiguous), landing on upstream main tip `296e0138`; release tags **v1.0.194** (`93229933`),
+**v1.0.195** (`a912749f`), and **v1.0.196** (`296e0138`) each point exactly at their recorded SHA.
+All four commits are outside the published bundle's import graph — **no code change required;
+engine pin stays at v1.0.193 / build `12b4d74f`**:
+
+- `7c5f1765` (docs): `LEDGER.md` +75/−0, `llms-full.txt` +20/−3 — no `shaders/src` or effect changes.
+- `a912749f` (GAP-019): adds `shaders/tests/passthrough-input.js` (+489) and
+  `shaders/tests/test_passthrough_input.js` (+259), `shaders/tests/test-harness.js` +70/−0, and
+  `scripts/run-js-tests.js` +1/−0 (`llms-full.txt` +9/−1) — a harness-only input-passthrough probe
+  behind an explicit `--passthrough-input` opt-in; default gates unchanged.
+- `11d7c699` (docs): `llms-full.txt` +1/−1 only (GAP-020 register narrowing; the MCP domain error
+  envelope lives in the Shade repository, nothing vendored).
+- `296e0138` (GAP-021): adds `shaders/tests/frame-resolution.js` (+95) and
+  `shaders/tests/test_frame_resolution.js` (+189), `shaders/tests/test-harness.js` +34/−1, and
+  `scripts/run-js-tests.js` +1/−0 (`llms-full.txt` +6/−1) — harness-only requested-vs-returned
+  frame-resolution reporting. Range diffstat (`git diff --stat 93229933..296e0138`): 8 files,
+  +1241/−9 (`LEDGER.md`, `llms-full.txt`, `scripts/run-js-tests.js`, the five `shaders/tests/`
+  files) — no effect definitions, DSL, runtime, or renderer changes; the upstream `shaders/src`
+  diff across the range is empty.
+- **Engine unchanged, verified against the live CDN**: the published
+  `https://shaders.noisedeck.app/1.0.196/noisemaker-shaders-core.esm.js` (884620 bytes, banner
+  `Build: 296e0138`) is byte-identical to the vendored v1.0.193 core (884620 bytes, banner
+  `Build: 12b4d74f`) once the two banner lines (`* Build:` / `* Date:`) are stripped (`cmp`
+  empty). The new modules' symbols are absent from the published bundle (string search for
+  `passthrough-input` / `frame-resolution` / `definition-schema` in the 1.0.196 core: no
+  matches), so the vendored engine already matches upstream tip; no re-vendor, no parity
+  re-grade, and no generated-artifact refresh are needed.
+- **Verification**: all **97 unit/integration tests pass, 0 fail** (`npm test` = `node --test
+  test/*.test.js`; pass count is 94 + the 3 GAP-006 qualification cases added by the
+  intervening local commit `c84adde`, not by this range — all 97 pass); the range introduces no new behavior to mirror — the only
+  import-graph-adjacent upstream artifacts are dev-only harness tooling that this port's
+  browser-bundled engine does not (and must not) consume.
+
 ## Vendor sync (12b4d74f..93229933)
 
 Source-side: `noisefactorllc/noisemaker` `7443f6e6..93229933` (tearoff `ports-sync`, flagged for
