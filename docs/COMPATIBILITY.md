@@ -14,6 +14,14 @@ All 15 served files matched their published sha256 values and byte counts on 202
 The adapter, template, and license files are byte-identical to the current tree. One exception: the kit's `adapter/src/compiler/index.js` overlay differs from the tree's `src/compiler/index.js` by design (A6).
 Artifact identity alone does not establish host qualification. The qualified matrix is in [section 2](#2-host-and-distribution-matrix).
 
+### Daily review, 2026-09-27
+
+Review run: `review-20260927-210000`. The reviewed source is `8cca4bf`, a document-only delta over `b44f41eb`.
+The review re-verified the audit evidence. Section 4 records the review commands and results.
+Upstream advanced to `04e8582c` after the audit. That commit changes `LEDGER.md` and `llms-full.txt` only.
+Release `v1.0.196` stays current. The engine bytes are unchanged.
+The CPU authority head advanced to `f0ccebef`. The audit-time record above stays `b61b6583`. That update belongs to the CPU review.
+
 ### Earlier source observations
 
 Daily review: 2026-09-25. Inspected source: [`8a39787a7c3564c4a331047e727a7b372d68c16b`](https://github.com/noisefactorllc/noisemaker-for-babylonjs/commit/8a39787a7c3564c4a331047e727a7b372d68c16b).
@@ -324,6 +332,15 @@ Provenance records bind each artifact to the SHA and the run id.
 Local commands and exits A1 to A10 are in the [gap register](COMPLETION_GAPS.md#3-methods-and-evidence).
 Evidence directory: `/series/evidence-audit-20260927-182000`.
 
+### Review verification, 2026-09-27
+
+Run `36337051664` at `b44f41eb` and run `36341707000` at `8cca4bf` both finished success.
+The merged ledger artifact holds 329 rows: 326 PASS, 3 SKIP, 0 FAIL. The skip programs are `media`, `roll`, and `text`. Worst max-abs-diff is 0.
+All 15 served kit files re-verified byte for byte. The adapter, template, license, and overlay files equal the tree bytes.
+The suite re-ran in a fresh container: 97 tests, 97 pass, 0 fail.
+Two fetches of the pin resolved identical core and engine hashes.
+The review commands and results are rows R1 to R9 in the [gap register](COMPLETION_GAPS.md#3-methods-and-evidence).
+
 ### Historical CI boundary, 2026-09-25
 
 No workflow run existed at the then-inspected source SHA. [Exact-source responses and workflows](/Users/alex/.codex/automations/noisemaker-port-completion-audit/review-20260925-053200/noisemaker-for-babylonjs-remote-evidence.json). Superseded by the current evidence above.
@@ -355,5 +372,6 @@ Implementation corrections remain with the separate job. This report does not ad
 |---|---|---|---|
 | 2026-09-24 | `e6aa0732ff7962f4a3ce044384581dbc75b632a1` | Full qualification unverified | Created the requested maintained compatibility report. Preserved historical evidence and open gaps. |
 | 2026-09-27 | `b44f41eb9d12621d31906698e9984bb5e623518d` | Roster parity verified in measured scope. 329 graded, 326 strict passes, 3 policy skips, 0 failures. Full parity stays open until the skips close. Exact-SHA CI run `36337051664`. | Updated sections 1, 3, 4, and 5 to the current source. Effect rows now carry fixture-bound verified status with a scope note. Kit `0.1.11` re-verified byte for byte. GAP-008 opened in the gap register. |
+| 2026-09-27 | `8cca4bfbbab64cb4bf537b5dc9478587129ca885` | Review verified the audit evidence. Roster parity stands: 329 graded, 326 strict passes, 3 policy skips, 0 failures. | Added the review verification block and the upstream advance record. No matrix cell changed. |
 
 Run: `20260924-remaining-gap-documents`. Later audits and reviews update this report with source-bound results.

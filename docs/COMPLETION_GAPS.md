@@ -20,6 +20,14 @@ Useful tasks include animated material textures, cubemap baking, and compiled No
 This audit does not apply a CPU renderer contract or claim native WebGPU support.
 The observations below retain their original source and authority identities. They do not qualify later updates.
 
+### Daily review, 2026-09-27
+
+Reviewed run: `audit-20260927-182000`. The reviewed source is `b44f41eb`. This review commit is a document-only delta at `8cca4bf`.
+The review re-verified the audit evidence independently. Section 3 records the commands and results.
+Upstream advanced to `04e8582c` after the audit. That commit changes `LEDGER.md` and `llms-full.txt` only.
+Release `v1.0.196` stays current. The engine bytes are unchanged. See the GAP-003 review evidence for the pin.
+The CPU authority head advanced to `f0ccebef`. The audit-time record above stays `b61b6583`. That update belongs to the CPU review.
+
 ### Daily review, 2026-09-25
 
 Reviewed source: [`8a39787a7c3564c4a331047e727a7b372d68c16b`](https://github.com/noisefactorllc/noisemaker-for-babylonjs/commit/8a39787a7c3564c4a331047e727a7b372d68c16b).
@@ -115,6 +123,23 @@ Browsers load from an exec-mounted volume because `/tmp` mounts noexec. Test lau
 
 Raw outputs: `/series/evidence-audit-20260927-182000`. The directory holds command records and result excerpts.
 The historical E-numbered evidence below retains its original provenance.
+
+### Daily review evidence, 2026-09-27
+
+Environment: Linux 6.8.0-134-generic x64, Node 26.5.1, npm 11.17.0, Chromium headless-shell 149.0.7827.55 over SwiftShader WebGL2.
+The browser loads from `/state/cache/pw-browsers` because `/tmp` mounts noexec.
+
+| Evidence | Method and command | Exit | Result and limits |
+| --- | --- | --- | --- |
+| R1 | `gh run view 36337051664`. `gh run list` for both heads. | 0 | Run `36337051664` at `b44f41e` finished success. All eleven jobs are green. Run `36341707000` at `8cca4bf` also finished success. |
+| R2 | Download the merged-ledger artifact of run `36337051664`. Parse every row. | 0 | The ledger holds 329 rows. 326 rows are PASS. 3 rows are SKIP. 0 rows are FAIL. The skip programs are `media`, `roll`, and `text`. Worst max-abs-diff is 0. Minimum SSIM is 1.0. No program appears twice. |
+| R3 | Download `kit.json` and all 15 served files. Compare each sha256 and byte count. | 0 | All 15 files match. The adapter, template, license, and overlay files equal the tree bytes. The kit overlay equals the committed `export-kit/overlay/compiler-index.js`. |
+| R4 | `npm ci`. Then run the suite as `PLAYWRIGHT_BROWSERS_PATH=/state/cache/pw-browsers node --test test/*.test.js`. | 0 | 97 tests, 97 pass, 0 fail, 0 skipped in a fresh container. An earlier run without dependencies failed on imports only. |
+| R5 | `bash vendor/fetch.sh`. Save the hashes. Wipe `vendor/noisemaker`. Fetch again. | 0 | Both fetches resolved pin `1.0.193`, build `12b4d74f`, with 210 mini-bundles. The core sha256 and every `engine-hashes.json` entry are identical between the fetches. |
+| R6 | Compare the published `1.0.196` core with the vendored core line by line. | 0 | The files differ in exactly two lines. Both are banner lines that carry the build tag and date. All other bytes are equal. |
+| R7 | `node parity/current-programs.mjs` | 0 | The roster prints 329 programs. Three retired programs print absence notes: `bc`, `hs`, and `colorspace`. |
+| R8 | `npm view noisemaker-for-babylonjs`. `npm view @babylonjs/core`. | 1 | The registry returns E404 for the port. The registry reports `@babylonjs/core` at `9.28.0`. The qualified matrix cell names the current latest. |
+| R9 | `gh api` compare `296e0138...04e8582c` on the authority repository. | 0 | The authority is one commit ahead of the audit. The commit changes `LEDGER.md` and `llms-full.txt` only. |
 
 Historical CI boundary, 2026-09-25: no workflow run existed at the then-inspected source SHA. Superseded by the exact-SHA evidence above. [Exact-source responses and workflows](/Users/alex/.codex/automations/noisemaker-port-completion-audit/review-20260925-053200/noisemaker-for-babylonjs-remote-evidence.json).
 
@@ -255,6 +280,7 @@ GAP-008 opens below.
 - Acceptance: two isolated installations resolve identical engine and effect hashes for the documented revision. Satisfied by the reproducibility check above.
 - Required checks: exact version metadata checked (`engine-meta.json` matches the vendor-sync record), all bundle hashes checked (212/212), parity against preserved baselines carried by byte-identity to the verified revision. All executed and recorded above.
 - Last verification: 2026-09-26. Not re-verified 2026-09-27: the recorded two-installation acceptance check did not run again this pass. A2 fetched the pinned 1.0.193 engine, and A4 re-derived the pinned-bundle identity claims. Those checks confirm the pin mechanism, not the full acceptance criterion.
+- Review evidence, 2026-09-27: the review fetched the pin twice. The second fetch ran after the review wiped `vendor/noisemaker`. Both fetches resolved `1.0.193`, build `12b4d74f`, with 210 mini-bundles. The core sha256 and every `engine-hashes.json` entry are identical between the fetches. The two-installation acceptance holds at the current pin within this checkout. The review did not repeat the isolated-directory form of 2026-09-26.
 - Follow-up authority note: the 2026-09-26 vendor sync `8eeb7b5a..6a0af04d` (STATUS.md "Vendor
   sync (8eeb7b5a..6a0af04d)") deliberately bumped the documented pin from `1.0.183` to `1.0.185`
   as its authority change, re-deriving the full range audit with `node tools/verify-sync-audit.mjs`
@@ -588,6 +614,7 @@ GAP-008 opens below.
   Fixing STATUS.md belongs to the implementation job. This audit's commit authority covers only this register and the compatibility report.
 - Reopen scope: the stale 94-count claims in STATUS.md lines 5 and 40. Every other GAP-007 claim was satisfied at its 2026-09-26 closure commit and is not contradicted.
 - Acceptance for reclosure: STATUS.md's suite counts match the tree's 97-test suite at the fix commit, verified by a fresh `node --test test/*.test.js` run.
+- Review confirmation, 2026-09-27: the review re-ran the suite in a fresh container. The review installed dependencies, the vendored engine, and the browser anew. The suite reports 97 tests, 97 pass, 0 fail, 0 skipped. STATUS.md lines 5 and 40 still claim 94 tests. The reopen stands.
 
 ### GAP-008: Fresh corpus re-grade unexecuted
 
@@ -631,6 +658,7 @@ Do not infer implementation, publication, or workflow authority from this list.
 | 2026-09-26 | `gap-007-docs` (this commit) | GAP-007 record updated with the reconciliation (this row); STATUS.md header/coverage corrections and the new verification-commands gate table; README command-gates and roster-denominator statements; clarification of the recorded-run "82/82" evidence strings in `parity/external-input-grades.json`/`parity/coverage-map.json` plus the matching generator `_comment`; reconciliation note for the dated 264/1,816 choice counts. No fixture, golden, ledger, or manifest bytes changed; no measured value or count in the JSON records altered. | Prose re-checked against `parity/coverage-map.json` (210/210 @ v1.0.185/`6a0af04d`, 4/4 external-input fixtured, 3 fallback skips retained), `parity/mode-coverage.json` (101 rows), `parity/ledger.json` (325 = 322 PASS + 3 SKIP + 0 FAIL), the fresh-sweep roster (332 DSL − 3 retired = 329; the 4 GAP-004 real-input fixtures graded, not skipped), and the actual command gates: `parity/sweep.sh` `tol_for` (0/0.999, media/text/roll skips), `parity/corpus/sweep.sh` hardcoded `--tolerance 2.001 --ssim-min 0.98`, `parity/run.sh` defaults (2.001/0.98); suite denominator 89 (82 + 7 coverage-map gate tests, recorded 89/89 at `9ad880e`). Review findings fixed from the first and second candidates (corpus gate misstated; stale 82 count; unqualified "314"; sweep denominator 325 vs 329; "never hand-edited" header; 264/1,816 note). Historical statements retained and dated, not deleted. | No new execution: vendored engine is gitignored by policy and was not re-fetched (so `parity/current-programs.mjs`'s roster count is derived from the committed fixture set and the reviewer-verified retirement rule, not re-run here); the gate table describes existing command behavior. GAP-005/006 remain open. |
 | 2026-09-27 | `gap-006-qualification` (this commit) | GAP-006 reopened after blocker re-verification and closed with the supported-matrix qualification (this row); `docs/COMPATIBILITY.md` §2 replaced with the qualified matrix. | Blockers re-verified (GAP-001/002 closed; Chromium/SwiftShader host now available). New `test/qualification.test.js`: packed-artifact cells for Babylon floor 9.13.0 and the current 9.x (9.28.0 via in-place peer upgrade), resource cleanup (GL `isTexture` deletion), teardown + rebuild, kit page template guards (`role="alert"`, view-only surface); full suite 97/97 (twice for the qualification file). Recorded exported-artifact check: published kit 0.1.11 (source `9ad880e7`) — all 15 served files sha256-verified, adapter + template byte-identical to this tree, assembled artifact renders (status `running`, non-uniform canvas, 0 errors), boot failure un-hides the `role="alert"` region, interactive surface empty. | Real-GPU browsers, Firefox/Safari, macOS/Windows/mobile, and in-browser context-loss restoration stay unqualified (recorded in `docs/COMPATIBILITY.md` §2); the headless SwiftShader driver never delivers `webglcontextrestored` — loss/restore lifecycle rests on the unit suite (`test/renderer-sinks.test.js`). Publication of this record remains a supervisor action. |
 | 2026-09-27 | `audit-20260927-182000`, `b44f41eb9d12621d31906698e9984bb5e623518d` | Updated both reports to the current source. Re-verified GAP-001, GAP-002, GAP-004, GAP-005, and GAP-006. Reopened GAP-007 on the stale STATUS.md suite counts. Opened GAP-008 for the unexecuted corpus re-grade. | Suite 97/97 locally and in exact-SHA CI run `36337051664` (all eleven jobs green). Sync-audit exit 0. Strict probes `noise`, `blur`, `bloom` byte-exact at tolerance 0. Kit 0.1.11 byte-verified. The assembled artifact rendered non-uniform output with zero page errors. Registry E404 confirmed. | GAP-007 STATUS.md 94-vs-97 staleness (implementation job). GAP-008 corpus re-grade. Real-GPU, Firefox, Safari, macOS, Windows, mobile hosts. In-browser context restoration. npm publication and git-based install. |
+| 2026-09-27 | `review-20260927-210000`, `8cca4bfbbab64cb4bf537b5dc9478587129ca885` (document-only delta) | Review corrections in sections 1, 3, 4, and 6. No gap status changed. | Exact-SHA CI re-verified at `b44f41e` and `8cca4bf`. Merged ledger parsed: 329 rows, 326 PASS, 3 policy SKIP, 0 FAIL. Kit 0.1.11 files re-verified. Suite re-run 97/97 in a fresh container. Pin fetch byte-deterministic at `1.0.193`. Upstream docs-only advance `04e8582c` recorded. | GAP-007 reopen stands. GAP-008 open. Real-GPU, Firefox, Safari, macOS, Windows, mobile hosts. In-browser context restoration. npm publication and git-based install. |
 
 No gap closed during this first audit. Successful checks do not establish whole-port completion or release approval.
 The worker stopped at the requested audit checkpoint. Publication of audit documents does not authorize implementation.
