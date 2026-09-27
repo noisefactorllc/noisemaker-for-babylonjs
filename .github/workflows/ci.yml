@@ -180,28 +180,66 @@ jobs:
       - name: Verify full-roster coverage and grades, merge the ledger
         run: |
           mapfile -t ROSTER < <(node parity/current-programs.mjs)
+          echo "roster size: ${#ROSTER[@]}"
+          if (( ${#ROSTER[@]} == 0 )); then
+            echo "::error::roster query produced no programs"
+            node parity/current-programs.mjs
+            exit 1
+          fi
           python3 - "$RUNNER_TEMP" "${ROSTER[@]}" <<'PY'
-          import json, sys, glob, os
+          import json, sys, glob, os, traceback
           tmp = sys.argv[1]
           roster = sys.argv[2:]
-          rows = {}
-          for path in sorted(glob.glob(os.path.join(tmp, "ledger-shard-*.json"))):
-              for row in json.load(open(path)):
-                  prog = row["program"]
-                  assert prog not in rows, f"duplicate program {prog}"
+          diag = {"ledger_files": {}, "roster": len(roster)}
+          try:
+              for path in sorted(glob.glob(os.path.join(tmp, "ledger-shard-*.json"))):
+                  data = json.load(open(path))
+                  rows = data if isinstance(data, list) else data.get("rows", [])
+                  diag["ledger_files"][os.path.basename(path)] = {
+                      "top_level": type(data).__name__, "rows": len(rows),
+                      "sample": rows[0] if rows else None}
+              def each_row():
+                  for path in sorted(glob.glob(os.path.join(tmp, "ledger-shard-*.json"))):
+                      data = json.load(open(path))
+                      for row in (data if isinstance(data, list) else data.get("rows", [])):
+                          yield path, row
+              rows = {}
+              dups = []
+              for path, row in each_row():
+                  prog = row.get("program")
+                  if prog in rows:
+                      dups.append(prog)
                   rows[prog] = row
-          missing = [p for p in roster if p not in rows]
-          assert not missing, f"missing from sweep: {missing}"
-          extra = [p for p in rows if p not in set(roster)]
-          assert not extra, f"not in roster: {extra}"
-          fails = {p: r for p, r in rows.items() if r.get("status") != "PASS" and r.get("status") != "SKIP"}
-          assert not fails, f"non-passing grades: {fails}"
-          skips = sorted(p for p, r in rows.items() if r.get("status") == "SKIP")
-          assert skips == ["media", "roll", "text"], f"unexpected skip set: {skips}"
-          merged = [rows[p] for p in roster]
-          json.dump({"programs": len(merged), "pass": len(merged) - len(skips), "skip": len(skips), "rows": merged},
-                    open(os.path.join(tmp, "ledger-merged.json"), "w"), indent=2, sort_keys=True)
-          print(f"parity coverage OK: {len(merged)} programs, {len(merged)-len(skips)} PASS, {len(skips)} policy SKIP")
+              diag["total_rows"] = len(rows)
+              diag["duplicates"] = dups
+              missing = [p for p in roster if p not in rows]
+              diag["missing_count"] = len(missing)
+              diag["missing_sample"] = missing[:10]
+              extra = [p for p in rows if p not in set(roster)]
+              diag["extra"] = extra[:10]
+              fails = {p: r.get("status") for p, r in rows.items()
+                       if r.get("status") not in ("PASS", "SKIP")}
+              diag["non_passing"] = dict(list(fails.items())[:10])
+              skips = sorted(p for p, r in rows.items() if r.get("status") == "SKIP")
+              diag["skips"] = skips
+              assert not dups, f"duplicate programs: {dups[:10]}"
+              assert not missing, f"missing from sweep ({len(missing)}): {missing[:10]}"
+              assert not extra, f"not in roster: {extra[:10]}"
+              assert not fails, f"non-passing grades: {dict(list(fails.items())[:10])}"
+              assert skips == ["media", "roll", "text"], f"unexpected skip set: {skips}"
+              merged = [rows[p] for p in roster]
+              json.dump({"programs": len(merged), "pass": len(merged) - len(skips),
+                         "skip": len(skips), "rows": merged},
+                        open(os.path.join(tmp, "ledger-merged.json"), "w"),
+                        indent=2, sort_keys=True)
+              print(f"parity coverage OK: {len(merged)} programs, "
+                    f"{len(merged)-len(skips)} PASS, {len(skips)} policy SKIP")
+          except Exception as e:
+              diag["error"] = repr(e)
+              print("::error::parity-merge diagnostics: "
+                    + json.dumps(diag, default=str)[:3500])
+              traceback.print_exc()
+              sys.exit(1)
           PY
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()

@@ -341,10 +341,18 @@ Original verification dates are 2026-09-22. Dated review notes identify subseque
   `parity-merge` coverage job failed closed, as designed: its roster query
   (`node parity/current-programs.mjs`) reads the vendored engine manifest
   (`vendor/noisemaker/effects/manifest.json`), which the merge job had not
-  fetched, so it exited nonzero before asserting coverage. Fixed in this
-  commit by fetching the pinned engine in `parity-merge` before the merge;
-  the repaired workflow must produce a fully green exact-SHA run before this
-  record is final.
+  fetched, so it exited nonzero before asserting coverage. Fixed in
+  `513594e` (fetch the engine in the merge job). Its run 36293993478 at
+  `513594e` again saw suite, public-host, and all 8 shards pass, but the
+  merge step still exited 1 with no readable detail available to this
+  read-only session (job logs and artifact downloads require authenticated
+  access; anonymous job-log and artifact-zip queries return 401/403), so this
+  commit re-arms the merge step with explicit validation diagnostics (the
+  ledger file inventory, row counts, duplicates, missing/extra/non-passing
+  lists, and skip set, emitted as an error annotation on failure) so the next
+  failure, if any, names its cause; the merge validation itself is unchanged
+  in substance. The repaired workflow must produce a fully green exact-SHA
+  run before this record is final.
 - Local verification at this commit (this container): `node --test
   test/*.test.js` — 90 pass / 0 fail (Node 26.5.1, Chromium headless-shell
   149 via SwiftShader, browsers from a `PLAYWRIGHT_BROWSERS_PATH` exec-mounted
