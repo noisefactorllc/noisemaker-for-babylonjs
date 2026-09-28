@@ -1,3 +1,4 @@
+import { ensurePlaywrightBrowsersPath } from './browser-launch.mjs'
 import assert from 'node:assert/strict'
 import { execFile } from 'node:child_process'
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -116,6 +117,7 @@ async function runConsumerProbe (consumer, body) {
 async function renderProbe (consumer, screenshotPath) {
   const { build } = await import('esbuild')
   const { chromium } = await import('playwright')
+
   const { createServer } = await import('node:http')
   const { readFile } = await import('node:fs/promises')
   const { extname } = await import('node:path')

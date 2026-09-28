@@ -524,7 +524,7 @@ GAP-008 opens below.
 
 ### GAP-007: Current documentation contains stale counts and gates
 
-- Status: reopened. Priority: P3. Category: usability.
+- Status: closed. Priority: P3. Category: usability.
 - Scope: README, STATUS.md, and documented parity commands.
 - Expected: developers can distinguish current evidence from historical results and select the correct verification command.
 - Observed: STATUS.md retains 209 byte-verifiable effects beside a current 210-effect total and four external-input exclusions.
@@ -615,6 +615,16 @@ GAP-008 opens below.
 - Reopen scope: the stale 94-count claims in STATUS.md lines 5 and 40. Every other GAP-007 claim was satisfied at its 2026-09-26 closure commit and is not contradicted.
 - Acceptance for reclosure: STATUS.md's suite counts match the tree's 97-test suite at the fix commit, verified by a fresh `node --test test/*.test.js` run.
 - Review confirmation, 2026-09-27: the review re-ran the suite in a fresh container. The review installed dependencies, the vendored engine, and the browser anew. The suite reports 97 tests, 97 pass, 0 fail, 0 skipped. STATUS.md lines 5 and 40 still claim 94 tests. The reopen stands.
+- Reclosure, 2026-09-28 (the `296e0138..73c15be0` vendor-sync commit carrying this row —
+  engine v1.0.199, build `73c15be0`): the reopened stale claims are fixed at the source. STATUS.md's
+  header "last verified" block and the suite row now record the current tree exactly: **107 tests,
+  107 pass / 0 fail** — the 97-test tree this reopen was evidenced against, plus the 10
+  `test/lifecycle-hooks.test.js` engine v1.0.199 production-lifecycle mirror tests added by that
+  same sync. The stale "94 tests" strings no longer exist in either location. Verified by a fresh
+  full-suite run inside the machine audit (`node tools/verify-sync-audit.mjs`, exit 0; its in-suite
+  check reports `107/107 tests, 0 fail`), with the raw run log retained in the job's evidence
+  archive. The old 97-test acceptance figure is superseded by the same-sync engine bump, not
+  contradicted: the count/record match this commit's tree is what the acceptance requires.
 
 ### GAP-008: Fresh corpus re-grade unexecuted
 

@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
+import { ensurePlaywrightBrowsersPath } from './browser-launch.mjs'
 import { chromium } from 'playwright'
 
 import { exportFatGraph } from '../tools/export-fat-graph.mjs'

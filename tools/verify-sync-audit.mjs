@@ -1,8 +1,9 @@
 // verify-sync-audit.mjs — re-derive every claim in STATUS.md's
 // "Vendor sync (240740dd..9d3474df)", "Vendor sync (9d3474df..2f47612c)",
 // "Vendor sync (2f47612c..8eeb7b5a)", "Vendor sync (8eeb7b5a..6a0af04d)",
-// "Vendor sync (6a0af04d..403c2a4b)", "Vendor sync (403c2a4b..7dc0f564)" and
-// "Vendor sync (7dc0f564..12b4d74f)"
+// "Vendor sync (6a0af04d..403c2a4b)", "Vendor sync (403c2a4b..7dc0f564)",
+// "Vendor sync (7dc0f564..12b4d74f)", "Vendor sync (93229933..296e0138)" and
+// "Vendor sync (296e0138..73c15be0)"
 // audits directly from source, so the
 // recorded audits are an executable contract instead of prose.
 //
@@ -80,7 +81,8 @@ const END5 = '403c2a4bf2cb56307448ea2fc1d6fa3cd74b7d6e' // replacement-predictio
 const END6 = '7dc0f5640534855d73f8c812ca071fe6b1e09197' // uniforms-report range end (v1.0.189)
 const END7 = '12b4d74fb4f28d5f00bb1dde107fa8673814d8b9' // preflight range end (v1.0.193)
 const END8 = '93229933b102ba82e713402be19db57207698850' // introspection range end (v1.0.194)
-const END9 = '296e0138c4744ed485b2e95de3eeb466c17629ee' // frame-resolution range end (v1.0.196, this sync)
+const END9 = '296e0138c4744ed485b2e95de3eeb466c17629ee' // frame-resolution range end (v1.0.196)
+const END10 = '73c15be00d6888f4b5d2835d8e242ee9e840df45' // lifecycle range end (v1.0.199, this sync)
 const VALIDATOR_DELTA = '1097\t18\tshaders/src/runtime/effect-validator.js\n457\t0\tshaders/tests/test_effect_definition_validation.js'
 const VALIDATOR_FILES = 'shaders/src/runtime/effect-validator.js\nshaders/tests/test_effect_definition_validation.js'
 const MIP_DELTA = '106\t15\tshaders/src/runtime/backends/webgl2.js\n273\t10\tshaders/src/runtime/backends/webgpu.js\n17\t0\tshaders/src/runtime/compiler.js\n26\t1\tshaders/src/runtime/effect-validator.js\n100\t19\tshaders/src/runtime/pipeline.js\n466\t0\tshaders/tests/test_mip_controls.js'
@@ -89,8 +91,8 @@ const POOL_DELTA = '185\t0\tshaders/src/runtime/backends/diagnostics.js\n26\t7\t
 const POOL_FILES = 'shaders/src/runtime/backends/diagnostics.js\nshaders/src/runtime/backends/webgl2.js\nshaders/src/runtime/backends/webgpu.js\nshaders/src/runtime/pipeline.js\nshaders/tests/test_backend_diagnostics.js\nshaders/tests/test_resource_pooling.js'
 const PRED_DELTA = '1\t1\tshaders/src/index.js\n2\t2\tshaders/src/lang/index.js\n11\t0\tshaders/src/lang/paramAliases.js\n372\t5\tshaders/src/lang/transform.js\n80\t0\tshaders/tests/frame-metrics.js\n161\t6\tshaders/tests/test-harness.js\n71\t0\tshaders/tests/test_frame_metrics.js\n200\t0\tshaders/tests/test_transform.js'
 const PRED_FILES = 'shaders/src/index.js\nshaders/src/lang/index.js\nshaders/src/lang/paramAliases.js\nshaders/src/lang/transform.js\nshaders/tests/frame-metrics.js\nshaders/tests/test-harness.js\nshaders/tests/test_frame_metrics.js\nshaders/tests/test_transform.js'
-const BUNDLE_URL = 'https://shaders.noisedeck.app/1.0.193/noisemaker-shaders-core.esm.js' // pinned documented revision (see vendor/fetch.sh), not the rolling /1 alias
-const BUNDLE_BYTES = 884620 // documented published build (12b4d74f tip, v1.0.193)
+const BUNDLE_URL = 'https://shaders.noisedeck.app/1.0.199/noisemaker-shaders-core.esm.js' // pinned documented revision (see vendor/fetch.sh), not the rolling /1 alias
+const BUNDLE_BYTES = 888834 // documented published build (73c15be0 tip, v1.0.199)
 const PREV_BUNDLE_URL = 'https://shaders.noisedeck.app/1.0.189/noisemaker-shaders-core.esm.js' // previous pinned revision (7dc0f564)
 
 let repo = process.env.NM_UPSTREAM || ''
@@ -348,6 +350,48 @@ try {
 } catch { /* no changes → git exits 0 with empty output */ }
 check('no shaders/src module changed in 93229933..296e0138 (catalog parity)', effectChanges9 === '')
 
+// 5i. The lifecycle range: 296e0138..73c15be0 (v1.0.197/v1.0.198/v1.0.199; this sync, ENGINE
+// CHANGE). The delivery was force-push-flagged with a declared range a912749f..73c15be0 and
+// three observed sub-range tips (c28e8fdb, 7aff843a, 73c15be0) — audited directly: the declared
+// start a912749f (v1.0.195) is an ancestor of the port's previously covered tip 296e0138, the
+// uncovered delta is exactly the contiguous 296e0138..73c15be0 (4 commits, including the
+// docs-only 04e8582c), the three release tags point exactly at their recorded SHAs, and the
+// shaders/ delta is the GAP-024 session-identity harness + GAP-026 lifecycle runtime
+// (webgl2.js +2, compiler.js +3, pipeline.js +128/−1) + the GAP-026 harness bindings + their
+// tests. No effect definition changed (catalog parity). Upstream main has since advanced two
+// docs-only commits (53398923, cdb60cfc) with an empty shaders/src delta, so v1.0.199 IS
+// upstream's current shaders/ tree.
+check('the declared range start a912749f is an ancestor of the previously covered tip 296e0138',
+  git('merge-base', '--is-ancestor', 'a912749fab5c3819e56a8abde664ff30e40870f4', END9) === '')
+check('296e0138 is an ancestor of 73c15be0 (lifecycle range contiguous)',
+  git('merge-base', '--is-ancestor', END9, END10) === '' && git('merge-base', END9, END10) === END9)
+tagCheck('v1.0.197', 'c28e8fdb9218d220b2d260e747f4123450c6a0e1', 'c28e8fdb')
+tagCheck('v1.0.198', '7aff843a4e33cc600968138199daae4648d0d613', '7aff843a')
+tagCheck('v1.0.199', END10, '73c15be0')
+const LIFECYCLE_DELTA = '2\t0\tshaders/src/runtime/backends/webgl2.js\n3\t0\tshaders/src/runtime/compiler.js\n128\t1\tshaders/src/runtime/pipeline.js\n237\t0\tshaders/tests/session-identity.js\n238\t13\tshaders/tests/test-harness.js\n407\t0\tshaders/tests/test_lifecycle_hooks.js\n61\t0\tshaders/tests/test_mesh_first_frame.mjs\n410\t0\tshaders/tests/test_session_identity.js'
+const LIFECYCLE_FILES = 'shaders/src/runtime/backends/webgl2.js\nshaders/src/runtime/compiler.js\nshaders/src/runtime/pipeline.js\nshaders/tests/session-identity.js\nshaders/tests/test-harness.js\nshaders/tests/test_lifecycle_hooks.js\nshaders/tests/test_mesh_first_frame.mjs\nshaders/tests/test_session_identity.js'
+const lifecycleNumstat = git('diff', '--numstat', `${END9}..${END10}`, '--', 'shaders/')
+check('shaders/ delta 296e0138..73c15be0 is exactly the GAP-026 lifecycle runtime + GAP-024 session-identity harness + their tests + harness wiring',
+  lifecycleNumstat === LIFECYCLE_DELTA, lifecycleNumstat.replace(/\n/g, ' | '))
+const lifecycleNames = git('diff', '--name-only', `${END9}..${END10}`, '--', 'shaders/').split('\n').sort().join('\n')
+check('no other shaders/ file changed in the lifecycle range', lifecycleNames === LIFECYCLE_FILES)
+const lifecycleSrcDelta = git('diff', '--numstat', `${END9}..${END10}`, '--', 'shaders/src')
+check('the lifecycle-range engine-src delta is exactly webgl2.js +2/0, compiler.js +3/0, pipeline.js +128/−1',
+  lifecycleSrcDelta === '2\t0\tshaders/src/runtime/backends/webgl2.js\n3\t0\tshaders/src/runtime/compiler.js\n128\t1\tshaders/src/runtime/pipeline.js',
+  lifecycleSrcDelta.replace(/\n/g, ' | '))
+let effectChanges10 = 'none'
+try {
+  effectChanges10 = git('diff', '--name-only', `${END9}..${END10}`, '--', 'shaders/src/effects')
+} catch { /* no changes → git exits 0 with empty output */ }
+check('no effect definition changed in 296e0138..73c15be0 (catalog parity)', effectChanges10 === '')
+// Beyond this sync's end (upstream main tips 53398923/cdb60cfc): docs-only — no shaders/src
+// change, so v1.0.199 IS upstream's current shaders/ tree.
+let postRange10 = 'x'
+try {
+  postRange10 = git('diff', '--name-only', `${END10}..cdb60cfc`, '--', 'shaders/src')
+} catch { /* git exits 0 with empty output for no changes */ }
+check('the upstream main tip (cdb60cfc, beyond the synced range end) changes no shaders/src module', postRange10 === '')
+
 // 6. Published bundle (pinned documented revision). A validator symbol remains a FAIL;
 //    a size move past the recorded build is a WARN pointing at a new ports-sync.
 const bundle = Buffer.from(await (await fetch(BUNDLE_URL)).arrayBuffer())
@@ -356,7 +400,7 @@ const stripBanner = (b) => {
   return text.replace(/^ \* Build: .*\n/m, '').replace(/^ \* Date: .*\n/m, '')
 }
 if (bundle.length === BUNDLE_BYTES) {
-  check(`published core bundle at the pinned documented revision is the recorded ${BUNDLE_BYTES}-byte build (12b4d74f tip, v1.0.193)`, true)
+  check(`published core bundle at the pinned documented revision is the recorded ${BUNDLE_BYTES}-byte build (73c15be0 tip, v1.0.199)`, true)
 } else {
   check(`published core bundle at the pinned revision no longer matches the recorded build (got ${bundle.length} bytes, recorded ${BUNDLE_BYTES}) — WARN only: the recorded byte-identity claim refers to the artifact verified during the audit; run a new ports-sync for the newer release`, true)
 }
@@ -367,10 +411,10 @@ if (bundle.length === BUNDLE_BYTES) {
 const prevBundle = Buffer.from(await (await fetch(PREV_BUNDLE_URL)).arrayBuffer())
 check('the previous pinned core (1.0.189) does NOT contain the GAP-016 preflight module',
   !prevBundle.includes('preflightEffect'))
-check('the 1.0.193 core adds the GAP-016 preflight runtime (internal preflightEffect + shared mrtFormatBytes)',
+check('the pinned core (1.0.193 tip onward) carries the GAP-016 preflight runtime (internal preflightEffect + shared mrtFormatBytes)',
   bundle.includes('preflightEffect') && bundle.includes('mrtFormatBytes') &&
   bundle.includes('maxColorBytesPerSample') && bundle.includes('maxTextureSize'))
-check('the 1.0.193 Pipeline.mrtFormatBytes() delegates to the shared preflight implementation',
+check('the pinned Pipeline.mrtFormatBytes() delegates to the shared preflight implementation',
   /mrtFormatBytes\(format\) \{\s*return mrtFormatBytes\(format\);/.test(bundle.toString('utf8')))
 check('published bundle carries the texture-policy + pass-field runtime symbols',
   bundle.includes('recreateTexturePreserving') && bundle.includes('refreshMipTargets') &&
@@ -383,16 +427,33 @@ check('published bundle carries the GAP-008 replacement-prediction symbols (v1.0
   bundle.includes('predictReplacement') && bundle.includes('getCompatibleReplacements') &&
   bundle.includes('getParamAliases'))
 check('published bundle contains no validator symbols', !bundle.includes('validateEffectDefinition'))
-// The this-sync claim (no code change required): the published 1.0.196 core (v1.0.196,
-// build 296e0138) is banner-stripped byte-identical to the pinned 1.0.193 core, and the
-// new dev-only harness modules' symbols are absent from the published bundle.
+// The 93229933..296e0138 sync claim (no code change required): the published 1.0.196
+// core (v1.0.196, build 296e0138) is banner-stripped byte-identical to the previous pinned
+// 1.0.193 core, and the dev-only harness modules' symbols are absent from the published bundle.
 const bundle196 = Buffer.from(await (await fetch('https://shaders.noisedeck.app/1.0.196/noisemaker-shaders-core.esm.js')).arrayBuffer())
-check('the published 1.0.196 core is banner-stripped byte-identical to the pinned 1.0.193 core',
-  Buffer.from(stripBanner(bundle196)).equals(Buffer.from(stripBanner(bundle))))
+const bundle193 = Buffer.from(await (await fetch('https://shaders.noisedeck.app/1.0.193/noisemaker-shaders-core.esm.js')).arrayBuffer())
+check('the published 1.0.196 core is banner-stripped byte-identical to the 1.0.193 core',
+  Buffer.from(stripBanner(bundle196)).equals(Buffer.from(stripBanner(bundle193))))
 check('the published 1.0.196 core contains none of the new dev-only harness modules\' symbols',
   !bundle196.toString('utf8').includes('passthrough-input') &&
   !bundle196.toString('utf8').includes('frame-resolution') &&
   !bundle196.toString('utf8').includes('definition-schema'))
+// The 296e0138..73c15be0 sync claim (engine change, re-vendored): the published 1.0.199 core
+// (v1.0.199, build 73c15be0) adds the GAP-026 production lifecycle runtime and the
+// c28e8fdb webgl2 mesh-target fix over the 1.0.193 core, while the GAP-024 session-identity
+// harness remains dev-only (its module name is absent from the bundle).
+check('the 1.0.193 core does NOT contain the GAP-026 lifecycle runtime',
+  !bundle193.includes('initLifecycleEffects') && !bundle193.includes('_invokeUpdateHooks'))
+check('the 1.0.199 core adds the GAP-026 lifecycle runtime (initLifecycleEffects + _invokeUpdateHooks + _withRuntimeUniforms)',
+  bundle.includes('initLifecycleEffects') && bundle.includes('_invokeUpdateHooks') &&
+  bundle.includes('_withRuntimeUniforms') && bundle.includes('hasLifecycleHook'))
+check('the 1.0.199 core carries the c28e8fdb webgl2 mesh-target fix (FBO rebound after depth allocation)',
+  /ensureDepthBuffer\(fbo, vpWidth, vpHeight\);\s*gl\.bindFramebuffer\(gl\.FRAMEBUFFER, fbo\);/.test(bundle.toString('utf8')))
+check('the 1.0.193 core lacks the c28e8fdb mesh-target fix (depth allocation left the FBO unbound)',
+  !/ensureDepthBuffer\(fbo, vpWidth, vpHeight\);\s*gl\.bindFramebuffer\(gl\.FRAMEBUFFER, fbo\);/.test(bundle193.toString('utf8')))
+check('the 1.0.199 core still contains none of the dev-only harness modules\' symbols (GAP-024 session-identity stays dev-only)',
+  !bundle.toString('utf8').includes('session-identity') && !bundle.toString('utf8').includes('frame-resolution') &&
+  !bundle.toString('utf8').includes('definition-schema'))
 
 // 7. The port's own test suite (`npm test`). In a prepared environment this check is
 //    REQUIRED: any failing test breaks the audit ("an absent run is not success"). In an
@@ -404,11 +465,18 @@ const REQUIRED_FOR_SUITE = [
   'node_modules/playwright/package.json'
 ]
 const missingForSuite = REQUIRED_FOR_SUITE.filter(p => !existsSync(p))
-const browsersRoot = process.env.PLAYWRIGHT_BROWSERS_PATH || join(homedir(), '.cache', 'ms-playwright')
+// Prepared-browser locations: the Playwright default (env or ~/.cache) plus the
+// repo-local exec-mounted cache the bare `npm test` run resolves via
+// test/browser-launch.mjs (test/browser-launch.mjs's own fallback).
+const browsersRoots = [
+  process.env.PLAYWRIGHT_BROWSERS_PATH,
+  join(homedir(), '.cache', 'ms-playwright'),
+  join(process.cwd(), '.cache', 'ms-playwright')
+].filter(Boolean)
 let browserReady = false
 try {
-  browserReady = existsSync(browsersRoot) &&
-    readdirSync(browsersRoot).some(d => d.startsWith('chromium'))
+  browserReady = browsersRoots.some(root => existsSync(root) &&
+    readdirSync(root).some(d => d.startsWith('chromium')))
 } catch { /* no browsers dir */ }
 if (missingForSuite.length || !browserReady) {
   console.log(`[SKIP] port test suite — prepare the environment first: ${missingForSuite.join(', ')}` +

@@ -1,15 +1,16 @@
 # Noisemaker for Babylon.js — status & parity
 
-*Last verified 2026-09-27 against the vendored engine **v1.0.193** (build `12b4d74f`,
-`noisemaker-shaders-core.esm.js`, 884620 bytes): the recorded suite run at this
-sync is **94 tests, 94 pass / 0 fail** (`node --test test/*.test.js`;
-82 pre-GAP-004 + the 7 `test/coverage-map.test.js` gate tests + the v1.0.187
-replacement-prediction engine-API test + the v1.0.193 static-preflight engine-API test
-(`test/preflight.test.js`) — earlier recorded runs: 94/94 at the v1.0.193 sync, 90/90 at the
-v1.0.189 sync, 89/89 at the GAP-004
+*Last verified 2026-09-28 against the vendored engine **v1.0.199** (build `73c15be0`,
+`noisemaker-shaders-core.esm.js`, 888834 bytes): the recorded suite run at this
+sync is **107 tests, 107 pass / 0 fail** (`node --test test/*.test.js`;
+97 pre-GAP-026 (the 94-test v1.0.193 recorded run + the 3 GAP-006
+qualification cases of commit `c84adde`) + the 10 `test/lifecycle-hooks.test.js` engine v1.0.199
+production-lifecycle mirror tests — earlier recorded runs: 97/97 at the
+v1.0.193/196 syncs, 94/94 at the v1.0.193 sync, 90/90 at the v1.0.189 sync, 89/89 at the GAP-004
 implementation commit (`9ad880e`), 82/82 in the v1.0.185 sync section), the machine-checked sync audit
 (`tools/verify-sync-audit.mjs`)
-re-derives the `8eeb7b5a..6a0af04d`, `6a0af04d..403c2a4b`, `403c2a4b..7dc0f564`, and `7dc0f564..12b4d74f` claims and the four external-input real-input fixtures
+re-derives the `8eeb7b5a..6a0af04d`, `6a0af04d..403c2a4b`, `403c2a4b..7dc0f564`,
+`7dc0f564..12b4d74f`, `93229933..296e0138`, and `296e0138..73c15be0` claims and the four external-input real-input fixtures
 grade byte-exact on both backends (see those sync sections and
 [`parity/external-input-grades.json`](parity/external-input-grades.json)). Those ranges changed no
 effect definitions (210 catalogued effects, 0 added / 0 removed), so the same-pass golden/candidate
@@ -37,11 +38,11 @@ Pick the command that matches the claim you are making — the gates differ:
 | `bash parity/sweep.sh` | **tolerance 0, SSIM 0.999** (flat byte-exact policy — the per-effect relaxed map was retired, see Parity below) | every current-roster program with a golden: **329 programs at this tree** (332 committed DSL fixtures minus the 3 retired `bc`/`hs`/`colorspace`, per `parity/current-programs.mjs`'s vendored-manifest roster) — the 325 committed-ledger programs (322 PASS / 3 policy skips retained: the `media`/`text`/`roll` no-input fallbacks) **plus the 4 GAP-004 real-input fixtures** (`media_image`, `text_glyphs`, `roll_midi`, `mesh_obj`), which are graded here, not skipped | the acceptance evidence for parity claims. Note the distinction: `parity/ledger.json` still records only its 325 v1.0.181-era rows (it was not rewritten with the 4 newer fixtures); 325 is the ledger artifact, 329 is what a fresh sweep grades |
 | `bash parity/corpus/sweep.sh` | **tolerance 2.001, SSIM 0.98** (hardcoded in the script — the same relaxed spot-check gate as `run.sh`, absorbing cross-driver driver noise), 1800-frame (~30 s) evolution per composition | the live corpus (historical denominator 40 raw / 39 gradeable + 1 reference-rejected, retained) | corpus grading. The recorded corpus grades in STATUS report the measured max-abs-diff per composition (the corpus evidence above is recorded **byte-identical outcomes**), but this gate does not itself enforce tolerance 0 — treat byte-exact corpus claims as recorded measured outcomes, not as an enforcement guarantee of this script |
 | `bash parity/run.sh <name>` | **defaults tolerance 2.001, SSIM 0.98** — a relaxed spot-check gate sized to cross-driver/cross-machine driver noise | one program | smoke check only. A PASS at these defaults is **not** byte-exact evidence (it can pass with a non-zero max-abs-diff). For the strict gate on one program: `bash parity/run.sh noise 0 0.999` |
-| `node --test test/*.test.js` | suite pass | **94 tests** at this tree (82 pre-GAP-004 + the 7 `test/coverage-map.test.js` gate tests + the `test/transform-prediction.test.js` engine v1.0.187 replacement-prediction API test + the `test/preflight.test.js` engine v1.0.193 static-preflight API test); the recorded GAP-004 run was **89 pass / 0 fail** at commit `9ad880e` (docs/COMPLETION_GAPS.md GAP-004); the current run is **94 pass / 0 fail** (see the `7dc0f564..12b4d74f` sync section) | unit/integration incl. `test/coverage-map.test.js`, which re-derives `parity/coverage-map.json` |
-| `node tools/verify-sync-audit.mjs` | exit 0 = every recorded sync-audit claim re-derived | the pinned engine revision (`vendor/fetch.sh` default, currently 1.0.193 / `12b4d74f`) | authority / sync-audit re-derivation |
+| `node --test test/*.test.js` | suite pass | **107 tests** at this tree (97 pre-GAP-026 — the 94-test v1.0.193 recorded run + the 3 GAP-006 qualification cases of commit `c84adde` — + the 10 `test/lifecycle-hooks.test.js` engine v1.0.199 production-lifecycle mirror tests); the recorded GAP-004 run was **89 pass / 0 fail** at commit `9ad880e` (docs/COMPLETION_GAPS.md GAP-004); the current run is **107 pass / 0 fail** (see the `296e0138..73c15be0` sync section) | unit/integration incl. `test/coverage-map.test.js`, which re-derives `parity/coverage-map.json` |
+| `node tools/verify-sync-audit.mjs` | exit 0 = every recorded sync-audit claim re-derived | the pinned engine revision (`vendor/fetch.sh` default, currently 1.0.199 / `73c15be0`) | authority / sync-audit re-derivation |
 
 Denominator and coverage authority: [`parity/coverage-map.json`](parity/coverage-map.json)
-(210/210 catalogued effects bound to graded evidence at engine 1.0.193 / build `12b4d74f`, 0
+(210/210 catalogued effects bound to graded evidence at engine 1.0.199 / build `73c15be0`, 0
 explicitly excluded; skipped and refused cases retained in the counts) and
 [`parity/ledger.json`](parity/ledger.json) (325 programs: 322 PASS, 3 SKIP, 0 FAIL — the
 v1.0.181-era full-roster artifact, retained verbatim; the fresh-sweep roster at this tree is
@@ -262,6 +263,110 @@ Source-side: `noisefactorllc/noisemaker` `246ff57f43cc..0ed489ec4684` (a tearoff
   parity/sweep.sh`, mints golden + candidate together per the documented discipline above) and every
   candidate re-rendered and re-graded — **325/325 non-corpus programs (roster + mode matrix + the 4 new
   fixtures) byte-identical**, 3 skipped (`media`/`text`/`roll`, unchanged policy).
+
+## Vendor sync (296e0138..73c15be0)
+
+Source-side: `noisefactorllc/noisemaker` `a912749fab5c..73c15be00d68` (tearoff `ports-sync`,
+flagged for a force-push / non-contiguous delivery with three observed sub-range tips — audited
+directly in a local checkout: the declared start `a912749f` (v1.0.195) is an ancestor of the
+port's covered tip entering this round, `296e0138` (the previous section's end), so the uncovered
+delta is exactly the contiguous `296e0138..73c15be0` (4 commits, including the docs-only
+`04e8582c`), landing on upstream main tip `73c15be0`; release tags **v1.0.197** (`c28e8fdb`),
+**v1.0.198** (`7aff843a`), and **v1.0.199** (`73c15be0`) each point exactly at their recorded SHA.
+Upstream main has since advanced two docs-only commits (`53398923`, `cdb60cfc`) with an empty
+`shaders/src` delta, so v1.0.199 IS upstream's current shaders/ tree).
+**Engine synced from upstream commit `73c15be0` (v1.0.199) — this round DOES change the engine,
+and the vendoring pin moves (authority change, per fetch.sh's own rule):**
+
+- **Manifest: 210 effects** (unchanged count, 0 added, 0 removed). **All 210 effect
+  mini-bundles are byte-identical** between the v1.0.193 and v1.0.199 fetches (per-file sha256
+  comparison of each `effects/*/*.js` against the fresh 1.0.193 CDN fetch, 210/210 match;
+  `manifest.json` byte-identical) — no effect definition changed.
+- **Engine core**: `noisemaker-shaders-core.esm.js` 884620 → **888834 bytes** (Build `73c15be0`,
+  v1.0.199). Vendored tree produced by the documented script itself (`bash vendor/fetch.sh` at
+  the bumped default → `vendor/noisemaker/engine-meta.json`: version 1.0.199, coreBuild
+  `73c15be0`, coreBytes 888834, effectCount 210). The audit tool's pinned-bundle checks moved
+  with the pin (its recorded `1.0.196 == 1.0.193` banner-stripped byte-identity claim is retained
+  as historical, re-derived against the explicitly fetched 1.0.193 core).
+- **Upstream changes audit** (re-derived by `node tools/verify-sync-audit.mjs`; range diffstat
+  `296e0138..73c15be0` on `shaders/`: `backends/webgl2.js` +2/−0, `compiler.js` +3/−0,
+  `pipeline.js` +128/−1, plus the four new/extended `tests/` modules + harness wiring — no
+  effect definition changed):
+  - Upstream commit `c28e8fdb` (v1.0.197): `WebGL2Backend` mesh-path fix — after
+    `ensureDepthBuffer()` (whose initial depth allocation unbinds the framebuffer), the FBO is
+    re-bound before the depth clear, so a first-frame mesh draw renders into the right target.
+    Engine-internal backend module: the port's render path uses `BabylonBackend`, which always
+    kept its render target bound, so no port change is needed — the mesh fixtures still grade
+    byte-exact (spot checks below), and the engine's own `test_mesh_first_frame.mjs` covers the
+    fixed behavior upstream.
+  - Upstream commit `7aff843a` (v1.0.198, GAP-024): `shaders/tests/*` harness-only
+    (session-identity bindings for the test harness) — outside the published bundle's import
+    graph (symbol search: `session-identity` absent from the 1.0.199 core). Nothing for the port
+    to mirror.
+  - Upstream commit `73c15be0` (v1.0.199, GAP-026): production lifecycle hooks. The
+    `Effect` wrapper had only ever *carried* onInit/onUpdate/onDestroy (config callbacks and
+    subclass overrides); the production Pipeline now invokes them: `initLifecycleEffects()`
+    rebuilds the managed-effect map at the same sites as `initAsyncEffects()` (init, resize, hot
+    recompile) with onInit once per effect instance per pipeline lifetime; `_invokeUpdateHooks()`
+    runs onUpdate once per frame with a `{ time, delta, uniforms }` context and binds returned
+    uniforms under **fallback semantics** (a returned uniform binds only when the pass does not
+    already resolve that key, so authored/step-provided values keep priority and the shared
+    authored uniforms object is never mutated); onDestroy runs for every managed effect at
+    dispose, joining the existing dispose error path; `recompile()` additionally calls
+    `pipeline.initLifecycleEffects?.()`, tolerating stub pipelines. **No shipped effect in the
+    210 mini-bundles defines a hook** (checked across all fetched bundles: no onInit/onUpdate/
+    onDestroy config keys outside the minified `Effect` base class each bundle inlines), so for
+    every real program the managed set is empty and the render path is bit-identical — committed
+    goldens carry by byte-identity (the 1.0.196→1.0.199 core delta is exactly the GAP-026
+    runtime + the mesh-target fix, both no-ops for the graded programs, verified by the spot
+    checks below).
+- **Babylon implementation & test coverage**: no `BabylonBackend`/runtime change is needed — the
+  engine delta is internal to the engine's own backend and pipeline, and the port's public
+  surface is untouched. `test/lifecycle-hooks.test.js` (new, 10 tests) mirrors the focused
+  upstream `test_lifecycle_hooks.js` cases against the vendored published engine through public
+  entry points (the engine's `compileGraph()` + `Pipeline` with a recording backend):
+  config-authored, subclass, and plain-object hooks are all invoked by the production pipeline;
+  the onUpdate context carries `{ time, delta, uniforms }` with the pipeline's global uniforms;
+  returned uniforms are bound over the pass uniforms only under fallback semantics (the
+  pass-resolved `level` keeps priority over a hook-returned default, mirroring the shipped
+  synth/media shape) and the authored uniforms object is not mutated; onInit runs once per
+  pipeline across resize and hot recompile; `recompile()` skips lifecycle init on stub pipelines
+  without the method; and hook-less effects keep identical pass execution (the original pass
+  object reaches the backend — the state of all 210 shipped effects this round).
+- **`parity/coverage-map.json`** regenerated via `node tools/coverage-map.mjs` (engine metadata
+  only — version 1.0.199 / build `73c15be0` / 888834 bytes; all counts, grades, and bindings
+  unchanged; the gate test re-derives the committed JSON).
+- **Suite environment repair (this commit)**: the headless browser tests resolved Playwright's
+  registry from `~/.cache/ms-playwright`, which is unexecutable in this harness's containers
+  (HOME sits on a noexec tmpfs). `test/browser-launch.mjs` (new; imported ahead of `playwright`
+  by the three browser-launching tests) sets `PLAYWRIGHT_BROWSERS_PATH` at module-evaluation
+  time to the repo-local exec-mounted `.cache/ms-playwright` (gitignored, produced by
+  `npx playwright install` with that path) — but only when the caller left the variable unset
+  AND the default registry holds no chromium; explicit settings and populated defaults are
+  untouched, so no test, tolerance, or launch argument changed. `tools/verify-sync-audit.mjs`'s
+  suite-readiness probe recognizes the same repo-local cache, so its REQUIRED suite check
+  executes instead of skipping. Bare `npm test` (no environment setup) now passes 107/107.
+- **Verification**: all **107 unit/integration tests pass, 0 fail** via the documented fetch
+  path (`bash vendor/fetch.sh` at the pinned 1.0.199 revision + `npm test` = `node --test
+  test/*.test.js`; 97 previous + the 10 new lifecycle mirror tests), and
+  `node tools/verify-sync-audit.mjs` re-derives every recorded claim and exits 0, including the
+  new range (ancestry/contiguity, the three release tags, the exact shaders/ and shaders/src
+  numstats, catalog parity, the pinned-revision bundle identity + GAP-026/mesh-fix symbols, and
+  the GAP-024 harness symbols' absence). Parity spot checks against the re-vendored engine, all
+  at the strict byte-exact gate (`parity/run.sh <name> 0 0.999`, tol 0 / SSIM 0.999) on
+  **freshly-paired mintings** (the documented discipline — golden and candidate rendered
+  back-to-back): `noise`, `blur`, `adjust`, `remap`, `mesh_basic`, `heightmap3d_landscape`,
+  `heightGrid`, `heightgrid_billboard_alpha`, `heightgrid_pointsrender_perspective`,
+  `billboard_flow`, `reactionDiffusion`, `navierStokes`, `ca3d`, `watercolor`, `target` — **15/15
+  byte-identical (max-abs-diff 0.000, ssim 1.0)**, including the mesh path (`c28e8fdb`'s
+  surface) and the heavy evolve programs. One initial FAIL on `heightGrid` against the *reused*
+  committed golden (max-abs-diff 123) is the documented stale-golden drift (see "A
+  found-and-fixed false failure" above): the same reused-golden comparison fails identically on
+  the previous engine, and the fresh-paired minting is byte-exact — not an engine-version
+  regression, and no committed golden was rewritten. Full-sweep re-grading not rerun this round:
+  the 210 mini-bundles are sha256-identical to the previous fetch and the runtime delta is a
+  no-op for programs whose effects define no hooks (i.e. all graded programs), so the committed
+  goldens carry by byte-identity; the 15 spot checks confirm the new tip renders identically.
 
 ## Vendor sync (6a0af04d..403c2a4b)
 

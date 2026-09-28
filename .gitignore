@@ -33,3 +33,6 @@ examples/hero.png
 # Python
 __pycache__/
 *.pyc
+
+# local Playwright browser cache (exec-mounted alternative to ~/.cache/ms-playwright)
+.cache/
