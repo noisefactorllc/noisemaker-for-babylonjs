@@ -80,7 +80,10 @@ Scope of the verified status:
 - The 3 skips are the documented `media`, `roll`, `text` no-input fallback programs. Their real-input fixture programs are separate roster entries and passed.
 - The 101-row mode matrix is part of the roster. The four real-input fixtures are part of the roster.
 - Parameter coverage is representative, not Cartesian. 257 choice-bearing parameters across 132 effects define the schema surface.
-- The corpus is not part of this gate. Its fresh re-grade stays open. See GAP-008 in the [gap register](COMPLETION_GAPS.md#4-known-gaps).
+- The corpus is not part of this gate. Its fresh re-grade ran separately on the stable
+  long-session runner: exact-SHA Corpus run `36361498078` graded 20/20 fetched compositions
+  byte-identical (max-abs-diff 0, SSIM 1.0). GAP-008 is closed; see the
+  [gap register](COMPLETION_GAPS.md#4-known-gaps).
 Local probes `noise`, `blur`, `bloom` also passed at max-abs-diff 0 against committed goldens.
 The retained `parity/ledger.json` artifact still records the 325-program v1.0.181-era grade: 322 PASS, 3 SKIP, 0 FAIL.
 
@@ -355,7 +358,7 @@ A successful dispatch or unit-test summary does not establish a full rendered ga
 
 Stable entries with evidence, dependencies, and acceptance criteria live in the [gap register](COMPLETION_GAPS.md#4-known-gaps).
 
-1. Fresh corpus re-grade: open. See GAP-008. The historical 40-composition grade stays retained. A 2026-09-26 refetch found 20/20 compositions compileable. No fresh grade ran.
+1. Fresh corpus re-grade: closed 2026-09-28. Exact-SHA Corpus run `36361498078` at `b5df22b6` fetched the then-live 20-composition feed and graded 20/20 byte-identical (max-abs-diff 0, SSIM 1.0). See the closed GAP-008 in the gap register.
 2. Real-GPU Chromium, Firefox, Safari, macOS, Windows, mobile: unqualified. This harness has no such hosts.
 3. In-browser context restoration: unqualified on the headless SwiftShader driver. The unit suite covers the loss and restore lifecycle.
 4. npm publication: no release exists. Registry E404. Git-based installation is untested.
@@ -373,5 +376,6 @@ Implementation corrections remain with the separate job. This report does not ad
 | 2026-09-24 | `e6aa0732ff7962f4a3ce044384581dbc75b632a1` | Full qualification unverified | Created the requested maintained compatibility report. Preserved historical evidence and open gaps. |
 | 2026-09-27 | `b44f41eb9d12621d31906698e9984bb5e623518d` | Roster parity verified in measured scope. 329 graded, 326 strict passes, 3 policy skips, 0 failures. Full parity stays open until the skips close. Exact-SHA CI run `36337051664`. | Updated sections 1, 3, 4, and 5 to the current source. Effect rows now carry fixture-bound verified status with a scope note. Kit `0.1.11` re-verified byte for byte. GAP-008 opened in the gap register. |
 | 2026-09-27 | `8cca4bfbbab64cb4bf537b5dc9478587129ca885` | Review verified the audit evidence. Roster parity stands: 329 graded, 326 strict passes, 3 policy skips, 0 failures. | Added the review verification block and the upstream advance record. No matrix cell changed. |
+| 2026-09-28 | `b5df22b632070e89123f5c3b2ec52835d88f90ac` | Fresh corpus re-grade executed on the stable long-session runner. Exact-SHA Corpus run `36361498078`: 20/20 fetched compositions graded, all byte-identical (max-abs-diff 0, SSIM 1.0), 0 skips, 0 failures. | Sections 1, 3, and 5 updated; the corpus limit left the open list. GAP-008 closed in the gap register. |
 
 Run: `20260924-remaining-gap-documents`. Later audits and reviews update this report with source-bound results.

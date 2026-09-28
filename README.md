@@ -158,10 +158,12 @@ engine in the same pass.
   Babylon skyboxes / PBR reflections.
 - **The live NoiseBLASTER! corpus** — the historical denominator is 40 raw compositions, 39
   gradeable + 1 the reference compiler itself rejects (counts retained; the raw art is a
-  local-only fixture and is not committed). A 2026-09-26 live-feed refetch classified 20/20
-  current compositions as reference-compileable; the full re-grade of a fresh corpus remains an
-  open, recorded exclusion (same-pass 1800-frame evolution per composition — needs a stable
-  long-session runner).
+  local-only fixture and is not committed). A 2026-09-28 fresh re-grade on the stable
+  long-session runner (exact-SHA Corpus run `36361498078`, `.github/workflows/corpus.yml`)
+  fetched the then-live 20-composition feed and graded all 20 byte-identical: 20 PASS,
+  max-abs-diff 0, SSIM 1.0 per composition (per-comparison reports and the merged ledger ride
+  the run artifacts). The feed lists the 20 most-recent shares, so each run re-fetches; the
+  workflow enforces per-run coverage against the fetch-time snapshot.
 - **All four external-input effects work through their real host-input path**, byte-identical on
   both backends with deterministic host fixtures recorded in
   [`parity/external-input-grades.json`](parity/external-input-grades.json): `media` (host image

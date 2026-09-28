@@ -99,7 +99,7 @@ The table above retains the 2026-09-22 findings. The rows below record current f
 | CLAIM-006 | Runtime API and export template | Errors and recovery support real use | partial | Suite checks green. They cover context loss, restore, resize, and missing engine. The kit page shows its alert region on boot failure. In-browser restore stays unqualified. |
 | CLAIM-007 | package.json and kit metadata | Ecosystem fit | supported | Peer cells qualified at Babylon 9.13.0 and 9.28.0. ES-module imports work. The package is not on npm. The README documents git install. |
 | CLAIM-008 | Actual distribution and workflow | Release readiness | partial | The packed artifact and served kit 0.1.11 passed their checks. No npm release exists. Registry E404. Real-GPU and other-platform cells stay unqualified. |
-| CLAIM-009 | STATUS.md corpus section | 39 gradeable compositions match | unverified | The raw corpus is local-only and absent from this checkout. Historical grades stay retained. The 2026-09-26 refetch found 20/20 compositions compileable. No fresh re-grade ran. See GAP-008. |
+| CLAIM-009 | STATUS.md corpus section | 39 gradeable compositions match | verified in measured scope | The historical 39/1 grade stays retained. The 2026-09-28 fresh re-grade (exact-SHA Corpus run `36361498078` at `b5df22b6`) measured the then-live 20-composition feed: 20/20 PASS, all max-abs-diff 0, SSIM 1.0. Raw art stays local-only; the merged ledger and per-comparison reports ride the run artifacts. |
 
 ## 3. Methods and evidence
 
@@ -618,24 +618,20 @@ GAP-008 opens below.
 
 ### GAP-008: Fresh corpus re-grade unexecuted
 
-- Status: open. Priority: P2. Category: verification.
+- Status: closed. Priority: P2. Category: verification.
 - Scope: `parity/corpus/` sweep and its live-feed fixtures.
 - Expected: every fetched corpus composition receives a measured grade against the reference backend.
-- Observed: the historical 40-composition grade stays retained. A 2026-09-26 refetch found 20/20 compositions compileable. No fresh grade ran.
-- Evidence: README corpus section and `parity/external-input-grades.json`.
-- Blocker: the raw corpus is local-only and absent from this checkout. The same-pass 1800-frame evolution per composition needs a stable long-session browser runner. This container's headless browser is unstable across many WebGL contexts.
-- Next action: run `bash parity/corpus/fetch.sh` and `bash parity/corpus/sweep.sh` on a stable runner. Record per-composition outcomes.
-- Dependencies: stable long-session runner. Raw inputs stay local-only by policy.
-- Acceptance: each fetched composition grades byte-identical, or fails with a recorded cause.
-- Required checks: corpus fetch, sweep, and per-comparison reports.
-- Last verification: 2026-09-26 compileability refetch. No grade ran since.
+- Observed at open: the historical 40-composition grade stayed retained. A 2026-09-26 refetch found 20/20 compositions compileable. No fresh grade had run.
+- Closure, 2026-09-28: the new `.github/workflows/corpus.yml` (commit `b5df22b632070e89123f5c3b2ec52835d88f90ac`) runs `parity/corpus/fetch.sh` and the per-composition 1800-frame sweep on GitHub-hosted long-session runners — one grade job per composition, golden (vendored WebGL2Backend, `NM_GOLDEN=1`) and Babylon candidate in separate sessions, graded at the corpus gates (tolerance 2.001, SSIM 0.98) with per-comparison reports. Exact-SHA run `36361498078` finished success: 22 jobs (fetch + 20 grades + coverage report), 20/20 fetched compositions graded, 20 PASS, 0 SKIP, 0 FAIL. Every row measured max-abs-diff 0 and SSIM 1.0, i.e. byte-identical to the reference backend. The merged per-composition ledger (`corpus-merged.json`) and per-comparison reports ride the run artifacts; the raw third-party art stays an ephemeral runner-local fixture and is not committed (local-only policy kept).
+- Acceptance met: each fetched composition graded byte-identical; no composition failed, so no failure causes needed recording.
+- Last verification: 2026-09-28, exact-SHA Corpus run `36361498078` at `b5df22b6`.
 
 ## 5. Ordered next actions
 
 Current actions, ordered. Implementation belongs to the separate authorized job. This audit does not implement or publish them.
 
 1. Reclose GAP-007: update STATUS.md lines 5 and 40 to the 97-test suite the tree holds. Prove it with a fresh suite run.
-2. Execute GAP-008 on a stable long-session runner. Fetch the live corpus. Grade every composition. Record byte-identical outcomes or failures with causes.
+2. ~~Execute GAP-008 on a stable long-session runner.~~ Done 2026-09-28: exact-SHA Corpus run `36361498078` graded 20/20 fetched compositions byte-identical (max-abs-diff 0, SSIM 1.0). GAP-008 closed.
 3. Qualify real-GPU Chromium, Firefox, and Safari cells when hosts become available. Record the qualified matrix in `docs/COMPATIBILITY.md` section 2.
 4. Probe in-browser context restoration on a driver that delivers `webglcontextrestored`. The unit suite stays the current evidence until then.
 5. Decide the npm publication path with the release job. Test git-based installation in an isolated consumer before any release claim.
