@@ -3,7 +3,7 @@
 // "Vendor sync (2f47612c..8eeb7b5a)", "Vendor sync (8eeb7b5a..6a0af04d)",
 // "Vendor sync (6a0af04d..403c2a4b)", "Vendor sync (403c2a4b..7dc0f564)",
 // "Vendor sync (7dc0f564..12b4d74f)", "Vendor sync (93229933..296e0138)" and
-// "Vendor sync (296e0138..73c15be0)"
+// "Vendor sync (296e0138..73c15be0)", "Vendor sync (73c15be0..a5059106)"
 // audits directly from source, so the
 // recorded audits are an executable contract instead of prose.
 //
@@ -82,7 +82,8 @@ const END6 = '7dc0f5640534855d73f8c812ca071fe6b1e09197' // uniforms-report range
 const END7 = '12b4d74fb4f28d5f00bb1dde107fa8673814d8b9' // preflight range end (v1.0.193)
 const END8 = '93229933b102ba82e713402be19db57207698850' // introspection range end (v1.0.194)
 const END9 = '296e0138c4744ed485b2e95de3eeb466c17629ee' // frame-resolution range end (v1.0.196)
-const END10 = '73c15be00d6888f4b5d2835d8e242ee9e840df45' // lifecycle range end (v1.0.199, this sync)
+const END10 = '73c15be00d6888f4b5d2835d8e242ee9e840df45' // lifecycle range end (v1.0.199, previous sync)
+const END11 = 'a5059106ea7510b839e70c5c9c33ba1f5ccbc043' // audio-input range end (this sync, no code change)
 const VALIDATOR_DELTA = '1097\t18\tshaders/src/runtime/effect-validator.js\n457\t0\tshaders/tests/test_effect_definition_validation.js'
 const VALIDATOR_FILES = 'shaders/src/runtime/effect-validator.js\nshaders/tests/test_effect_definition_validation.js'
 const MIP_DELTA = '106\t15\tshaders/src/runtime/backends/webgl2.js\n273\t10\tshaders/src/runtime/backends/webgpu.js\n17\t0\tshaders/src/runtime/compiler.js\n26\t1\tshaders/src/runtime/effect-validator.js\n100\t19\tshaders/src/runtime/pipeline.js\n466\t0\tshaders/tests/test_mip_controls.js'
@@ -392,6 +393,41 @@ try {
 } catch { /* git exits 0 with empty output for no changes */ }
 check('the upstream main tip (cdb60cfc, beyond the synced range end) changes no shaders/src module', postRange10 === '')
 
+// 5j. The audio-input range: 73c15be0..a5059106 (this sync, no code change).
+// The delivery was force-push-flagged with a declared range 73c15be0..a5059106
+// and one observed sub-range 3e21906e..a5059106 — audited directly: the
+// declared start is the port's covered tip and an exact ancestor of the end
+// (contiguous), tag v1.0.200 points at the in-range deps-only commit
+// 6b05a270, and the shaders/ delta is exactly the GAP-032 audio-input runtime
+// (external-input.js) + its focused regressions. No effect definition changed
+// (catalog parity). The GAP-032 runtime is NOT in any published release: the
+// published 1.0.200 core is banner-stripped byte-identical to the pinned
+// 1.0.199 core and lacks the new manager symbols, so the engine pin stays.
+check('73c15be0 is an ancestor of a5059106 (audio-input range contiguous)',
+  git('merge-base', '--is-ancestor', END10, END11) === '' && git('merge-base', END10, END11) === END10)
+check('the observed sub-range start 3e21906e is a descendant of the covered tip 73c15be0 (audit covers the full declared range)',
+  git('merge-base', '--is-ancestor', END10, '3e21906e4f6f86422e72920a990fc8f6cab9c309') === '')
+tagCheck('v1.0.200', '6b05a27050b8dccd68c6500a8e9d705a5dfd0e70', '6b05a270')
+const AUDIO_DELTA = '111\t7\tshaders/src/runtime/external-input.js\n186\t1\tshaders/tests/test_external_input.js'
+const AUDIO_FILES = 'shaders/src/runtime/external-input.js\nshaders/tests/test_external_input.js'
+const audioNumstat = git('diff', '--numstat', `${END10}..${END11}`, '--', 'shaders/')
+check('shaders/ delta 73c15be0..a5059106 is exactly the GAP-032 audio-input runtime + its focused regressions',
+  audioNumstat === AUDIO_DELTA, audioNumstat.replace(/\n/g, ' | '))
+const audioNames = git('diff', '--name-only', `${END10}..${END11}`, '--', 'shaders/').split('\n').sort().join('\n')
+check('no other shaders/ file changed in the audio-input range', audioNames === AUDIO_FILES)
+let effectChanges11 = 'none'
+try {
+  effectChanges11 = git('diff', '--name-only', `${END10}..${END11}`, '--', 'shaders/src/effects')
+} catch { /* no changes → git exits 0 with empty output */ }
+check('no effect definition changed in 73c15be0..a5059106 (catalog parity)', effectChanges11 === '')
+// The in-range v1.0.200 release (6b05a270) is a deps-only commit between the
+// covered tip and the end: it changes no shaders/ file.
+let tag200Shaders = 'x'
+try {
+  tag200Shaders = git('diff', '--name-only', `${END10}..6b05a27050b8dccd68c6500a8e9d705a5dfd0e70`, '--', 'shaders/')
+} catch { /* git exits 0 with empty output for no changes */ }
+check('the in-range v1.0.200 release (6b05a270, deps-only) changes no shaders/ file', tag200Shaders === '')
+
 // 6. Published bundle (pinned documented revision). A validator symbol remains a FAIL;
 //    a size move past the recorded build is a WARN pointing at a new ports-sync.
 const bundle = Buffer.from(await (await fetch(BUNDLE_URL)).arrayBuffer())
@@ -454,6 +490,20 @@ check('the 1.0.193 core lacks the c28e8fdb mesh-target fix (depth allocation lef
 check('the 1.0.199 core still contains none of the dev-only harness modules\' symbols (GAP-024 session-identity stays dev-only)',
   !bundle.toString('utf8').includes('session-identity') && !bundle.toString('utf8').includes('frame-resolution') &&
   !bundle.toString('utf8').includes('definition-schema'))
+// The 73c15be0..a5059106 sync claim (no code change required): the newest
+// published release (1.0.200, build 6b05a270 — deps-only, in-range) is
+// banner-stripped byte-identical to the pinned 1.0.199 core, and the GAP-032
+// audio-input runtime is absent from it — so the pinned engine already matches
+// upstream's published surface and the pin stays at 1.0.199 until a release
+// ships the GAP-032 manager changes.
+const bundle200 = Buffer.from(await (await fetch('https://shaders.noisedeck.app/1.0.200/noisemaker-shaders-core.esm.js')).arrayBuffer())
+check('the published 1.0.200 core is banner-stripped byte-identical to the pinned 1.0.199 core',
+  Buffer.from(stripBanner(bundle200)).equals(Buffer.from(stripBanner(bundle))))
+check('the published 1.0.200 core does NOT contain the GAP-032 audio-input runtime',
+  !bundle200.toString('utf8').includes('_checkSelectedRequirements') &&
+  !bundle200.toString('utf8').includes('selected-device audio binding'))
+check('the pinned 1.0.199 core likewise lacks the GAP-032 audio-input runtime',
+  !bundle.toString('utf8').includes('_checkSelectedRequirements'))
 
 // 7. The port's own test suite (`npm test`). In a prepared environment this check is
 //    REQUIRED: any failing test breaks the audit ("an absent run is not success"). In an

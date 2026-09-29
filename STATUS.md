@@ -10,7 +10,7 @@ v1.0.193/196 syncs, 94/94 at the v1.0.193 sync, 90/90 at the v1.0.189 sync, 89/8
 implementation commit (`9ad880e`), 82/82 in the v1.0.185 sync section), the machine-checked sync audit
 (`tools/verify-sync-audit.mjs`)
 re-derives the `8eeb7b5a..6a0af04d`, `6a0af04d..403c2a4b`, `403c2a4b..7dc0f564`,
-`7dc0f564..12b4d74f`, `93229933..296e0138`, and `296e0138..73c15be0` claims and the four external-input real-input fixtures
+`7dc0f564..12b4d74f`, `93229933..296e0138`, `296e0138..73c15be0`, and `73c15be0..a5059106` claims and the four external-input real-input fixtures
 grade byte-exact on both backends (see those sync sections and
 [`parity/external-input-grades.json`](parity/external-input-grades.json)). Those ranges changed no
 effect definitions (210 catalogued effects, 0 added / 0 removed), so the same-pass golden/candidate
@@ -263,6 +263,47 @@ Source-side: `noisefactorllc/noisemaker` `246ff57f43cc..0ed489ec4684` (a tearoff
   parity/sweep.sh`, mints golden + candidate together per the documented discipline above) and every
   candidate re-rendered and re-graded — **325/325 non-corpus programs (roster + mode matrix + the 4 new
   fixtures) byte-identical**, 3 skipped (`media`/`text`/`roll`, unchanged policy).
+
+## Vendor sync (73c15be0..a5059106)
+
+Source-side: `noisefactorllc/noisemaker` `73c15be00d68..a5059106ea75` (tearoff `ports-sync`,
+flagged for a force-push / non-contiguous delivery with one observed sub-range `3e21906e..a5059106`
+— audited directly in a local checkout: the declared start `73c15be0` is the port's covered tip
+entering this round and an exact ancestor of the end `a5059106`, so the uncovered delta is exactly
+the contiguous `73c15be0..a5059106` (7 commits), landing on upstream main tip `a5059106`.
+The only `shaders/` change is GAP-032 (`git diff --stat 73c15be0..a5059106 -- shaders/`:
+`shaders/src/runtime/external-input.js` +111/−7, `shaders/tests/test_external_input.js` +186/−1;
+the other five commits are docs-only `d95d0c8c`/`3e21906e`/`53398923`/`cdb60cfc` and the two
+dependabot bumps `a50c90bc`/`6b05a270`, none touching `shaders/`).
+**No code change required; engine pin stays at v1.0.199 / build `73c15be0`:**
+
+- Upstream commit `a5059106` (GAP-032): `AudioInputManager` now registers the browser-selected
+  capture device via `AudioState.registerDevice()` and its channels via
+  `registerDefaultChannels()`, analyzes each captured channel through a `ChannelSplitterNode`
+  with one `AnalyserNode` per channel, marks aggregate and per-channel rawReady each tick from
+  the bipolar time-domain mean, clears state through the public reset paths on `disable()`, and
+  warns about selected-device bindings it does not capture
+  (`Pipeline.getAudioInputRequirements()`, re-checked every 60 update ticks). Aggregate band,
+  spectrum, and waveform behavior is unchanged.
+- **Not in any published release**: upstream tag **v1.0.200** points at the in-range deps-only
+  commit `6b05a270` (eslint bump; zero `shaders/` files changed), and the published
+  `https://shaders.noisedeck.app/1.0.200/noisemaker-shaders-core.esm.js` core is **banner-stripped
+  byte-identical to the pinned 1.0.199 core** (`cmp` after stripping the `* Build:` / `* Date:`
+  banner lines — only those two lines differ) and does **not** contain the GAP-032 manager
+  changes (string search for `_checkSelectedRequirements` / the warning text: no matches, same
+  for the pinned 1.0.199 core). The GAP-032 runtime lives in `AudioInputManager`, which IS part
+  of the published bundle's import graph — so when a future release ships it, the pin moves and
+  that round re-verifies (the port has no audio-input code or tests of its own to mirror:
+  `grep -rl AudioInputManager test/ src/` is empty; the manager drives the host's getUserMedia
+  path, not the render path). Until then the vendored engine already matches upstream's published
+  surface — no re-vendor, no parity re-grade, and no generated-artifact refresh are needed.
+- **Verification**: `NM_UPSTREAM=<checkout> node tools/verify-sync-audit.mjs` exit 0 re-derives
+  every recorded claim including this range (ancestry/contiguity, the v1.0.200 tag at the
+  in-range deps-only commit, the exact shaders/ numstat, catalog parity, the banner-stripped
+  1.0.200-vs-1.0.199 core byte-identity, and the GAP-032 symbols' absence from both cores).
+  All **107 unit/integration tests pass, 0 fail** (`npm test` = `node --test test/*.test.js`;
+  the range introduces no new behavior to mirror). Committed goldens carry by byte-identity:
+  the pinned core is byte-identical to the previously verified 1.0.199 artifact.
 
 ## Vendor sync (296e0138..73c15be0)
 
