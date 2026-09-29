@@ -643,7 +643,7 @@ try {
 } catch { /* no browsers dir */ }
 if (missingForSuite.length || !browserReady) {
   console.log(`[SKIP] port test suite — prepare the environment first: ${missingForSuite.join(', ')}` +
-    (browserReady ? '' : `, a chromium install under PLAYWRIGHT_BROWSERS_PATH (currently: ${browsersRoot})`))
+    (browserReady ? '' : `, a chromium install under PLAYWRIGHT_BROWSERS_PATH (searched: ${browsersRoots.join(', ')})`))
   console.log('       bash vendor/fetch.sh && npm install && PLAYWRIGHT_BROWSERS_PATH=<dir> npx playwright install chromium')
 } else {
   const run = execSync('npm test', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'], timeout: 600000 })
