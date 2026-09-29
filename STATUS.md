@@ -1,7 +1,7 @@
 # Noisemaker for Babylon.js — status & parity
 
-*Last verified 2026-09-28 against the vendored engine **v1.0.199** (build `73c15be0`,
-`noisemaker-shaders-core.esm.js`, 888834 bytes): the recorded suite run at this
+*Last verified 2026-09-29 against the vendored engine **v1.0.202** (build `68273906`,
+`noisemaker-shaders-core.esm.js`, 898266 bytes): the recorded suite run at this
 sync is **107 tests, 107 pass / 0 fail** (`node --test test/*.test.js`;
 97 pre-GAP-026 (the 94-test v1.0.193 recorded run + the 3 GAP-006
 qualification cases of commit `c84adde`) + the 10 `test/lifecycle-hooks.test.js` engine v1.0.199
@@ -10,7 +10,8 @@ v1.0.193/196 syncs, 94/94 at the v1.0.193 sync, 90/90 at the v1.0.189 sync, 89/8
 implementation commit (`9ad880e`), 82/82 in the v1.0.185 sync section), the machine-checked sync audit
 (`tools/verify-sync-audit.mjs`)
 re-derives the `8eeb7b5a..6a0af04d`, `6a0af04d..403c2a4b`, `403c2a4b..7dc0f564`,
-`7dc0f564..12b4d74f`, `93229933..296e0138`, `296e0138..73c15be0`, and `73c15be0..a5059106` claims and the four external-input real-input fixtures
+`7dc0f564..12b4d74f`, `93229933..296e0138`, `296e0138..73c15be0`,
+`73c15be0..a5059106`, and `a5059106..68273906` claims and the four external-input real-input fixtures
 grade byte-exact on both backends (see those sync sections and
 [`parity/external-input-grades.json`](parity/external-input-grades.json)). Those ranges changed no
 effect definitions (210 catalogued effects, 0 added / 0 removed), so the same-pass golden/candidate
@@ -39,10 +40,10 @@ Pick the command that matches the claim you are making — the gates differ:
 | `bash parity/corpus/sweep.sh` | **tolerance 2.001, SSIM 0.98** (hardcoded in the script — the same relaxed spot-check gate as `run.sh`, absorbing cross-driver driver noise), 1800-frame (~30 s) evolution per composition | the live corpus (historical denominator 40 raw / 39 gradeable + 1 reference-rejected, retained) | corpus grading. The recorded corpus grades in STATUS report the measured max-abs-diff per composition (the corpus evidence above is recorded **byte-identical outcomes**), but this gate does not itself enforce tolerance 0 — treat byte-exact corpus claims as recorded measured outcomes, not as an enforcement guarantee of this script |
 | `bash parity/run.sh <name>` | **defaults tolerance 2.001, SSIM 0.98** — a relaxed spot-check gate sized to cross-driver/cross-machine driver noise | one program | smoke check only. A PASS at these defaults is **not** byte-exact evidence (it can pass with a non-zero max-abs-diff). For the strict gate on one program: `bash parity/run.sh noise 0 0.999` |
 | `node --test test/*.test.js` | suite pass | **107 tests** at this tree (97 pre-GAP-026 — the 94-test v1.0.193 recorded run + the 3 GAP-006 qualification cases of commit `c84adde` — + the 10 `test/lifecycle-hooks.test.js` engine v1.0.199 production-lifecycle mirror tests); the recorded GAP-004 run was **89 pass / 0 fail** at commit `9ad880e` (docs/COMPLETION_GAPS.md GAP-004); the current run is **107 pass / 0 fail** (see the `296e0138..73c15be0` sync section) | unit/integration incl. `test/coverage-map.test.js`, which re-derives `parity/coverage-map.json` |
-| `node tools/verify-sync-audit.mjs` | exit 0 = every recorded sync-audit claim re-derived | the pinned engine revision (`vendor/fetch.sh` default, currently 1.0.199 / `73c15be0`) | authority / sync-audit re-derivation |
+| `node tools/verify-sync-audit.mjs` | exit 0 = every recorded sync-audit claim re-derived | the pinned engine revision (`vendor/fetch.sh` default, currently 1.0.202 / `68273906`) | authority / sync-audit re-derivation |
 
 Denominator and coverage authority: [`parity/coverage-map.json`](parity/coverage-map.json)
-(210/210 catalogued effects bound to graded evidence at engine 1.0.199 / build `73c15be0`, 0
+(210/210 catalogued effects bound to graded evidence at engine 1.0.202 / build `68273906`, 0
 explicitly excluded; skipped and refused cases retained in the counts) and
 [`parity/ledger.json`](parity/ledger.json) (325 programs: 322 PASS, 3 SKIP, 0 FAIL — the
 v1.0.181-era full-roster artifact, retained verbatim; the fresh-sweep roster at this tree is
@@ -263,6 +264,72 @@ Source-side: `noisefactorllc/noisemaker` `246ff57f43cc..0ed489ec4684` (a tearoff
   parity/sweep.sh`, mints golden + candidate together per the documented discipline above) and every
   candidate re-rendered and re-graded — **325/325 non-corpus programs (roster + mode matrix + the 4 new
   fixtures) byte-identical**, 3 skipped (`media`/`text`/`roll`, unchanged policy).
+
+## Vendor sync (a5059106..68273906)
+
+Source-side: `noisefactorllc/noisemaker` `a5059106ea75..682739066d3b` (tearoff `ports-sync`,
+flagged for a force-push / non-contiguous delivery with one observed sub-range
+`a5059106..68273906` — audited directly in a local checkout: the declared start `73c15be0` is
+the previously covered tip and an exact ancestor of the end `68273906`, the observed sub-range
+start IS the previously audited tip `a5059106`, so the uncovered delta is exactly the contiguous
+`a5059106..68273906` (2 commits), landing on upstream main tip `68273906`. Release tags
+**v1.0.201** (`a5059106`) and **v1.0.202** (`68273906`) each point exactly at their recorded SHA.)
+The only `shaders/` change is the GAP-032 continuation (`git diff --numstat a5059106..68273906
+-- shaders/`: `shaders/src/runtime/external-input.js` +226/−82,
+`shaders/tests/test_external_input.js` +174/−49).
+**Engine synced from upstream commit `68273906` (v1.0.202) — this round DOES change the engine,
+and the vendoring pin moves (authority change, per fetch.sh's own rule):** `noisemaker-shaders-core.esm.js`
+888834 → **898266 bytes** (Build `68273906`, v1.0.202). Vendored tree produced by the documented
+script itself (`bash vendor/fetch.sh` at the bumped default → `vendor/noisemaker/engine-meta.json`:
+version 1.0.202, coreBuild `68273906`, coreBytes 898266, effectCount 210).
+
+- **Manifest + effect mini-bundles: 210 effects** (unchanged count, 0 added, 0 removed). All
+  210 mini-bundles and `manifest.json` are **byte-identical** to the previous 1.0.199 vendored
+  tree (per-file sha256 comparison of each `effects/*/*.js` plus the manifest: 211/211 match)
+  — no effect definition changed.
+- **Engine core delta = the GAP-032 multi-device capture runtime, entirely inside
+  `AudioInputManager`:** the 1.0.199→1.0.202 bundle diff's hunks all lie within the
+  `AudioInputManager` class body (constructor capture fields, `_registerCapture` /
+  `_openDeviceCapture` / `_stopCapture` / `_capturedDeviceIds` / `_enumerateInputDevices` /
+  `_syncCaptures`, the per-tick per-channel analyser pass, and `disable()` teardown). It
+  registers the browser-selected capture device (`AudioState.registerDevice`) and its default
+  channels (`registerDefaultChannels`), opens one additional `getUserMedia` stream per
+  selected-device requirement resolved against `enumerateDevices()` (exact id authoritative;
+  name must match exactly one device; re-synced at enable and every 60 update ticks), analyzes
+  each captured channel through a `ChannelSplitterNode` with one `AnalyserNode` per channel,
+  marks the aggregate and every captured channel rawReady each tick from the bipolar time-domain
+  mean, tears all captures down through the public reset paths on `disable()`, and warns about
+  uncapturable requirements (unknown id, ambiguous name, open failure, no enumerable deviceId —
+  they evaluate to min instead of failing silently). The render path is untouched.
+- **No port change required:** the port has no audio-input code or tests of its own
+  (`grep -rl AudioInputManager test/ src/` is empty; the manager drives the host's
+  getUserMedia path, not the render path), so the GAP-032 runtime carries with the vendored
+  engine. The four external-input real-input fixtures are unchanged.
+- **Parity:** dual-minted golden + candidate in one browser session through the re-vendored
+  engine (`NM_DUAL=1 LEDGER_PATH=<partial> bash parity/sweep.sh navierStokes target
+  reactionDiffusion dither dither_bayer4x4 oilPaint noise blur watercolor texture
+  billboard_flow`) — the stateful/evolve, agent-sim and sparse-dither cases that a reuse
+  spot-check cannot grade — graded at the flat max-abs-diff-0 gate: **11/11 PASS, 0 skipped**,
+  every graded program max-abs-diff 0.000 / ssim 1.00000 (the golden/candidate pairs are
+  minted in the same SwiftShader session here, so the match is byte-exact; the minted subset
+  goldens were **not** committed — the retained `parity/out/*.golden.png` stays the
+  macOS-Metal-minted set, and static-program reuse grading against it still passes:
+  noise, blur, watercolor, pondRipples max-abs-diff 0, texture max-abs-diff 1 at tol 2.001).
+- **Generated artifact refresh:** `parity/coverage-map.json` regenerated via
+  `node tools/coverage-map.mjs` — the only delta is the engine record
+  (version/build/coreBytes 1.0.199/`73c15be0`/888834 → 1.0.202/`68273906`/898266); no count,
+  grade, or coverage value changed.
+- **Verification**: `NM_UPSTREAM=<checkout> node tools/verify-sync-audit.mjs` exit 0 re-derives
+  every recorded claim including this range (ancestry/contiguity, the v1.0.201/v1.0.202 tags,
+  the exact shaders/ numstat, catalog parity, the pinned 1.0.202 core carrying the GAP-032
+  multi-device symbols while 1.0.199/1.0.200 lack them, and 1.0.201 carrying the first
+  GAP-032 commit's state half). All **107 unit/integration tests pass, 0 fail**
+  (`npm test` = `node --test test/*.test.js`). The three browser-launching test files'
+  `test/browser-launch.mjs` resolver gains a last-resort repair: when no known cache holds a
+  chromium install (fresh container, no prepared `/state/cache` and empty `~/.cache`), it
+  installs the chromium bundle ONCE into the repo-local `.cache/ms-playwright` (gitignored)
+  under an exclusive lock with mtime-based steal, so a bare `npm test` is self-preparing
+  instead of failing on the unprepared default registry.
 
 ## Vendor sync (73c15be0..a5059106)
 

@@ -1,4 +1,5 @@
-import { existsSync, readdirSync } from 'node:fs'
+import { mkdirSync, existsSync, readdirSync, rmSync, statSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
 import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -19,10 +20,18 @@ import { fileURLToPath } from 'node:url'
 // imported before 'playwright'): the Playwright registry reads
 // PLAYWRIGHT_BROWSERS_PATH when the module is first imported, so an env var
 // set later in the same process is ignored.
+//
+// If NO known cache holds a chromium install (a fresh container that has never
+// prepared one), the browsers are installed ONCE into the repo-local
+// `.cache/ms-playwright` directory so every later bare `npm test` — including
+// in fresh clones/containers with no prepared cache — finds an executable.
+// The install runs under an exclusive lock directory so concurrent node --test
+// workers don't race; a registry without a chromium entry is treated as absent.
 const FALLBACK_BROWSER_ROOTS = [
   join(dirname(fileURLToPath(import.meta.url)), '..', '.cache', 'ms-playwright'),
   '/state/cache/pw-browsers'
 ]
+const REPO_BROWSER_ROOT = FALLBACK_BROWSER_ROOTS[0]
 
 const hasChromium = (root) => {
   try {
@@ -34,11 +43,62 @@ const hasChromium = (root) => {
 
 if (!process.env.PLAYWRIGHT_BROWSERS_PATH &&
     !hasChromium(join(homedir(), '.cache', 'ms-playwright'))) {
+  let resolved = null
   for (const root of FALLBACK_BROWSER_ROOTS) {
     if (existsSync(root) && hasChromium(root)) {
-      process.env.PLAYWRIGHT_BROWSERS_PATH = root
+      resolved = root
       break
     }
+  }
+  if (resolved === null) {
+    installRepoLocalBrowsers()
+    // The install targets the repo-local root; point the registry there even
+    // when the install is owned by another concurrent worker still in flight —
+    // the launching test then fails loudly with the exact missing path instead
+    // of silently probing an unprepared default registry.
+    process.env.PLAYWRIGHT_BROWSERS_PATH = REPO_BROWSER_ROOT
+  } else {
+    process.env.PLAYWRIGHT_BROWSERS_PATH = resolved
+  }
+}
+
+function installRepoLocalBrowsers () {
+  mkdirSync(REPO_BROWSER_ROOT, { recursive: true })
+  const lock = join(REPO_BROWSER_ROOT, '.install.lock')
+  // Concurrent node --test workers all hit this path in a fresh environment:
+  // one installs (up to 10 min), the others wait for the registry to appear
+  // (or for the lock to be abandoned, in which case they take over).
+  const deadline = Date.now() + 600000
+  while (Date.now() < deadline) {
+    if (hasChromium(REPO_BROWSER_ROOT)) return
+    let locked = false
+    try {
+      mkdirSync(lock)
+      locked = true
+    } catch (e) {
+      if (e.code !== 'EEXIST') throw e
+    }
+    if (locked) {
+      try {
+        if (!hasChromium(REPO_BROWSER_ROOT)) {
+          execFileSync('npx', ['playwright', 'install', 'chromium'], {
+            cwd: dirname(dirname(fileURLToPath(import.meta.url))),
+            stdio: 'inherit',
+            env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: REPO_BROWSER_ROOT },
+            timeout: 600000
+          })
+        }
+        return
+      } finally {
+        rmSync(lock, { recursive: true, force: true })
+      }
+    }
+    // Lock held by another worker: wait for its registry, and steal the lock
+    // if its holder is evidently gone (mtime older than the install timeout).
+    try {
+      if (Date.now() - statSync(lock).mtimeMs > 660000) rmSync(lock, { recursive: true, force: true })
+    } catch { /* vanished between mkdir and stat — retry */ }
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2000)
   }
 }
 

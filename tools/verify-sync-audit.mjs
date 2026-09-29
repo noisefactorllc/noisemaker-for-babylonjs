@@ -3,7 +3,8 @@
 // "Vendor sync (2f47612c..8eeb7b5a)", "Vendor sync (8eeb7b5a..6a0af04d)",
 // "Vendor sync (6a0af04d..403c2a4b)", "Vendor sync (403c2a4b..7dc0f564)",
 // "Vendor sync (7dc0f564..12b4d74f)", "Vendor sync (93229933..296e0138)" and
-// "Vendor sync (296e0138..73c15be0)", "Vendor sync (73c15be0..a5059106)"
+// "Vendor sync (296e0138..73c15be0)", "Vendor sync (73c15be0..a5059106)" and
+// "Vendor sync (a5059106..68273906)"
 // audits directly from source, so the
 // recorded audits are an executable contract instead of prose.
 //
@@ -83,7 +84,8 @@ const END7 = '12b4d74fb4f28d5f00bb1dde107fa8673814d8b9' // preflight range end (
 const END8 = '93229933b102ba82e713402be19db57207698850' // introspection range end (v1.0.194)
 const END9 = '296e0138c4744ed485b2e95de3eeb466c17629ee' // frame-resolution range end (v1.0.196)
 const END10 = '73c15be00d6888f4b5d2835d8e242ee9e840df45' // lifecycle range end (v1.0.199, previous sync)
-const END11 = 'a5059106ea7510b839e70c5c9c33ba1f5ccbc043' // audio-input range end (this sync, no code change)
+const END11 = 'a5059106ea7510b839e70c5c9c33ba1f5ccbc043' // audio-input range end (previous sync, no code change)
+const END12 = '682739066d3b74962febbdcdae85b5aa4d2e19f3' // audio-input multi-device range end (this sync, ENGINE CHANGE)
 const VALIDATOR_DELTA = '1097\t18\tshaders/src/runtime/effect-validator.js\n457\t0\tshaders/tests/test_effect_definition_validation.js'
 const VALIDATOR_FILES = 'shaders/src/runtime/effect-validator.js\nshaders/tests/test_effect_definition_validation.js'
 const MIP_DELTA = '106\t15\tshaders/src/runtime/backends/webgl2.js\n273\t10\tshaders/src/runtime/backends/webgpu.js\n17\t0\tshaders/src/runtime/compiler.js\n26\t1\tshaders/src/runtime/effect-validator.js\n100\t19\tshaders/src/runtime/pipeline.js\n466\t0\tshaders/tests/test_mip_controls.js'
@@ -92,8 +94,8 @@ const POOL_DELTA = '185\t0\tshaders/src/runtime/backends/diagnostics.js\n26\t7\t
 const POOL_FILES = 'shaders/src/runtime/backends/diagnostics.js\nshaders/src/runtime/backends/webgl2.js\nshaders/src/runtime/backends/webgpu.js\nshaders/src/runtime/pipeline.js\nshaders/tests/test_backend_diagnostics.js\nshaders/tests/test_resource_pooling.js'
 const PRED_DELTA = '1\t1\tshaders/src/index.js\n2\t2\tshaders/src/lang/index.js\n11\t0\tshaders/src/lang/paramAliases.js\n372\t5\tshaders/src/lang/transform.js\n80\t0\tshaders/tests/frame-metrics.js\n161\t6\tshaders/tests/test-harness.js\n71\t0\tshaders/tests/test_frame_metrics.js\n200\t0\tshaders/tests/test_transform.js'
 const PRED_FILES = 'shaders/src/index.js\nshaders/src/lang/index.js\nshaders/src/lang/paramAliases.js\nshaders/src/lang/transform.js\nshaders/tests/frame-metrics.js\nshaders/tests/test-harness.js\nshaders/tests/test_frame_metrics.js\nshaders/tests/test_transform.js'
-const BUNDLE_URL = 'https://shaders.noisedeck.app/1.0.199/noisemaker-shaders-core.esm.js' // pinned documented revision (see vendor/fetch.sh), not the rolling /1 alias
-const BUNDLE_BYTES = 888834 // documented published build (73c15be0 tip, v1.0.199)
+const BUNDLE_URL = 'https://shaders.noisedeck.app/1.0.202/noisemaker-shaders-core.esm.js' // pinned documented revision (see vendor/fetch.sh), not the rolling /1 alias
+const BUNDLE_BYTES = 898266 // documented published build (68273906 tip, v1.0.202)
 const PREV_BUNDLE_URL = 'https://shaders.noisedeck.app/1.0.189/noisemaker-shaders-core.esm.js' // previous pinned revision (7dc0f564)
 
 let repo = process.env.NM_UPSTREAM || ''
@@ -428,6 +430,39 @@ try {
 } catch { /* git exits 0 with empty output for no changes */ }
 check('the in-range v1.0.200 release (6b05a270, deps-only) changes no shaders/ file', tag200Shaders === '')
 
+// 5k. The audio-input multi-device range: a5059106..68273906 (v1.0.201/v1.0.202; this sync,
+// ENGINE CHANGE). The delivery was force-push-flagged with a declared range
+// 73c15be0..68273906 and one observed sub-range a5059106..68273906 — audited directly:
+// the declared start 73c15be0 is the port's covered tip entering this round and an exact
+// ancestor of the end (contiguous), the previously-audited tip a5059106 is the observed
+// sub-range start, tags v1.0.201/v1.0.202 point exactly at a5059106/68273906, and the
+// shaders/ delta is exactly the GAP-032 multi-device capture runtime (external-input.js)
+// + its extended regressions. No effect definition changed (catalog parity).
+check('73c15be0 is an ancestor of 68273906 (declared audio range contiguous)',
+  git('merge-base', '--is-ancestor', END10, END12) === '' && git('merge-base', END10, END12) === END10)
+check('a5059106 is an ancestor of 68273906 (multi-device range contiguous)',
+  git('merge-base', '--is-ancestor', END11, END12) === '' && git('merge-base', END11, END12) === END11)
+check('the observed sub-range start a5059106 is the previously audited covered tip (audit covers only the delta beyond it)',
+  END11 === 'a5059106ea7510b839e70c5c9c33ba1f5ccbc043')
+tagCheck('v1.0.201', END11, 'a5059106')
+tagCheck('v1.0.202', END12, '68273906')
+const AUDIO2_DELTA = '226\t82\tshaders/src/runtime/external-input.js\n174\t49\tshaders/tests/test_external_input.js'
+const AUDIO2_FILES = 'shaders/src/runtime/external-input.js\nshaders/tests/test_external_input.js'
+const audio2Numstat = git('diff', '--numstat', `${END11}..${END12}`, '--', 'shaders/')
+check('shaders/ delta a5059106..68273906 is exactly the GAP-032 multi-device capture runtime + its extended regressions',
+  audio2Numstat === AUDIO2_DELTA, audio2Numstat.replace(/\n/g, ' | '))
+const audio2Names = git('diff', '--name-only', `${END11}..${END12}`, '--', 'shaders/').split('\n').sort().join('\n')
+check('no other shaders/ file changed in the multi-device audio range', audio2Names === AUDIO2_FILES)
+let effectChanges12 = 'none'
+try {
+  effectChanges12 = git('diff', '--name-only', `${END11}..${END12}`, '--', 'shaders/src/effects')
+} catch { /* no changes → git exits 0 with empty output */ }
+check('no effect definition changed in a5059106..68273906 (catalog parity)', effectChanges12 === '')
+const audio2SrcDelta = git('diff', '--numstat', `${END11}..${END12}`, '--', 'shaders/src')
+check('the multi-device-range engine-src delta is exactly external-input.js +226/−82',
+  audio2SrcDelta === '226\t82\tshaders/src/runtime/external-input.js',
+  audio2SrcDelta.replace(/\n/g, ' | '))
+
 // 6. Published bundle (pinned documented revision). A validator symbol remains a FAIL;
 //    a size move past the recorded build is a WARN pointing at a new ports-sync.
 const bundle = Buffer.from(await (await fetch(BUNDLE_URL)).arrayBuffer())
@@ -436,7 +471,7 @@ const stripBanner = (b) => {
   return text.replace(/^ \* Build: .*\n/m, '').replace(/^ \* Date: .*\n/m, '')
 }
 if (bundle.length === BUNDLE_BYTES) {
-  check(`published core bundle at the pinned documented revision is the recorded ${BUNDLE_BYTES}-byte build (73c15be0 tip, v1.0.199)`, true)
+  check(`published core bundle at the pinned documented revision is the recorded ${BUNDLE_BYTES}-byte build (68273906 tip, v1.0.202)`, true)
 } else {
   check(`published core bundle at the pinned revision no longer matches the recorded build (got ${bundle.length} bytes, recorded ${BUNDLE_BYTES}) — WARN only: the recorded byte-identity claim refers to the artifact verified during the audit; run a new ports-sync for the newer release`, true)
 }
@@ -490,20 +525,38 @@ check('the 1.0.193 core lacks the c28e8fdb mesh-target fix (depth allocation lef
 check('the 1.0.199 core still contains none of the dev-only harness modules\' symbols (GAP-024 session-identity stays dev-only)',
   !bundle.toString('utf8').includes('session-identity') && !bundle.toString('utf8').includes('frame-resolution') &&
   !bundle.toString('utf8').includes('definition-schema'))
-// The 73c15be0..a5059106 sync claim (no code change required): the newest
-// published release (1.0.200, build 6b05a270 — deps-only, in-range) is
-// banner-stripped byte-identical to the pinned 1.0.199 core, and the GAP-032
-// audio-input runtime is absent from it — so the pinned engine already matches
-// upstream's published surface and the pin stays at 1.0.199 until a release
-// ships the GAP-032 manager changes.
+// The 73c15be0..a5059106 sync claim (no code change required at that round): the
+// then-newest published release (1.0.200, build 6b05a270 — deps-only, in-range) is
+// banner-stripped byte-identical to the 1.0.199 core, and the GAP-032
+// audio-input runtime is absent from it — so the pin stayed at 1.0.199 until a
+// release shipped the GAP-032 manager changes. The 1.0.199 core here is an
+// explicit fetch (the pin has since moved to 1.0.202).
+const bundle199 = Buffer.from(await (await fetch('https://shaders.noisedeck.app/1.0.199/noisemaker-shaders-core.esm.js')).arrayBuffer())
 const bundle200 = Buffer.from(await (await fetch('https://shaders.noisedeck.app/1.0.200/noisemaker-shaders-core.esm.js')).arrayBuffer())
-check('the published 1.0.200 core is banner-stripped byte-identical to the pinned 1.0.199 core',
-  Buffer.from(stripBanner(bundle200)).equals(Buffer.from(stripBanner(bundle))))
+check('the published 1.0.200 core is banner-stripped byte-identical to the 1.0.199 core (historical no-code-change claim, re-anchored to an explicit 1.0.199 fetch)',
+  Buffer.from(stripBanner(bundle200)).equals(Buffer.from(stripBanner(bundle199))))
 check('the published 1.0.200 core does NOT contain the GAP-032 audio-input runtime',
   !bundle200.toString('utf8').includes('_checkSelectedRequirements') &&
   !bundle200.toString('utf8').includes('selected-device audio binding'))
-check('the pinned 1.0.199 core likewise lacks the GAP-032 audio-input runtime',
-  !bundle.toString('utf8').includes('_checkSelectedRequirements'))
+check('the 1.0.199 core likewise lacks the GAP-032 audio-input runtime',
+  !bundle199.toString('utf8').includes('_checkSelectedRequirements'))
+// The a5059106..68273906 sync claim (engine change, re-vendored): the published
+// 1.0.202 core (v1.0.202, build 68273906) carries the full GAP-032 multi-device
+// capture runtime — registerDevice/registerDefaultChannels state, the per-device
+// _syncCaptures plan resolved against enumerateDevices(), and the unmet-binding
+// warning — while 1.0.201 (a5059106) already carried the first GAP-032 commit's
+// per-device state half. The pinned 1.0.202 core is the vendored artifact.
+const bundle201 = Buffer.from(await (await fetch('https://shaders.noisedeck.app/1.0.201/noisemaker-shaders-core.esm.js')).arrayBuffer())
+check('the 1.0.201 core already carries the first GAP-032 commit (registerDevice + registerDefaultChannels + getDefaultChannelState)',
+  bundle201.toString('utf8').includes('registerDevice') && bundle201.toString('utf8').includes('registerDefaultChannels') &&
+  bundle201.toString('utf8').includes('getDefaultChannelState'))
+check('the 1.0.202 core adds the GAP-032 multi-device capture runtime (_syncCaptures plan + unmet-binding warning + per-channel splitter)',
+  bundle.toString('utf8').includes('selected-device audio binding') &&
+  /_syncCaptures/.test(bundle.toString('utf8')) &&
+  bundle.toString('utf8').includes('createChannelSplitter') &&
+  bundle.toString('utf8').includes('getDeviceChannelState'))
+check('the 1.0.199 core lacks the multi-device capture plan (no _syncCaptures / unmet-binding warning)',
+  !bundle199.toString('utf8').includes('selected-device audio binding') && !/_syncCaptures/.test(bundle199.toString('utf8')))
 
 // 7. The port's own test suite (`npm test`). In a prepared environment this check is
 //    REQUIRED: any failing test breaks the audit ("an absent run is not success"). In an
