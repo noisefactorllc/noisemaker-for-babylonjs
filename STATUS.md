@@ -305,16 +305,19 @@ version 1.0.202, coreBuild `68273906`, coreBytes 898266, effectCount 210).
   (`grep -rl AudioInputManager test/ src/` is empty; the manager drives the host's
   getUserMedia path, not the render path), so the GAP-032 runtime carries with the vendored
   engine. The four external-input real-input fixtures are unchanged.
-- **Parity:** dual-minted golden + candidate in one browser session through the re-vendored
-  engine (`NM_DUAL=1 LEDGER_PATH=<partial> bash parity/sweep.sh navierStokes target
-  reactionDiffusion dither dither_bayer4x4 oilPaint noise blur watercolor texture
-  billboard_flow`) — the stateful/evolve, agent-sim and sparse-dither cases that a reuse
-  spot-check cannot grade — graded at the flat max-abs-diff-0 gate: **11/11 PASS, 0 skipped**,
-  every graded program max-abs-diff 0.000 / ssim 1.00000 (the golden/candidate pairs are
-  minted in the same SwiftShader session here, so the match is byte-exact; the minted subset
-  goldens were **not** committed — the retained `parity/out/*.golden.png` stays the
-  macOS-Metal-minted set, and static-program reuse grading against it still passes:
-  noise, blur, watercolor, pondRipples max-abs-diff 0, texture max-abs-diff 1 at tol 2.001).
+- **Parity (strict gate — the round's parity evidence):** dual-minted golden + candidate in one
+  browser session through the re-vendored engine (`NM_DUAL=1 LEDGER_PATH=<partial> bash
+  parity/sweep.sh navierStokes target reactionDiffusion dither dither_bayer4x4 oilPaint noise
+  blur watercolor texture billboard_flow`) — the stateful/evolve, agent-sim and sparse-dither
+  cases that a reuse spot-check cannot grade — graded at the flat max-abs-diff-0 gate:
+  **11/11 PASS, 0 skipped**, every graded program max-abs-diff 0.000 / ssim 1.00000 at
+  tolerance 0 / ssim 0.999 (the golden/candidate pairs are minted in the same SwiftShader
+  session here, so the match is byte-exact; `texture` is graded byte-exact in this subset).
+  The minted subset goldens were **not** committed — the retained `parity/out/*.golden.png`
+  stays the macOS-Metal-minted set. A separate relaxed reuse smoke run against those retained
+  goldens (`bash parity/run.sh`, tol 2.001) is smoke-only per run.sh's documented contract —
+  a PASS there is explicitly not byte-exact evidence and is not counted as parity:
+  noise, blur, watercolor, pondRipples max-abs-diff 0, texture max-abs-diff 1.
 - **Generated artifact refresh:** `parity/coverage-map.json` regenerated via
   `node tools/coverage-map.mjs` — the only delta is the engine record
   (version/build/coreBytes 1.0.199/`73c15be0`/888834 → 1.0.202/`68273906`/898266); no count,
@@ -329,7 +332,11 @@ version 1.0.202, coreBuild `68273906`, coreBytes 898266, effectCount 210).
   chromium install (fresh container, no prepared `/state/cache` and empty `~/.cache`), it
   installs the chromium bundle ONCE into the repo-local `.cache/ms-playwright` (gitignored)
   under an exclusive lock with mtime-based steal, so a bare `npm test` is self-preparing
-  instead of failing on the unprepared default registry.
+  instead of failing on the unprepared default registry. Readiness is detected by the
+  browser directory's `INSTALLATION_COMPLETE` marker (Playwright creates the directory
+  before extracting and writes the marker after), so a concurrent cold-cache install can
+  never be mistaken for a finished one; re-verified cold in this container (cache hidden,
+  bare suite self-installs and passes).
 
 ## Vendor sync (73c15be0..a5059106)
 

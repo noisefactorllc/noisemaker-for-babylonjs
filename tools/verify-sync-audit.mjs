@@ -578,8 +578,15 @@ const browsersRoots = [
 ].filter(Boolean)
 let browserReady = false
 try {
-  browserReady = browsersRoots.some(root => existsSync(root) &&
-    readdirSync(root).some(d => d.startsWith('chromium')))
+  browserReady = browsersRoots.some(root => {
+    try {
+      // Readiness = a chromium dir WITH its INSTALLATION_COMPLETE marker: Playwright
+      // creates the browser directory before extracting and writes the marker after
+      // the install finishes, so a bare listing can report a half-extracted install.
+      return readdirSync(root).some(d => d.startsWith('chromium') &&
+        existsSync(join(root, d, 'INSTALLATION_COMPLETE')))
+    } catch { return false }
+  })
 } catch { /* no browsers dir */ }
 if (missingForSuite.length || !browserReady) {
   console.log(`[SKIP] port test suite — prepare the environment first: ${missingForSuite.join(', ')}` +

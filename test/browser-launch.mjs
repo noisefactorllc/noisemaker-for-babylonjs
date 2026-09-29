@@ -33,9 +33,17 @@ const FALLBACK_BROWSER_ROOTS = [
 ]
 const REPO_BROWSER_ROOT = FALLBACK_BROWSER_ROOTS[0]
 
+// A chromium directory exists only when its INSTALLATION_COMPLETE marker is
+// present: Playwright creates the browser directory BEFORE extracting the
+// archive and writes the marker only after the install finishes, so a bare
+// directory listing would report a half-extracted install as ready (a cold
+// cache with several node --test workers racing the one installer).
 const hasChromium = (root) => {
   try {
-    return readdirSync(root).some(d => d.startsWith('chromium'))
+    for (const d of readdirSync(root)) {
+      if (d.startsWith('chromium') && existsSync(join(root, d, 'INSTALLATION_COMPLETE'))) return true
+    }
+    return false
   } catch {
     return false
   }
