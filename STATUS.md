@@ -1,7 +1,7 @@
 # Noisemaker for Babylon.js — status & parity
 
-*Last verified 2026-09-29 against the vendored engine **v1.0.202** (build `68273906`,
-`noisemaker-shaders-core.esm.js`, 898266 bytes): the recorded suite run at this
+*Last verified 2026-09-29 against the vendored engine **v1.0.204** (build `4f5e0d28`,
+`noisemaker-shaders-core.esm.js`, 899674 bytes): the recorded suite run at this
 sync is **107 tests, 107 pass / 0 fail** (`node --test test/*.test.js`;
 97 pre-GAP-026 (the 94-test v1.0.193 recorded run + the 3 GAP-006
 qualification cases of commit `c84adde`) + the 10 `test/lifecycle-hooks.test.js` engine v1.0.199
@@ -11,7 +11,7 @@ implementation commit (`9ad880e`), 82/82 in the v1.0.185 sync section), the mach
 (`tools/verify-sync-audit.mjs`)
 re-derives the `8eeb7b5a..6a0af04d`, `6a0af04d..403c2a4b`, `403c2a4b..7dc0f564`,
 `7dc0f564..12b4d74f`, `93229933..296e0138`, `296e0138..73c15be0`,
-`73c15be0..a5059106`, `a5059106..68273906`, and `68273906..4d47b3fd` claims and the four external-input real-input fixtures
+`73c15be0..a5059106`, `a5059106..68273906`, and `68273906..4f5e0d28` claims and the four external-input real-input fixtures
 grade byte-exact on both backends (see those sync sections and
 [`parity/external-input-grades.json`](parity/external-input-grades.json)). Those ranges changed no
 effect definitions (210 catalogued effects, 0 added / 0 removed), so the same-pass golden/candidate
@@ -265,45 +265,70 @@ Source-side: `noisefactorllc/noisemaker` `246ff57f43cc..0ed489ec4684` (a tearoff
   candidate re-rendered and re-graded — **325/325 non-corpus programs (roster + mode matrix + the 4 new
   fixtures) byte-identical**, 3 skipped (`media`/`text`/`roll`, unchanged policy).
 
-## Vendor sync (68273906..4d47b3fd)
+## Vendor sync (68273906..4f5e0d28)
 
-Source-side: `noisefactorllc/noisemaker` `682739066d3b..4d47b3fd8262` (tearoff `ports-sync`,
+Source-side: `noisefactorllc/noisemaker` `682739066d3b..4f5e0d28bdc1` (tearoff `ports-sync`,
 flagged for a force-push / non-contiguous delivery with one observed sub-range
-`c4606d11..4d47b3fd` — audited directly in a local checkout: the declared start `73c15be0` is
-the port's covered tip entering the previous round and an exact ancestor of the end `4d47b3fd`
-(contiguous), the previously synced tip `68273906` is likewise an exact ancestor of the end, so
-the uncovered delta is exactly the contiguous `68273906..4d47b3fd` (5 commits: 4 ledger/i18n/
-contract commits plus the fix itself), landing on upstream main tip `4d47b3fd`. **The tip is
-unpublished: `git tag --contains 4d47b3fd` is empty** (`v1.0.202-5-g4d47b3fd`), so the
-documented vendoring pin stays at **1.0.202** (build `68273906`) and this round is an audit
-only — the engine cannot be re-vendored until a release ships the fix.)
+`c4606d11..4d47b3fd` — audited directly in a local checkout: the declared start `73c15be0` and
+the previously synced tip `68273906` are each an exact ancestor of upstream main tip
+`4f5e0d28` (contiguous), so the uncovered delta is exactly `68273906..4f5e0d28` (6 commits:
+4 ledger/i18n/contract commits plus two GAP-032 audio fixes). The delivery's tip moved under
+this round: the audit commit recorded `4d47b3fd` as unpublished (`v1.0.202-5-g4d47b3fd`), then
+upstream tagged **v1.0.203 (`4d47b3fd`) and v1.0.204 (`4f5e0d28`)** and re-published the CDN —
+the v1.0.204 artifact's Build banner records the **`4f5e0d28`** build, so the tip shipped
+inside the documented release.
+**Engine synced from the published 1.0.204 artifact — this round DOES change the engine, and
+the vendoring pin moves (authority change, per fetch.sh's own rule):** `noisemaker-shaders-core.esm.js`
+898266 → **899674 bytes** (Build `4f5e0d28`, v1.0.204). Vendored tree produced by the
+documented script itself (`bash vendor/fetch.sh` at the bumped default → `vendor/noisemaker/engine-meta.json`:
+version 1.0.204, coreBuild `4f5e0d28`, coreBytes 899674, effectCount 210; the vendored core is
+byte-identical to a fresh CDN fetch).
 
-- **`shaders/` delta** (`git diff --numstat 68273906..4d47b3fd -- shaders/`):
-  `shaders/src/runtime/external-input.js` +38/−0,
-  `shaders/tests/test_external_input.js` +43/−0. No `shaders/src/effects` file changed
-  (catalog parity: 210 effects, 0 added / 0 removed).
-- **The change is the GAP-032 channel-shortfall follow-up, entirely inside
-  `AudioInputManager`:** `_syncCaptures()` gains a post-open validation pass
-  (`_channelShortfall()`) that warns for every selected requirement — default-device,
-  id-selected, and name-selected alike — whose captured device exposes fewer channels than the
-  requirement selects (previously the channel lookup returned null and the binding silently
-  evaluated to min with no diagnostic); requirements with no capture keep their existing
-  specific warnings. `llms-full.txt`'s uncapturable-binding enumerations (parameters/globals
-  and Diagnose) gain the shortfall. The render path is untouched.
-- **No port change required:** the fix lives in the published engine's `AudioInputManager`
-  only, and the published pinned 1.0.202 core predates it (`_channelShortfall` absent from
-  `vendor/noisemaker/noisemaker-shaders-core.esm.js`, which still carries the multi-device
-  capture runtime beneath it) — the port consumes the published engine, so there is nothing
-  to vendor, translate, or mirror until upstream releases; the port has no audio-input code
-  or tests of its own (`grep -rl AudioInputManager test/ src/` is empty).
+- **Manifest + effect mini-bundles: 210 effects** (unchanged count, 0 added, 0 removed). The
+  `shaders/` source delta over the previous pin is exactly
+  `shaders/src/runtime/external-input.js` +38/−0 and `shaders/tests/test_external_input.js`
+  +82/−0 (`git diff --numstat 68273906..4f5e0d28 -- shaders/`; the 4d47b3fd..4f5e0d28
+  follow-up is +1/−1 in the same file plus +39 test lines); no `shaders/src/effects` file
+  changed (catalog parity). The published core delta is contained in one hunk region, entirely
+  inside `AudioInputManager` (verified by prefix/suffix byte comparison of the banner-stripped
+  1.0.202 vs 1.0.204 cores): the render path is untouched.
+- **The two fixes, both inside `AudioInputManager`:** `_syncCaptures()` gains a post-open
+  validation pass (`_channelShortfall()`) warning for every selected requirement —
+  default-device, id-selected, and name-selected alike — whose captured device exposes fewer
+  channels than the requirement selects (previously the channel lookup returned null and the
+  binding silently evaluated to min with no diagnostic); `4f5e0d28` drops the default-device
+  branch's `this._deviceId` guard so the deviceless capture (stored under the null key when
+  the track reports no deviceId) is checked too. Requirements with no capture keep their
+  existing specific warnings.
+- **Port change: authority bump only** — `vendor/fetch.sh`'s documented default moves
+  1.0.202 → **1.0.204**; no port code change (the port has no audio-input code or tests of
+  its own, `grep -rl AudioInputManager test/ src/` is empty; the manager drives the host's
+  getUserMedia path, not the render path). The four external-input real-input fixtures are
+  unchanged.
+- **Parity (strict gate — the round's parity evidence):** dual-minted golden + candidate in one
+  browser session through the re-vendored engine (`NM_DUAL=1 LEDGER_PATH=<partial> bash
+  parity/sweep.sh navierStokes target reactionDiffusion dither dither_bayer4x4 oilPaint noise
+  blur watercolor texture billboard_flow`) — the stateful/evolve, agent-sim and sparse-dither
+  cases a reuse spot-check cannot grade — graded at the flat max-abs-diff-0 gate: **11/11
+  PASS, 0 skipped**, every graded program max-abs-diff 0.000 / ssim 1.00000 at tolerance 0 /
+  ssim 0.999 (the golden/candidate pairs are minted in the same SwiftShader session here, so
+  the match is byte-exact). The minted subset goldens were **not** committed — the retained
+  `parity/out/*.golden.png` stays the macOS-Metal-minted set. A separate relaxed reuse smoke
+  run against those retained goldens (`bash parity/run.sh`, tol 2.001) is smoke-only per
+  run.sh's documented contract — a PASS there is explicitly not byte-exact evidence and is
+  not counted as parity: noise, blur, watercolor, pondRipples max-abs-diff 0, texture
+  max-abs-diff 1. The full-roster byte-exact re-grade is the repository's CI strict-parity
+  job (8 shards, NM_DUAL, tolerance 0 / SSIM 0.999) at this exact commit.
+- **Generated artifact refresh:** `parity/coverage-map.json` regenerated via
+  `node tools/coverage-map.mjs` — the only delta is the engine record
+  (version/build/coreBytes 1.0.202/`68273906`/898266 → 1.0.204/`4f5e0d28`/899674); no count,
+  grade, or coverage value changed.
 - **Verification**: `NM_UPSTREAM=<checkout> node tools/verify-sync-audit.mjs` exit 0 re-derives
-  every recorded claim including this range (ancestry of both the declared start and the
-  previous synced tip, the empty `tag --contains`, the exact shaders/ numstat, catalog parity,
-  the pinned 1.0.202 core lacking the shortfall symbols while carrying the multi-device
-  runtime). All **107 unit/integration tests pass, 0 fail** (`npm test` =
-  `node --test test/*.test.js`). Engine pin and byte counts unchanged (898266-byte core) —
-  no parity re-grade is owed (the vendored artifact is unchanged; `bash vendor/fetch.sh`
-  re-fetches the identical 1.0.202 tree).
+  every recorded claim including this range (ancestry of the declared start and the previous
+  synced tip, v1.0.203 pointing exactly at `4d47b3fd` and v1.0.204 at `4f5e0d28`, the
+  exact shaders/ numstat including the 1/1 follow-up, catalog parity, the pinned 1.0.204 core
+  carrying both fixes while 1.0.202 carries neither). All **107 unit/integration tests pass,
+  0 fail** (`npm test` = `node --test test/*.test.js`).
 
 ## Vendor sync (a5059106..68273906)
 
