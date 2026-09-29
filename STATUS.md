@@ -11,7 +11,7 @@ implementation commit (`9ad880e`), 82/82 in the v1.0.185 sync section), the mach
 (`tools/verify-sync-audit.mjs`)
 re-derives the `8eeb7b5a..6a0af04d`, `6a0af04d..403c2a4b`, `403c2a4b..7dc0f564`,
 `7dc0f564..12b4d74f`, `93229933..296e0138`, `296e0138..73c15be0`,
-`73c15be0..a5059106`, and `a5059106..68273906` claims and the four external-input real-input fixtures
+`73c15be0..a5059106`, `a5059106..68273906`, and `68273906..4d47b3fd` claims and the four external-input real-input fixtures
 grade byte-exact on both backends (see those sync sections and
 [`parity/external-input-grades.json`](parity/external-input-grades.json)). Those ranges changed no
 effect definitions (210 catalogued effects, 0 added / 0 removed), so the same-pass golden/candidate
@@ -264,6 +264,46 @@ Source-side: `noisefactorllc/noisemaker` `246ff57f43cc..0ed489ec4684` (a tearoff
   parity/sweep.sh`, mints golden + candidate together per the documented discipline above) and every
   candidate re-rendered and re-graded — **325/325 non-corpus programs (roster + mode matrix + the 4 new
   fixtures) byte-identical**, 3 skipped (`media`/`text`/`roll`, unchanged policy).
+
+## Vendor sync (68273906..4d47b3fd)
+
+Source-side: `noisefactorllc/noisemaker` `682739066d3b..4d47b3fd8262` (tearoff `ports-sync`,
+flagged for a force-push / non-contiguous delivery with one observed sub-range
+`c4606d11..4d47b3fd` — audited directly in a local checkout: the declared start `73c15be0` is
+the port's covered tip entering the previous round and an exact ancestor of the end `4d47b3fd`
+(contiguous), the previously synced tip `68273906` is likewise an exact ancestor of the end, so
+the uncovered delta is exactly the contiguous `68273906..4d47b3fd` (5 commits: 4 ledger/i18n/
+contract commits plus the fix itself), landing on upstream main tip `4d47b3fd`. **The tip is
+unpublished: `git tag --contains 4d47b3fd` is empty** (`v1.0.202-5-g4d47b3fd`), so the
+documented vendoring pin stays at **1.0.202** (build `68273906`) and this round is an audit
+only — the engine cannot be re-vendored until a release ships the fix.)
+
+- **`shaders/` delta** (`git diff --numstat 68273906..4d47b3fd -- shaders/`):
+  `shaders/src/runtime/external-input.js` +38/−0,
+  `shaders/tests/test_external_input.js` +43/−0. No `shaders/src/effects` file changed
+  (catalog parity: 210 effects, 0 added / 0 removed).
+- **The change is the GAP-032 channel-shortfall follow-up, entirely inside
+  `AudioInputManager`:** `_syncCaptures()` gains a post-open validation pass
+  (`_channelShortfall()`) that warns for every selected requirement — default-device,
+  id-selected, and name-selected alike — whose captured device exposes fewer channels than the
+  requirement selects (previously the channel lookup returned null and the binding silently
+  evaluated to min with no diagnostic); requirements with no capture keep their existing
+  specific warnings. `llms-full.txt`'s uncapturable-binding enumerations (parameters/globals
+  and Diagnose) gain the shortfall. The render path is untouched.
+- **No port change required:** the fix lives in the published engine's `AudioInputManager`
+  only, and the published pinned 1.0.202 core predates it (`_channelShortfall` absent from
+  `vendor/noisemaker/noisemaker-shaders-core.esm.js`, which still carries the multi-device
+  capture runtime beneath it) — the port consumes the published engine, so there is nothing
+  to vendor, translate, or mirror until upstream releases; the port has no audio-input code
+  or tests of its own (`grep -rl AudioInputManager test/ src/` is empty).
+- **Verification**: `NM_UPSTREAM=<checkout> node tools/verify-sync-audit.mjs` exit 0 re-derives
+  every recorded claim including this range (ancestry of both the declared start and the
+  previous synced tip, the empty `tag --contains`, the exact shaders/ numstat, catalog parity,
+  the pinned 1.0.202 core lacking the shortfall symbols while carrying the multi-device
+  runtime). All **107 unit/integration tests pass, 0 fail** (`npm test` =
+  `node --test test/*.test.js`). Engine pin and byte counts unchanged (898266-byte core) —
+  no parity re-grade is owed (the vendored artifact is unchanged; `bash vendor/fetch.sh`
+  re-fetches the identical 1.0.202 tree).
 
 ## Vendor sync (a5059106..68273906)
 

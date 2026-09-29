@@ -4,7 +4,7 @@
 // "Vendor sync (6a0af04d..403c2a4b)", "Vendor sync (403c2a4b..7dc0f564)",
 // "Vendor sync (7dc0f564..12b4d74f)", "Vendor sync (93229933..296e0138)" and
 // "Vendor sync (296e0138..73c15be0)", "Vendor sync (73c15be0..a5059106)" and
-// "Vendor sync (a5059106..68273906)"
+// "Vendor sync (a5059106..68273906)" and "Vendor sync (68273906..4d47b3fd)"
 // audits directly from source, so the
 // recorded audits are an executable contract instead of prose.
 //
@@ -86,6 +86,7 @@ const END9 = '296e0138c4744ed485b2e95de3eeb466c17629ee' // frame-resolution rang
 const END10 = '73c15be00d6888f4b5d2835d8e242ee9e840df45' // lifecycle range end (v1.0.199, previous sync)
 const END11 = 'a5059106ea7510b839e70c5c9c33ba1f5ccbc043' // audio-input range end (previous sync, no code change)
 const END12 = '682739066d3b74962febbdcdae85b5aa4d2e19f3' // audio-input multi-device range end (this sync, ENGINE CHANGE)
+const END13 = '4d47b3fd826288077a58a95da3597dba59007fd9' // channel-shortfall range end (this sync, no code change — unpublished tip)
 const VALIDATOR_DELTA = '1097\t18\tshaders/src/runtime/effect-validator.js\n457\t0\tshaders/tests/test_effect_definition_validation.js'
 const VALIDATOR_FILES = 'shaders/src/runtime/effect-validator.js\nshaders/tests/test_effect_definition_validation.js'
 const MIP_DELTA = '106\t15\tshaders/src/runtime/backends/webgl2.js\n273\t10\tshaders/src/runtime/backends/webgpu.js\n17\t0\tshaders/src/runtime/compiler.js\n26\t1\tshaders/src/runtime/effect-validator.js\n100\t19\tshaders/src/runtime/pipeline.js\n466\t0\tshaders/tests/test_mip_controls.js'
@@ -557,6 +558,48 @@ check('the 1.0.202 core adds the GAP-032 multi-device capture runtime (_syncCapt
   bundle.toString('utf8').includes('getDeviceChannelState'))
 check('the 1.0.199 core lacks the multi-device capture plan (no _syncCaptures / unmet-binding warning)',
   !bundle199.toString('utf8').includes('selected-device audio binding') && !/_syncCaptures/.test(bundle199.toString('utf8')))
+
+// 5l. The channel-shortfall range: 68273906..4d47b3fd (this sync, no code change —
+// unpublished tip). The delivery was force-push-flagged with a declared range
+// 73c15be0..4d47b3fd and one observed sub-range c4606d11..4d47b3fd — audited directly:
+// the declared start 73c15be0 is the port's covered tip entering the previous round and
+// an exact ancestor of the end (contiguous), the previously synced tip 68273906 is an
+// exact ancestor of the end (the uncovered delta is exactly 68273906..4d47b3fd), and
+// 4d47b3fd is contained in NO release tag (it is 5 commits past v1.0.202, unpublished) —
+// so the pinned 1.0.202 vendored engine cannot be bumped and the pin stays. The
+// shaders/ delta is exactly the GAP-032 channel-shortfall warning (+ its regression)
+// in the audio-input manager; no effect definition changed (catalog parity).
+check('73c15be0 is an ancestor of 4d47b3fd (declared shortfall range contiguous)',
+  git('merge-base', '--is-ancestor', END10, END13) === '' && git('merge-base', END10, END13) === END10)
+check('68273906 is an ancestor of 4d47b3fd (uncovered delta is exactly 68273906..4d47b3fd)',
+  git('merge-base', '--is-ancestor', END12, END13) === '' && git('merge-base', END12, END13) === END12)
+check('4d47b3fd is contained in no release tag (tip is unpublished — pin stays at 1.0.202)',
+  git('tag', '--contains', END13) === '')
+const SHORTFALL_DELTA = '38\t0\tshaders/src/runtime/external-input.js\n43\t0\tshaders/tests/test_external_input.js'
+const SHORTFALL_FILES = 'shaders/src/runtime/external-input.js\nshaders/tests/test_external_input.js'
+const shortfallNumstat = git('diff', '--numstat', `${END12}..${END13}`, '--', 'shaders/')
+check('shaders/ delta 68273906..4d47b3fd is exactly the GAP-032 channel-shortfall warning + its regression',
+  shortfallNumstat === SHORTFALL_DELTA, shortfallNumstat.replace(/\n/g, ' | '))
+const shortfallNames = git('diff', '--name-only', `${END12}..${END13}`, '--', 'shaders/').split('\n').sort().join('\n')
+check('no other shaders/ file changed in the channel-shortfall range', shortfallNames === SHORTFALL_FILES)
+let effectChanges13 = 'none'
+try {
+  effectChanges13 = git('diff', '--name-only', `${END12}..${END13}`, '--', 'shaders/src/effects')
+} catch { /* no changes → git exits 0 with empty output */ }
+check('no effect definition changed in 68273906..4d47b3fd (catalog parity)', effectChanges13 === '')
+const shortfallSrcDelta = git('diff', '--numstat', `${END12}..${END13}`, '--', 'shaders/src')
+check('the channel-shortfall-range engine-src delta is exactly external-input.js +38/−0',
+  shortfallSrcDelta === '38\t0\tshaders/src/runtime/external-input.js',
+  shortfallSrcDelta.replace(/\n/g, ' | '))
+// No code change required at this round: the fix is upstream-only and the published
+// pinned 1.0.202 core predates it — the vendored engine cannot carry it until a
+// release ships, so the published core must still LACK the shortfall symbols while
+// carrying the multi-device runtime beneath it.
+check('the pinned 1.0.202 core does NOT yet carry the channel-shortfall warning (fix is unpublished)',
+  !bundle.toString('utf8').includes('_channelShortfall') &&
+  !bundle.toString('utf8').includes('lacks the requested channel'))
+check('the pinned 1.0.202 core still carries the multi-device capture runtime beneath the unpublished fix',
+  bundle.toString('utf8').includes('selected-device audio binding') && /_syncCaptures/.test(bundle.toString('utf8')))
 
 // 7. The port's own test suite (`npm test`). In a prepared environment this check is
 //    REQUIRED: any failing test breaks the audit ("an absent run is not success"). In an
