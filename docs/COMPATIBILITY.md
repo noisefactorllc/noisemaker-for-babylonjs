@@ -89,7 +89,7 @@ The retained `parity/ledger.json` artifact still records the 325-program v1.0.18
 
 ### Historical review, 2026-09-25
 
-53 unit tests passed, but importing the compiler from the packed distribution still failed then. GAP-001 was open at that revision. Current full rendered parity was stale and unverified. [Raw evidence](/Users/alex/.codex/automations/noisemaker-port-completion-audit/review-20260925-053200/babylon-installed-compiler.json).
+53 unit tests passed, but importing the compiler from the packed distribution still failed then. GAP-001 was open at that revision. Current full rendered parity was stale and unverified. Raw evidence (audit evidence `review-20260925-053200/babylon-installed-compiler.json`).
 
 ### Earlier measurements
 
@@ -346,10 +346,10 @@ The review commands and results are rows R1 to R9 in the [gap register](COMPLETI
 
 ### Historical CI boundary, 2026-09-25
 
-No workflow run existed at the then-inspected source SHA. [Exact-source responses and workflows](/Users/alex/.codex/automations/noisemaker-port-completion-audit/review-20260925-053200/noisemaker-for-babylonjs-remote-evidence.json). Superseded by the current evidence above.
+No workflow run existed at the then-inspected source SHA. Exact-source responses and workflows (audit evidence `review-20260925-053200/noisemaker-for-babylonjs-remote-evidence.json`). Superseded by the current evidence above.
 
 [Earlier audit and review evidence](COMPLETION_GAPS.md#3-methods-and-evidence). [Exact-source Actions](https://github.com/noisefactorllc/noisemaker-for-babylonjs/actions?query=head_sha%3Ae6aa0732ff7962f4a3ce044384581dbc75b632a1).
-[This run evidence](/Users/alex/.codex/automations/noisemaker-port-completion-audit/evidence-20260924-remaining-gap-documents) retains commands, exit codes, source identities, and distribution metadata.
+This run evidence (audit evidence `evidence-20260924-remaining-gap-documents`) retains commands, exit codes, source identities, and distribution metadata.
 Official host references and historical environment limits remain in the linked gap register.
 Source CI, export dispatch, artifact delivery, and rendered parity are separate evidence dimensions.
 A successful dispatch or unit-test summary does not establish a full rendered gate.
@@ -369,7 +369,7 @@ Implementation corrections remain with the separate job. This report does not ad
 
 ## 6. History
 
-2026-09-25 daily review at `8a39787a7c3564c4a331047e727a7b372d68c16b`: source freshness and bounded evidence reviewed. Open qualification limits retained. [Retained review evidence](/Users/alex/.codex/automations/noisemaker-port-completion-audit/review-20260925-053200/babylon-installed-compiler.json). No new closure claimed.
+2026-09-25 daily review at `8a39787a7c3564c4a331047e727a7b372d68c16b`: source freshness and bounded evidence reviewed. Open qualification limits retained. Retained review evidence (audit evidence `review-20260925-053200/babylon-installed-compiler.json`). No new closure claimed.
 
 | Date | Source | Result | Change |
 |---|---|---|---|

@@ -32,7 +32,7 @@ The CPU authority head advanced to `f0ccebef`. The audit-time record above stays
 
 Reviewed source: [`8a39787a7c3564c4a331047e727a7b372d68c16b`](https://github.com/noisefactorllc/noisemaker-for-babylonjs/commit/8a39787a7c3564c4a331047e727a7b372d68c16b).
 Full rendered parity was unverified at that revision. The upstream discovery then was `bbdeb56c4b75cf33379766c3e87b0f5a18bcbba8`, authority `1.0.179` at `fca611fd8f91424661d4e531d39313d24ea21134`.
-The served kit then was `0.1.5` at `e6aa0732ff7962f4a3ce044384581dbc75b632a1`. [Retrieved inventory and hashes](/Users/alex/.codex/automations/noisemaker-port-completion-audit/review-20260925-053200/current-served-inventories.json). Artifact identity does not establish host qualification.
+The served kit then was `0.1.5` at `e6aa0732ff7962f4a3ce044384581dbc75b632a1`. Retrieved inventory and hashes (audit evidence `review-20260925-053200/current-served-inventories.json`). Artifact identity does not establish host qualification.
 
 ### Earlier source observations
 
@@ -141,11 +141,11 @@ The browser loads from `/state/cache/pw-browsers` because `/tmp` mounts noexec.
 | R8 | `npm view noisemaker-for-babylonjs`. `npm view @babylonjs/core`. | 1 | The registry returns E404 for the port. The registry reports `@babylonjs/core` at `9.28.0`. The qualified matrix cell names the current latest. |
 | R9 | `gh api` compare `296e0138...04e8582c` on the authority repository. | 0 | The authority is one commit ahead of the audit. The commit changes `LEDGER.md` and `llms-full.txt` only. |
 
-Historical CI boundary, 2026-09-25: no workflow run existed at the then-inspected source SHA. Superseded by the exact-SHA evidence above. [Exact-source responses and workflows](/Users/alex/.codex/automations/noisemaker-port-completion-audit/review-20260925-053200/noisemaker-for-babylonjs-remote-evidence.json).
+Historical CI boundary, 2026-09-25: no workflow run existed at the then-inspected source SHA. Superseded by the exact-SHA evidence above. Exact-source responses and workflows (audit evidence `review-20260925-053200/noisemaker-for-babylonjs-remote-evidence.json`).
 
 ### Daily review, 2026-09-25
 
-53 unit tests pass, but importing the compiler from the packed distribution still fails with ERR_MODULE_NOT_FOUND for tools/export-fat-graph.mjs. The package contains 12 files. GAP-001 remains open. Current full rendered parity is stale and unverified. [Raw evidence](/Users/alex/.codex/automations/noisemaker-port-completion-audit/review-20260925-053200/babylon-installed-compiler.json).
+53 unit tests pass, but importing the compiler from the packed distribution still fails with ERR_MODULE_NOT_FOUND for tools/export-fat-graph.mjs. The package contains 12 files. GAP-001 remains open. Current full rendered parity is stale and unverified. Raw evidence (audit evidence `review-20260925-053200/babylon-installed-compiler.json`).
 The review checked source changes, worker evidence, source-bound CI where present, and current served inventories. Full installed-host and platform qualification remains incomplete.
 
 Environment: Darwin arm64, Node 24.7.0, npm 11.5.1, Babylon 9.13.0, Chromium 149.0.7827.55, ANGLE Metal.
@@ -652,7 +652,7 @@ Do not infer implementation, publication, or workflow authority from this list.
 
 ## 6. Pass history
 
-2026-09-25 daily review at `8a39787a7c3564c4a331047e727a7b372d68c16b`: source freshness and bounded evidence reviewed. Open qualification limits retained. [Retained review evidence](/Users/alex/.codex/automations/noisemaker-port-completion-audit/review-20260925-053200/babylon-installed-compiler.json). No new closure claimed.
+2026-09-25 daily review at `8a39787a7c3564c4a331047e727a7b372d68c16b`: source freshness and bounded evidence reviewed. Open qualification limits retained. Retained review evidence (audit evidence `review-20260925-053200/babylon-installed-compiler.json`). No new closure claimed.
 
 | Date | Run and source | Document changes | Tested scope | Remaining limits |
 | --- | --- | --- | --- | --- |
