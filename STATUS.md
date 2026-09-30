@@ -1,17 +1,18 @@
 # Noisemaker for Babylon.js — status & parity
 
-*Last verified 2026-09-29 against the vendored engine **v1.0.204** (build `4f5e0d28`,
-`noisemaker-shaders-core.esm.js`, 899674 bytes): the recorded suite run at this
-sync is **107 tests, 107 pass / 0 fail** (`node --test test/*.test.js`;
-97 pre-GAP-026 (the 94-test v1.0.193 recorded run + the 3 GAP-006
-qualification cases of commit `c84adde`) + the 10 `test/lifecycle-hooks.test.js` engine v1.0.199
-production-lifecycle mirror tests — earlier recorded runs: 97/97 at the
-v1.0.193/196 syncs, 94/94 at the v1.0.193 sync, 90/90 at the v1.0.189 sync, 89/89 at the GAP-004
+*Last verified 2026-09-30 against the vendored engine **v1.0.206** (build `e24c844f`,
+`noisemaker-shaders-core.esm.js`, 903581 bytes): the recorded suite run at this
+sync is **111 tests, 111 pass / 0 fail** (`node --test test/*.test.js`;
+107 at the v1.0.204 sync — the 94-test v1.0.193 recorded run + the 3 GAP-006
+qualification cases of commit `c84adde` + the 10 `test/lifecycle-hooks.test.js` engine v1.0.199
+production-lifecycle mirror tests — plus the 4 `test/backend-diagnostics.test.js` GAP-007
+final-leg mirror tests of this sync; earlier recorded runs: 107/107 at the
+v1.0.193/196 syncs' lineage, 94/94 at the v1.0.193 sync, 90/90 at the v1.0.189 sync, 89/89 at the GAP-004
 implementation commit (`9ad880e`), 82/82 in the v1.0.185 sync section), the machine-checked sync audit
 (`tools/verify-sync-audit.mjs`)
 re-derives the `8eeb7b5a..6a0af04d`, `6a0af04d..403c2a4b`, `403c2a4b..7dc0f564`,
 `7dc0f564..12b4d74f`, `93229933..296e0138`, `296e0138..73c15be0`,
-`73c15be0..a5059106`, `a5059106..68273906`, and `68273906..4f5e0d28` claims and the four external-input real-input fixtures
+`73c15be0..a5059106`, `a5059106..68273906`, `68273906..4f5e0d28`, and `4f5e0d28..e24c844f` claims and the four external-input real-input fixtures
 grade byte-exact on both backends (see those sync sections and
 [`parity/external-input-grades.json`](parity/external-input-grades.json)). Those ranges changed no
 effect definitions (210 catalogued effects, 0 added / 0 removed), so the same-pass golden/candidate
@@ -39,11 +40,11 @@ Pick the command that matches the claim you are making — the gates differ:
 | `bash parity/sweep.sh` | **tolerance 0, SSIM 0.999** (flat byte-exact policy — the per-effect relaxed map was retired, see Parity below) | every current-roster program with a golden: **329 programs at this tree** (332 committed DSL fixtures minus the 3 retired `bc`/`hs`/`colorspace`, per `parity/current-programs.mjs`'s vendored-manifest roster) — the 325 committed-ledger programs (322 PASS / 3 policy skips retained: the `media`/`text`/`roll` no-input fallbacks) **plus the 4 GAP-004 real-input fixtures** (`media_image`, `text_glyphs`, `roll_midi`, `mesh_obj`), which are graded here, not skipped | the acceptance evidence for parity claims. Note the distinction: `parity/ledger.json` still records only its 325 v1.0.181-era rows (it was not rewritten with the 4 newer fixtures); 325 is the ledger artifact, 329 is what a fresh sweep grades |
 | `bash parity/corpus/sweep.sh` | **tolerance 2.001, SSIM 0.98** (hardcoded in the script — the same relaxed spot-check gate as `run.sh`, absorbing cross-driver driver noise), 1800-frame (~30 s) evolution per composition | the live corpus (historical denominator 40 raw / 39 gradeable + 1 reference-rejected, retained) | corpus grading. The recorded corpus grades in STATUS report the measured max-abs-diff per composition (the corpus evidence above is recorded **byte-identical outcomes**), but this gate does not itself enforce tolerance 0 — treat byte-exact corpus claims as recorded measured outcomes, not as an enforcement guarantee of this script |
 | `bash parity/run.sh <name>` | **defaults tolerance 2.001, SSIM 0.98** — a relaxed spot-check gate sized to cross-driver/cross-machine driver noise | one program | smoke check only. A PASS at these defaults is **not** byte-exact evidence (it can pass with a non-zero max-abs-diff). For the strict gate on one program: `bash parity/run.sh noise 0 0.999` |
-| `node --test test/*.test.js` | suite pass | **107 tests** at this tree (97 pre-GAP-026 — the 94-test v1.0.193 recorded run + the 3 GAP-006 qualification cases of commit `c84adde` — + the 10 `test/lifecycle-hooks.test.js` engine v1.0.199 production-lifecycle mirror tests); the recorded GAP-004 run was **89 pass / 0 fail** at commit `9ad880e` (docs/COMPLETION_GAPS.md GAP-004); the current run is **107 pass / 0 fail** (see the `296e0138..73c15be0` sync section) | unit/integration incl. `test/coverage-map.test.js`, which re-derives `parity/coverage-map.json` |
-| `node tools/verify-sync-audit.mjs` | exit 0 = every recorded sync-audit claim re-derived | the pinned engine revision (`vendor/fetch.sh` default, currently 1.0.204 / `4f5e0d28`) | authority / sync-audit re-derivation |
+| `node --test test/*.test.js` | suite pass | **111 tests** at this tree (107 at the v1.0.204 sync — the 94-test v1.0.193 recorded run + the 3 GAP-006 qualification cases of commit `c84adde` + the 10 `test/lifecycle-hooks.test.js` production-lifecycle mirror tests — plus the 4 GAP-007 final-leg mirror tests of this sync); the recorded GAP-004 run was **89 pass / 0 fail** at commit `9ad880e` (docs/COMPLETION_GAPS.md GAP-004); the current run is **111 pass / 0 fail** (see the `4f5e0d28..e24c844f` sync section) | unit/integration incl. `test/coverage-map.test.js`, which re-derives `parity/coverage-map.json` |
+| `node tools/verify-sync-audit.mjs` | exit 0 = every recorded sync-audit claim re-derived | the pinned engine revision (`vendor/fetch.sh` default, currently 1.0.206 / `e24c844f`) | authority / sync-audit re-derivation |
 
 Denominator and coverage authority: [`parity/coverage-map.json`](parity/coverage-map.json)
-(210/210 catalogued effects bound to graded evidence at engine 1.0.204 / build `4f5e0d28`, 0
+(210/210 catalogued effects bound to graded evidence at engine 1.0.206 / build `e24c844f`, 0
 explicitly excluded; skipped and refused cases retained in the counts) and
 [`parity/ledger.json`](parity/ledger.json) (325 programs: 322 PASS, 3 SKIP, 0 FAIL — the
 v1.0.181-era full-roster artifact, retained verbatim; the fresh-sweep roster at this tree is
@@ -264,6 +265,100 @@ Source-side: `noisefactorllc/noisemaker` `246ff57f43cc..0ed489ec4684` (a tearoff
   parity/sweep.sh`, mints golden + candidate together per the documented discipline above) and every
   candidate re-rendered and re-graded — **325/325 non-corpus programs (roster + mode matrix + the 4 new
   fixtures) byte-identical**, 3 skipped (`media`/`text`/`roll`, unchanged policy).
+
+## Vendor sync (4f5e0d28..e24c844f)
+
+Source-side: `noisefactorllc/noisemaker` `73c15be00d68..e24c844f8dad` (tearoff `ports-sync`,
+flagged for a force-push / non-contiguous delivery with observed sub-ranges
+`c2a19c70..dd4606ea`, `dd4606ea..a0e9bbffc038`, `a0e9bbffc038..e24c844f` and a side leg
+`e105344b..16c1997c` — audited directly in a local checkout: the declared start `73c15be0` and
+the previously synced tip `4f5e0d28` are each an exact ancestor of upstream main tip
+`e24c844f`, and each observed sub-range start is an ancestor of its end within that delta, so
+the uncovered delta is exactly the contiguous `4f5e0d28..e24c844f` (3 commits). Release tags
+**v1.0.205 (`a0e9bbff`) and v1.0.206 (`e24c844f`)** point exactly at their recorded SHAs and the
+CDN was re-published — the v1.0.206 artifact's Build banner records the **`e24c844f`** build.
+The side leg `e105344b..16c1997c` (upstream tagged **v1.0.207** at `16c1997c`) touches ONLY
+`shaders/tests/test-harness.js`, `shaders/tests/test_uniform_status.js`,
+`shaders/tests/uniform-status.js` and `llms-full.txt` (the GAP-010 `--strict-uniforms` harness
+gate, dev-only, outside the bundle's import graph) — `shaders/src` is untouched and the
+published 1.0.207 core is banner-stripped byte-identical to the pinned 1.0.206 core, so it
+needs no code change (recorded here and re-derived by `tools/verify-sync-audit.mjs`).
+**Engine synced from the published 1.0.206 artifact — this round DOES change the engine, and
+the vendoring pin moves (authority change, per fetch.sh's own rule):** `noisemaker-shaders-core.esm.js`
+899674 → **903581 bytes** (Build `e24c844f`, v1.0.206). Vendored tree produced by the
+documented script itself (`bash vendor/fetch.sh` at the bumped default → `vendor/noisemaker/engine-meta.json`:
+version 1.0.206, coreBuild `e24c844f`, coreBytes 903581, effectCount 210; the vendored core is
+byte-identical to a fresh CDN fetch).
+
+- **Manifest + effect mini-bundles: 210 effects** (unchanged count, 0 added, 0 removed). The
+  `shaders/` delta over the previous pin is exactly `shaders/src/runtime/backends/diagnostics.js`
+  +32/−2, `shaders/src/runtime/backends/webgl2.js` +68/−5, `shaders/src/runtime/backends/webgpu.js`
+  +13/−1, `shaders/src/runtime/pipeline.js` +38/−1 and `shaders/tests/test_backend_diagnostics.js`
+  +279/−3 (`git diff --numstat 4f5e0d28..e24c844f -- shaders/`, re-derived by
+  `node tools/verify-sync-audit.mjs`); no `shaders/src/effects` file changed (catalog parity).
+- **The three commits — the GAP-007 final legs, all engine-runtime (no effect definition):**
+  - `dd4606ea` closes GAP-007: the WebGL2 `ERR_UNIFORM_BLOCK_TOO_LARGE` throw now throws a
+    `ShaderDiagnostic` (`stage: 'uniform-block'`, byte-identical legacy detail) instead of an
+    ad-hoc plain object; the historically-silent WebGL unknown-format fallback (rgba8) and
+    unknown-dimension-form fallback (screen size) keep their behavior but surface deduplicated
+    structured records (`ERR_UNKNOWN_FORMAT_FALLBACK` in `backend.diagnostics`,
+    `ERR_DIMENSION_FALLBACK` in `pipeline.diagnostics`) through the new capped (64) queryable
+    `DiagnosticCollector`.
+  - `a0e9bbff` recognizes the validator-accepted `input`/`resolution` dimension keywords in
+    `Pipeline.resolveDimension` as recognized forms (historical screen-size resolution, no
+    diagnostic) — filter/grade legitimately authors them.
+  - `e24c844f` records runtime resource and device-validation failures in
+    `backend.diagnostics` alongside the unchanged legacy console output: WebGL2
+    missing-FBO/MRT render targets record deduplicated `ERR_MISSING_RENDER_TARGET` entries
+    (per-occurrence warnings unchanged), post-draw drained `gl.getError()` failures record
+    `ERR_GL_ERROR` entries with pass/effect/program/output context, and WebGPU
+    `uncapturederror` device validation records `ERR_DEVICE_VALIDATION` entries.
+- **Port change: authority bump + the BabylonBackend mirrors of the legs that apply to this
+  port's backend** — `vendor/fetch.sh`'s documented default moves 1.0.204 → **1.0.206**:
+  - `BabylonBackend` gains the ported `DiagnosticCollector` (capped 64, `add`/`clear`) exposed
+    as `backend.diagnostics`; the historically-silent unknown-format rgba8 fallback in texture
+    creation (via the new `_resolveFormat`) and the missing-render-target warning paths
+    (single-output, points, triangles, per-missing-MRT-output) now surface deduplicated
+    structured records (`ERR_UNKNOWN_FORMAT_FALLBACK` with `fallback: 'rgba8'`;
+    `ERR_MISSING_RENDER_TARGET` with `kind`/`pass`/`output`, deduplicated per `kind|output|pass`)
+    while the legacy silent fallback and per-occurrence console warnings are byte-unchanged
+    (mirrors upstream dd4606ea/e24c844f's WebGL2 contract, `backend: 'babylon'`).
+    Not mirrored, with reason: the uniform-block device-limit throw (upstream converts an
+    EXISTING webgl2 throw; BabylonBackend has no max-block-size throw to convert) and the
+    post-draw gl.getError()/WebGPU uncapturederror paths (webgl2/webgpu-bundle-internal, no
+    Babylon analog). The Pipeline-side dimension fallback and `input`/`resolution` keywords
+    carry with the re-vendored engine (the port's `createPipeline` passes options through).
+  - `test/backend-diagnostics.test.js` (+4 tests): unknown-format fallback record shape/dedup
+    with known formats and the absent default recording nothing; missing-render-target records
+    across the single-output/points/triangles/MRT paths with legacy warnings unchanged and
+    records deduplicated; `DiagnosticCollector` cap/clear; the vendored Pipeline's
+    unknown-dimension fallback record (with `backend: 'Babylon'`) and the recognized
+    `screen`/`auto`/`input`/`resolution`/numeric/param-object forms recording nothing.
+- **Parity (strict gate — the round's parity evidence):** dual-minted golden + candidate in one
+  browser session through the re-vendored engine (`NM_DUAL=1 LEDGER_PATH=<partial> bash
+  parity/sweep.sh navierStokes target reactionDiffusion dither dither_bayer4x4 oilPaint noise
+  blur watercolor texture billboard_flow`) — the stateful/evolve, agent-sim and sparse-dither
+  cases a reuse spot-check cannot grade — graded at the flat max-abs-diff-0 gate: **11/11
+  PASS, 0 skipped**, every graded program max-abs-diff 0.000 / ssim 1.00000 at tolerance 0 /
+  ssim 0.999 (the golden/candidate pairs are minted in the same SwiftShader session here, so
+  the match is byte-exact). The minted subset goldens were **not** committed — the retained
+  `parity/out/*.golden.png` stays the macOS-Metal-minted set. A separate relaxed reuse smoke
+  run against those retained goldens (`bash parity/run.sh`, tol 2.001) is smoke-only per
+  run.sh's documented contract — a PASS there is explicitly not byte-exact evidence and is
+  not counted as parity: noise, blur, watercolor, pondRipples max-abs-diff 0. The full-roster
+  byte-exact re-grade is the repository's CI strict-parity job (8 shards, NM_DUAL, tolerance
+  0 / SSIM 0.999) at this exact commit.
+- **Generated artifact refresh:** `parity/coverage-map.json` regenerated via
+  `node tools/coverage-map.mjs` — the only delta is the engine record
+  (version/build/coreBytes 1.0.204/`4f5e0d28`/899674 → 1.0.206/`e24c844f`/903581); no count,
+  grade, or coverage value changed.
+- **Verification**: `NM_UPSTREAM=<checkout> node tools/verify-sync-audit.mjs` exit 0 re-derives
+  every recorded claim including this range (ancestry of the declared start and the previous
+  synced tip, the observed sub-range starts, v1.0.205 pointing exactly at `a0e9bbff` and
+  v1.0.206 at `e24c844f`, the side leg's dev-only delta and the banner-stripped 1.0.207-core
+  identity, the exact shaders/ numstat, catalog parity, the pinned 1.0.206 core carrying the
+  GAP-007 final-leg symbols while 1.0.204 carries none). All **111 unit/integration tests
+  pass, 0 fail** (`npm test` = `node --test test/*.test.js`).
 
 ## Vendor sync (68273906..4f5e0d28)
 

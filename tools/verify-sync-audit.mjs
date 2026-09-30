@@ -4,8 +4,8 @@
 // "Vendor sync (6a0af04d..403c2a4b)", "Vendor sync (403c2a4b..7dc0f564)",
 // "Vendor sync (7dc0f564..12b4d74f)", "Vendor sync (93229933..296e0138)" and
 // "Vendor sync (296e0138..73c15be0)", "Vendor sync (73c15be0..a5059106)" and
-// "Vendor sync (a5059106..68273906)" and "Vendor sync (68273906..4f5e0d28)"
-// audits directly from source, so the
+// "Vendor sync (a5059106..68273906)" and "Vendor sync (68273906..4f5e0d28)" and
+// "Vendor sync (4f5e0d28..e24c844f)" audits directly from source, so the
 // recorded audits are an executable contract instead of prose.
 //
 //   node tools/verify-sync-audit.mjs
@@ -86,7 +86,8 @@ const END9 = '296e0138c4744ed485b2e95de3eeb466c17629ee' // frame-resolution rang
 const END10 = '73c15be00d6888f4b5d2835d8e242ee9e840df45' // lifecycle range end (v1.0.199, previous sync)
 const END11 = 'a5059106ea7510b839e70c5c9c33ba1f5ccbc043' // audio-input range end (previous sync, no code change)
 const END12 = '682739066d3b74962febbdcdae85b5aa4d2e19f3' // audio-input multi-device range end (this sync, ENGINE CHANGE)
-const END13 = '4f5e0d28bdc155700393c314e9a5aafcc4da91fd' // channel-shortfall range end (this sync, ENGINE CHANGE; v1.0.203 points at 4d47b3fd, v1.0.204 at the tip)
+const END13 = '4f5e0d28bdc155700393c314e9a5aafcc4da91fd' // channel-shortfall range end (previous sync)
+const END14 = 'e24c844f8dada85551ab084f41db8944fbc176c8' // GAP-007 final-legs range end (this sync, ENGINE CHANGE)
 const VALIDATOR_DELTA = '1097\t18\tshaders/src/runtime/effect-validator.js\n457\t0\tshaders/tests/test_effect_definition_validation.js'
 const VALIDATOR_FILES = 'shaders/src/runtime/effect-validator.js\nshaders/tests/test_effect_definition_validation.js'
 const MIP_DELTA = '106\t15\tshaders/src/runtime/backends/webgl2.js\n273\t10\tshaders/src/runtime/backends/webgpu.js\n17\t0\tshaders/src/runtime/compiler.js\n26\t1\tshaders/src/runtime/effect-validator.js\n100\t19\tshaders/src/runtime/pipeline.js\n466\t0\tshaders/tests/test_mip_controls.js'
@@ -95,8 +96,8 @@ const POOL_DELTA = '185\t0\tshaders/src/runtime/backends/diagnostics.js\n26\t7\t
 const POOL_FILES = 'shaders/src/runtime/backends/diagnostics.js\nshaders/src/runtime/backends/webgl2.js\nshaders/src/runtime/backends/webgpu.js\nshaders/src/runtime/pipeline.js\nshaders/tests/test_backend_diagnostics.js\nshaders/tests/test_resource_pooling.js'
 const PRED_DELTA = '1\t1\tshaders/src/index.js\n2\t2\tshaders/src/lang/index.js\n11\t0\tshaders/src/lang/paramAliases.js\n372\t5\tshaders/src/lang/transform.js\n80\t0\tshaders/tests/frame-metrics.js\n161\t6\tshaders/tests/test-harness.js\n71\t0\tshaders/tests/test_frame_metrics.js\n200\t0\tshaders/tests/test_transform.js'
 const PRED_FILES = 'shaders/src/index.js\nshaders/src/lang/index.js\nshaders/src/lang/paramAliases.js\nshaders/src/lang/transform.js\nshaders/tests/frame-metrics.js\nshaders/tests/test-harness.js\nshaders/tests/test_frame_metrics.js\nshaders/tests/test_transform.js'
-const BUNDLE_URL = 'https://shaders.noisedeck.app/1.0.204/noisemaker-shaders-core.esm.js' // pinned documented revision (see vendor/fetch.sh), not the rolling /1 alias
-const BUNDLE_BYTES = 899674 // documented published build (4f5e0d28 tip, v1.0.204)
+const BUNDLE_URL = 'https://shaders.noisedeck.app/1.0.206/noisemaker-shaders-core.esm.js' // pinned documented revision (see vendor/fetch.sh), not the rolling /1 alias
+const BUNDLE_BYTES = 903581 // documented published build (e24c844f tip, v1.0.206)
 const PREV_BUNDLE_URL = 'https://shaders.noisedeck.app/1.0.189/noisemaker-shaders-core.esm.js' // previous pinned revision (7dc0f564)
 
 let repo = process.env.NM_UPSTREAM || ''
@@ -472,10 +473,14 @@ const stripBanner = (b) => {
   return text.replace(/^ \* Build: .*\n/m, '').replace(/^ \* Date: .*\n/m, '')
 }
 if (bundle.length === BUNDLE_BYTES) {
-  check(`published core bundle at the pinned documented revision is the recorded ${BUNDLE_BYTES}-byte build (68273906 tip, v1.0.202)`, true)
+  check(`published core bundle at the pinned documented revision is the recorded ${BUNDLE_BYTES}-byte build (e24c844f tip, v1.0.206)`, true)
 } else {
   check(`published core bundle at the pinned revision no longer matches the recorded build (got ${bundle.length} bytes, recorded ${BUNDLE_BYTES}) — WARN only: the recorded byte-identity claim refers to the artifact verified during the audit; run a new ports-sync for the newer release`, true)
 }
+// The pinned documented revision is the recorded e24c844f build (v1.0.206): the banner
+// inside the artifact names the build SHA (belt to the byte-count braces above).
+check('the published 1.0.206 core banner records the e24c844f build',
+  /Build: e24c844f/.test(bundle.toString('utf8')))
 // The v1.0.189→v1.0.193 published core delta is exactly the GAP-016 addition:
 // the new internal preflight module, the mrtFormatBytes delegation, and the
 // Pipeline.preflight() method — re-derived against the previous pinned CDN
@@ -610,6 +615,78 @@ check('the previous pinned 1.0.202 core lacks both channel-shortfall fixes',
   !bundle202Fetch.toString('utf8').includes('_channelShortfall'))
 check('the pinned 1.0.204 core still carries the multi-device capture runtime beneath the new fixes',
   bundle.toString('utf8').includes('selected-device audio binding') && /_syncCaptures/.test(bundle.toString('utf8')))
+
+// 5m. The GAP-007 final-legs range: 4f5e0d28..e24c844f (this sync, ENGINE CHANGE).
+// The delivery was force-push-flagged with a declared range 73c15be0..e24c844f and
+// observed sub-ranges c2a19c70..dd4606ea / dd4606ea..a0e9bbffc038 / a0e9bbffc038..e24c844f
+// plus a side leg e105344b..16c1997c — audited directly: the declared start 73c15be0 and
+// the previously synced tip 4f5e0d28 are each an exact ancestor of the end e24c844f, and
+// each observed sub-range start is an ancestor of its end within that delta, so the
+// uncovered delta is exactly the contiguous 4f5e0d28..e24c844f (3 commits). Release tags
+// v1.0.205 and v1.0.206 point exactly at a0e9bbff and the tip e24c844f — the pin's
+// documented release is v1.0.206. The side leg e105344b..16c1997c (upstream tagged
+// v1.0.207 at 16c1997c) touches ONLY test-harness/test/uniform-status modules and
+// llms-full.txt (dev-only, outside the bundle's import graph) and the published 1.0.207
+// core is banner-stripped byte-identical to the pinned 1.0.206 core. The shaders/ delta
+// is exactly the GAP-007 final legs (uniform-block ShaderDiagnostic throw, unknown-format
+// + unknown-dimension fallback diagnostics, the input/resolution dimension keywords,
+// missing-render-target/GL-error/uncapturederror records); no effect definition changed
+// (catalog parity).
+check('73c15be0 is an ancestor of e24c844f (declared GAP-007 range contiguous)',
+  git('merge-base', '--is-ancestor', END10, END14) === '' && git('merge-base', END10, END14) === END10)
+check('4f5e0d28 is an ancestor of e24c844f (uncovered delta is exactly 4f5e0d28..e24c844f)',
+  git('merge-base', '--is-ancestor', END13, END14) === '' && git('merge-base', END13, END14) === END13)
+tagCheck('v1.0.205', 'a0e9bbffc0380b4bba046e81cfbff905328af650', 'a0e9bbff')
+tagCheck('v1.0.206', END14, 'e24c844f')
+const GAP7_DELTA = '32\t2\tshaders/src/runtime/backends/diagnostics.js\n68\t5\tshaders/src/runtime/backends/webgl2.js\n13\t1\tshaders/src/runtime/backends/webgpu.js\n38\t1\tshaders/src/runtime/pipeline.js\n279\t3\tshaders/tests/test_backend_diagnostics.js'
+const gap7Numstat = git('diff', '--numstat', `${END13}..${END14}`, '--', 'shaders/')
+check('shaders/ delta 4f5e0d28..e24c844f is exactly the GAP-007 final legs + their extended regressions',
+  gap7Numstat === GAP7_DELTA, gap7Numstat.replace(/\n/g, ' | '))
+const gap7Names = git('diff', '--name-only', `${END13}..${END14}`, '--', 'shaders/').split('\n').sort().join('\n')
+check('no other shaders/ file changed in the GAP-007 final-legs range',
+  gap7Names === 'shaders/src/runtime/backends/diagnostics.js\nshaders/src/runtime/backends/webgl2.js\nshaders/src/runtime/backends/webgpu.js\nshaders/src/runtime/pipeline.js\nshaders/tests/test_backend_diagnostics.js')
+let effectChanges14 = 'none'
+try {
+  effectChanges14 = git('diff', '--name-only', `${END13}..${END14}`, '--', 'shaders/src/effects')
+} catch { /* no changes → git exits 0 with empty output */ }
+check('no effect definition changed in 4f5e0d28..e24c844f (catalog parity)', effectChanges14 === '')
+// The side leg e105344b..16c1997c: dev-only test-harness pinning (GAP-010), no engine
+// change — the published 1.0.207 core is banner-stripped byte-identical to 1.0.206.
+check('the side leg 16c1997c is a descendant of the range end e24c844f (observed, not uncovered)',
+  git('merge-base', '--is-ancestor', END14, '16c1997cd5511824117bd98a13af49cafc9dba55') === '')
+check('the side-leg shaders/ delta is test-harness-only (llms-full + test modules, no src)',
+  git('diff', '--name-only', 'e105344b4a2bf8c81f7c0fadce7447bd3a0d7369..16c1997cd5511824117bd98a13af49cafc9dba55', '--', 'shaders/src')
+    .split('\n').filter(Boolean).length === 0,
+  git('diff', '--name-only', 'e105344b4a2bf8c81f7c0fadce7447bd3a0d7369..16c1997cd5511824117bd98a13af49cafc9dba55', '--', 'shaders/').replace(/\n/g, ' | '))
+tagCheck('v1.0.207', '16c1997cd5511824117bd98a13af49cafc9dba55', '16c1997c')
+const bundle206 = Buffer.from(await (await fetch('https://shaders.noisedeck.app/1.0.206/noisemaker-shaders-core.esm.js')).arrayBuffer())
+const bundle207 = Buffer.from(await (await fetch('https://shaders.noisedeck.app/1.0.207/noisemaker-shaders-core.esm.js')).arrayBuffer())
+const bundle204Fetch = Buffer.from(await (await fetch('https://shaders.noisedeck.app/1.0.204/noisemaker-shaders-core.esm.js')).arrayBuffer())
+check('the published 1.0.207 core is banner-stripped byte-identical to the pinned 1.0.206 core (side leg is dev-only)',
+  Buffer.from(stripBanner(bundle207)).equals(Buffer.from(stripBanner(bundle206))))
+// ENGINE CHANGE (re-vendored): the pinned 1.0.206 core carries the GAP-007 final legs
+// while the previous pin (1.0.204, 4f5e0d28) carries none of them.
+check('the pinned 1.0.206 core carries the uniform-block ShaderDiagnostic throw (stage uniform-block)',
+  bundle.toString('utf8').includes('uniform-block') && bundle.toString('utf8').includes('ERR_UNIFORM_BLOCK_TOO_LARGE'))
+check('the pinned 1.0.206 core carries the DiagnosticCollector + fallback diagnostic codes',
+  bundle.toString('utf8').includes('DiagnosticCollector') &&
+  bundle.toString('utf8').includes('ERR_UNKNOWN_FORMAT_FALLBACK') &&
+  bundle.toString('utf8').includes('ERR_DIMENSION_FALLBACK') &&
+  bundle.toString('utf8').includes('ERR_MISSING_RENDER_TARGET') &&
+  bundle.toString('utf8').includes('ERR_GL_ERROR') &&
+  bundle.toString('utf8').includes('ERR_DEVICE_VALIDATION'))
+check('the pinned 1.0.206 core recognizes the input/resolution dimension keywords in resolveDimension',
+  /spec === "screen" \|\| spec === "auto" \|\| spec === "input" \|\| spec === "resolution"/.test(bundle.toString('utf8')))
+check('the pinned 1.0.206 core carries the missing-render-target and GL-error record paths',
+  bundle.toString('utf8').includes('_recordMissingRenderTarget') &&
+  bundle.toString('utf8').includes('WebGL Error '))
+check('the pinned 1.0.206 core carries the pipeline dimension-fallback diagnostic',
+  bundle.toString('utf8').includes('Unknown dimension spec') &&
+  bundle.toString('utf8').includes('_warnedDimensionFallbacks'))
+check('the previous pinned 1.0.204 core lacks the GAP-007 final-leg symbols',
+  !bundle204Fetch.toString('utf8').includes('DiagnosticCollector') &&
+  !bundle204Fetch.toString('utf8').includes('ERR_DIMENSION_FALLBACK') &&
+  !bundle204Fetch.toString('utf8').includes('_recordMissingRenderTarget'))
 
 // 7. The port's own test suite (`npm test`). In a prepared environment this check is
 //    REQUIRED: any failing test breaks the audit ("an absent run is not success"). In an

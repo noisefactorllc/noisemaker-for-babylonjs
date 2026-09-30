@@ -83,7 +83,30 @@ export function parseGLSLInfoLog (log) {
   return messages
 }
 
+// Capped, queryable collector for structured diagnostics that are RECORDED rather than
+// thrown (port of the reference backends' diagnostics.js DiagnosticCollector, GAP-007
+// final legs dd4606ea/e24c844f): the historically-silent unknown-format rgba8 fallback
+// and the missing-render-target warnings keep their behavior but surface deduplicated
+// structured records on `backend.diagnostics`.
+export class DiagnosticCollector {
+  constructor (cap = 64) {
+    this.cap = cap
+    this.records = []
+  }
+
+  add (record) {
+    this.records.push(record)
+    if (this.records.length > this.cap) this.records.shift()
+    return record
+  }
+
+  clear () {
+    this.records.length = 0
+  }
+}
+
 // rgba8/rgba16f/rgba32f/r8/r16f/r32f → Babylon { type, format } (mirrors webgl2 resolveFormat)
+export const KNOWN_FORMATS = new Set(['rgba8', 'rgba16f', 'rgba32f', 'r8', 'r16f', 'r32f'])
 function resolveFormat (format) {
   const RGBA = Constants.TEXTUREFORMAT_RGBA
   const RED = Constants.TEXTUREFORMAT_R
@@ -172,9 +195,49 @@ export class BabylonBackend {
     this._mipDrawFbo = null
     this._rawFbos = new Map() // glTex → raw FBO for mipmapped-target pass rendering
     this._destroyed = false
+    // Queryable structured diagnostics for the historically-silent unknown-format
+    // fallback and the missing-render-target warnings (GAP-007 final legs).
+    this.diagnostics = new DiagnosticCollector()
+    this._warnedFormatFallbacks = new Set()
+    this._warnedMissingRenderTargets = new Set()
   }
 
   getName () { return 'Babylon' }
+
+  // Record an unknown texture-format rgba8 fallback as a structured diagnostic
+  // (GAP-007). The legacy silent fallback is unchanged; the record is deduplicated
+  // per format string. An absent format is the default, not a fallback.
+  _recordFormatFallback (format) {
+    const key = String(format)
+    if (this._warnedFormatFallbacks.has(key)) return
+    this._warnedFormatFallbacks.add(key)
+    this.diagnostics.add({
+      code: 'ERR_UNKNOWN_FORMAT_FALLBACK',
+      backend: 'babylon',
+      stage: 'createTexture',
+      format: key,
+      fallback: 'rgba8'
+    })
+  }
+
+  // Record a missing render target (single-output or MRT output texture) as a
+  // structured diagnostic (GAP-007). The legacy console warning is unchanged and
+  // still fires on every occurrence; the record is deduplicated per
+  // kind|output|pass so per-frame rendering cannot grow it unboundedly.
+  _recordMissingRenderTarget (kind, outputId, passId) {
+    const key = `${kind}|${outputId}|${passId}`
+    if (this._warnedMissingRenderTargets.has(key)) return
+    this._warnedMissingRenderTargets.add(key)
+    this.diagnostics.add({
+      code: 'ERR_MISSING_RENDER_TARGET',
+      backend: 'babylon',
+      stage: 'render',
+      kind,
+      pass: passId,
+      output: outputId
+    })
+  }
+
   static isAvailable () { return true }
 
   createFrameExportQueue (options = {}) {
@@ -266,8 +329,19 @@ export class BabylonBackend {
 
   // ---- textures --------------------------------------------------------------
 
+  // Format resolution with the GAP-007 structured fallback record: unknown formats
+  // keep the historical silent rgba8 fallback (no new rejection of previously
+  // accepted input) but surface a deduplicated structured diagnostic instead of
+  // pure silence. An absent format is the default, not a fallback.
+  _resolveFormat (format) {
+    if (format !== undefined && format !== null && !KNOWN_FORMATS.has(format)) {
+      this._recordFormatFallback(format)
+    }
+    return resolveFormat(format)
+  }
+
   createTexture (id, spec) {
-    const fmt = resolveFormat(spec.format)
+    const fmt = this._resolveFormat(spec.format)
     const width = spec.width
     const height = spec.height
     // Every graph texture is a renderable, NEAREST/CLAMP, linear half-float-by-default RGBA
@@ -776,7 +850,7 @@ export class BabylonBackend {
     // Single-output fullscreen (the proven 2D path).
     const outputId = this._resolveOutputId(effectivePass.outputs?.color ?? Object.values(effectivePass.outputs || {})[0], state)
     const outRec = this.textures.get(outputId)
-    if (!outRec) { console.warn(`[BabylonBackend] output texture not found: ${outputId} (pass ${effectivePass.id})`); return }
+    if (!outRec) { console.warn(`[BabylonBackend] output texture not found: ${outputId} (pass ${effectivePass.id})`); this._recordMissingRenderTarget('fbo', outputId, effectivePass.id); return }
     this.engine.setAlphaMode(this._resolveAlphaMode(effectivePass.blend))
     this._bindPass = effectivePass
     this._bindState = state
@@ -838,7 +912,7 @@ export class BabylonBackend {
       const id = this._resolveOutputId(pass.outputs[key], state)
       const rec = this.textures.get(id)
       ids.push(id)
-      if (rec) { texes.push(this._glTexOf(rec)); if (!viewportRec) viewportRec = rec }
+      if (rec) { texes.push(this._glTexOf(rec)); if (!viewportRec) viewportRec = rec } else { this._recordMissingRenderTarget('mrt', id, pass.id) }
     }
     if (!texes.length || texes.some(t => !t)) { console.warn(`[BabylonBackend] MRT ${pass.id}: missing output texture`); return }
 
@@ -889,7 +963,7 @@ export class BabylonBackend {
     const gl = this.gl
     const outputId = this._resolveOutputId(pass.outputs?.color ?? Object.values(pass.outputs || {})[0], state)
     const outRec = this.textures.get(outputId)
-    if (!outRec) { console.warn(`[BabylonBackend] points ${pass.id}: no output ${outputId}`); return }
+    if (!outRec) { console.warn(`[BabylonBackend] points ${pass.id}: no output ${outputId}`); this._recordMissingRenderTarget('fbo', outputId, pass.id); return }
     const count = this._pointCount(pass, state)
     if (!count) return
     this.engine.bindFramebuffer(outRec.rtw) // bind FBO + viewport (full target size)
@@ -962,7 +1036,7 @@ export class BabylonBackend {
     const gl = this.gl
     const outputId = this._resolveOutputId(pass.outputs?.color ?? pass.outputs?.fragColor ?? Object.values(pass.outputs || {})[0], state)
     const outRec = this.textures.get(outputId)
-    if (!outRec) { console.warn(`[BabylonBackend] triangles ${pass.id}: no output ${outputId}`); return }
+    if (!outRec) { console.warn(`[BabylonBackend] triangles ${pass.id}: no output ${outputId}`); this._recordMissingRenderTarget('fbo', outputId, pass.id); return }
     const count = this._triCount(pass, state)
     this.engine.bindFramebuffer(outRec.rtw) // bind FBO + viewport (full target size)
     this._ensureDepthBuffer(outRec) // attach a DEPTH_COMPONENT24 renderbuffer to the bound FBO
