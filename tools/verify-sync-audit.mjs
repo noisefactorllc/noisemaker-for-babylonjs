@@ -5,7 +5,8 @@
 // "Vendor sync (7dc0f564..12b4d74f)", "Vendor sync (93229933..296e0138)" and
 // "Vendor sync (296e0138..73c15be0)", "Vendor sync (73c15be0..a5059106)" and
 // "Vendor sync (a5059106..68273906)" and "Vendor sync (68273906..4f5e0d28)" and
-// "Vendor sync (4f5e0d28..e24c844f)" audits directly from source, so the
+// "Vendor sync (4f5e0d28..e24c844f)" and "Vendor sync (e24c844f..ed478159)" audits
+// directly from source, so the
 // recorded audits are an executable contract instead of prose.
 //
 //   node tools/verify-sync-audit.mjs
@@ -67,7 +68,7 @@
 // must then be corrected — do not loosen a check).
 
 import { execSync, execFileSync } from 'node:child_process'
-import { existsSync, mkdtempSync, readdirSync, rmSync } from 'node:fs'
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs'
 import { homedir, tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -87,7 +88,8 @@ const END10 = '73c15be00d6888f4b5d2835d8e242ee9e840df45' // lifecycle range end 
 const END11 = 'a5059106ea7510b839e70c5c9c33ba1f5ccbc043' // audio-input range end (previous sync, no code change)
 const END12 = '682739066d3b74962febbdcdae85b5aa4d2e19f3' // audio-input multi-device range end (this sync, ENGINE CHANGE)
 const END13 = '4f5e0d28bdc155700393c314e9a5aafcc4da91fd' // channel-shortfall range end (previous sync)
-const END14 = 'e24c844f8dada85551ab084f41db8944fbc176c8' // GAP-007 final-legs range end (this sync, ENGINE CHANGE)
+const END14 = 'e24c844f8dada85551ab084f41db8944fbc176c8' // GAP-007 final-legs range end (previous sync)
+const END15 = 'ed478159e5a31870c318be05ff755e533c754126' // uniform-gate range end (this sync, no code change)
 const VALIDATOR_DELTA = '1097\t18\tshaders/src/runtime/effect-validator.js\n457\t0\tshaders/tests/test_effect_definition_validation.js'
 const VALIDATOR_FILES = 'shaders/src/runtime/effect-validator.js\nshaders/tests/test_effect_definition_validation.js'
 const MIP_DELTA = '106\t15\tshaders/src/runtime/backends/webgl2.js\n273\t10\tshaders/src/runtime/backends/webgpu.js\n17\t0\tshaders/src/runtime/compiler.js\n26\t1\tshaders/src/runtime/effect-validator.js\n100\t19\tshaders/src/runtime/pipeline.js\n466\t0\tshaders/tests/test_mip_controls.js'
@@ -687,6 +689,45 @@ check('the previous pinned 1.0.204 core lacks the GAP-007 final-leg symbols',
   !bundle204Fetch.toString('utf8').includes('DiagnosticCollector') &&
   !bundle204Fetch.toString('utf8').includes('ERR_DIMENSION_FALLBACK') &&
   !bundle204Fetch.toString('utf8').includes('_recordMissingRenderTarget'))
+
+// 5n. The uniform-gate range: e24c844f..ed478159 (v1.0.207/v1.0.208; this sync, no code change).
+// The delivery was force-push-flagged with one observed range 16c1997c..ed478159 — audited
+// directly: the previously synced tip e24c844f is an exact ancestor of the end ed478159, the
+// observed start 16c1997c is a descendant of e24c844f and an ancestor of the end (so the audit
+// covers the full uncovered delta, of which the e105344b..16c1997c side leg was already audited
+// in the 4f5e0d28..e24c844f section), tags v1.0.207/v1.0.208 point exactly at 16c1997c/ed478159,
+// and the shaders/ delta is exactly the GAP-010 uniform-gate harness pinning
+// (test-harness/test_uniform_status/uniform-status) — test-only, no shaders/src change. The
+// published 1.0.208 core is banner-stripped byte-identical to the pinned 1.0.206 core, its
+// manifest and all effect mini-bundles are byte-identical to the vendored 1.0.206 tree, and it
+// carries none of the new dev-only symbols, so the engine pin stays at 1.0.206.
+check('e24c844f is an ancestor of ed478159 (uniform-gate range contiguous)',
+  git('merge-base', '--is-ancestor', END14, END15) === '' && git('merge-base', END14, END15) === END14)
+check('the observed range start 16c1997c is a descendant of the covered tip e24c844f and an ancestor of the end ed478159',
+  git('merge-base', '--is-ancestor', END14, '16c1997cd5511824117bd98a13af49cafc9dba55') === '' &&
+  git('merge-base', '--is-ancestor', '16c1997cd5511824117bd98a13af49cafc9dba55', END15) === '')
+tagCheck('v1.0.208', END15, 'ed478159')
+const UNIFGATE_DELTA = '2\t2\tshaders/tests/test-harness.js\n71\t0\tshaders/tests/test_uniform_status.js\n24\t0\tshaders/tests/uniform-status.js'
+const UNIFGATE_FILES = 'shaders/tests/test-harness.js\nshaders/tests/test_uniform_status.js\nshaders/tests/uniform-status.js'
+const unifgateNumstat = git('diff', '--numstat', `${END14}..${END15}`, '--', 'shaders/')
+check('shaders/ delta e24c844f..ed478159 is exactly the GAP-010 uniform-gate harness pinning + its tests',
+  unifgateNumstat === UNIFGATE_DELTA, unifgateNumstat.replace(/\n/g, ' | '))
+const unifgateNames = git('diff', '--name-only', `${END14}..${END15}`, '--', 'shaders/').split('\n').sort().join('\n')
+check('no other shaders/ file changed in the uniform-gate range', unifgateNames === UNIFGATE_FILES)
+let effectChanges15 = 'none'
+try {
+  effectChanges15 = git('diff', '--name-only', `${END14}..${END15}`, '--', 'shaders/src')
+} catch { /* no changes → git exits 0 with empty output */ }
+check('no shaders/src module changed in e24c844f..ed478159 (catalog parity)', effectChanges15 === '')
+const bundle208 = Buffer.from(await (await fetch('https://shaders.noisedeck.app/1.0.208/noisemaker-shaders-core.esm.js')).arrayBuffer())
+check('the published 1.0.208 core is banner-stripped byte-identical to the pinned 1.0.206 core (uniform-gate range is dev-only)',
+  Buffer.from(stripBanner(bundle208)).equals(Buffer.from(stripBanner(bundle206))))
+check('the 1.0.208 core carries none of the new dev-only uniform-gate symbols',
+  !bundle208.toString('utf8').includes('resolveUniformGateStatus') &&
+  !bundle208.toString('utf8').includes('uniform-status'))
+const manifest208 = Buffer.from(await (await fetch('https://shaders.noisedeck.app/1.0.208/effects/manifest.json')).arrayBuffer())
+check('the 1.0.208 effects manifest is byte-identical to the vendored 1.0.206 manifest',
+  manifest208.equals(readFileSync(join(process.cwd(), 'vendor/noisemaker/effects/manifest.json'))))
 
 // 7. The port's own test suite (`npm test`). In a prepared environment this check is
 //    REQUIRED: any failing test breaks the audit ("an absent run is not success"). In an
