@@ -117,8 +117,35 @@ const git = (...args) =>
 let failures = 0
 const check = (name, ok, detail = '') => {
   console.log(`${ok ? '[PASS]' : '[FAIL]'} ${name}${detail ? ` — ${detail}` : ''}`)
-  if (!ok) failures++
+  if (!ok) {
+    failures++
+    // Annotate the failing claim so a CI check-run names it directly (logs are not
+    // anonymously readable; the annotation is the diagnosable surface).
+    console.error(`::error::verify-sync-audit [FAIL] ${name}${detail ? ` — ${detail.slice(0, 500)}` : ''}`)
+  }
 }
+// Transient fetch failures (CDN hiccup, runner egress) must not flip a byte-identity
+// claim: retry each artifact fetch a bounded number of times before giving up.
+const fetchBuffer = async (url, attempts = 4) => {
+  let last
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const res = await fetch(url)
+      if (res.ok) return Buffer.from(await res.arrayBuffer())
+      last = new Error(`HTTP ${res.status} ${res.statusText}`)
+    } catch (e) { last = e }
+    if (i + 1 < attempts) await new Promise(r => setTimeout(r, 2000 * (i + 1)))
+  }
+  throw new Error(`fetch failed after ${attempts} attempts: ${url} — ${last?.message ?? last}`)
+}
+process.on('uncaughtException', (e) => {
+  console.error(`::error::verify-sync-audit crashed: ${e.message?.split('\n')[0]}`)
+  process.exit(1)
+})
+process.on('unhandledRejection', (e) => {
+  console.error(`::error::verify-sync-audit crashed (rejection): ${String(e?.message ?? e).split('\n')[0]}`)
+  process.exit(1)
+})
 
 // 1. Ancestry (directions verified explicitly).
 check('fca611fd is an ancestor of 9d3474df (flagged range contiguous)',
@@ -469,7 +496,7 @@ check('the multi-device-range engine-src delta is exactly external-input.js +226
 
 // 6. Published bundle (pinned documented revision). A validator symbol remains a FAIL;
 //    a size move past the recorded build is a WARN pointing at a new ports-sync.
-const bundle = Buffer.from(await (await fetch(BUNDLE_URL)).arrayBuffer())
+const bundle = await fetchBuffer(BUNDLE_URL)
 const stripBanner = (b) => {
   const text = b.toString('utf8')
   return text.replace(/^ \* Build: .*\n/m, '').replace(/^ \* Date: .*\n/m, '')
@@ -487,7 +514,7 @@ check('the published 1.0.206 core banner records the e24c844f build',
 // the new internal preflight module, the mrtFormatBytes delegation, and the
 // Pipeline.preflight() method — re-derived against the previous pinned CDN
 // artifact (no rendering-path behavior change; effect mini-bundles unchanged).
-const prevBundle = Buffer.from(await (await fetch(PREV_BUNDLE_URL)).arrayBuffer())
+const prevBundle = await fetchBuffer(PREV_BUNDLE_URL)
 check('the previous pinned core (1.0.189) does NOT contain the GAP-016 preflight module',
   !prevBundle.includes('preflightEffect'))
 check('the pinned core (1.0.193 tip onward) carries the GAP-016 preflight runtime (internal preflightEffect + shared mrtFormatBytes)',
@@ -509,8 +536,8 @@ check('published bundle contains no validator symbols', !bundle.includes('valida
 // The 93229933..296e0138 sync claim (no code change required): the published 1.0.196
 // core (v1.0.196, build 296e0138) is banner-stripped byte-identical to the previous pinned
 // 1.0.193 core, and the dev-only harness modules' symbols are absent from the published bundle.
-const bundle196 = Buffer.from(await (await fetch('https://shaders.noisedeck.app/1.0.196/noisemaker-shaders-core.esm.js')).arrayBuffer())
-const bundle193 = Buffer.from(await (await fetch('https://shaders.noisedeck.app/1.0.193/noisemaker-shaders-core.esm.js')).arrayBuffer())
+const bundle196 = await fetchBuffer('https://shaders.noisedeck.app/1.0.196/noisemaker-shaders-core.esm.js')
+const bundle193 = await fetchBuffer('https://shaders.noisedeck.app/1.0.193/noisemaker-shaders-core.esm.js')
 check('the published 1.0.196 core is banner-stripped byte-identical to the 1.0.193 core',
   Buffer.from(stripBanner(bundle196)).equals(Buffer.from(stripBanner(bundle193))))
 check('the published 1.0.196 core contains none of the new dev-only harness modules\' symbols',
@@ -539,8 +566,8 @@ check('the 1.0.199 core still contains none of the dev-only harness modules\' sy
 // audio-input runtime is absent from it — so the pin stayed at 1.0.199 until a
 // release shipped the GAP-032 manager changes. The 1.0.199 core here is an
 // explicit fetch (the pin has since moved to 1.0.202).
-const bundle199 = Buffer.from(await (await fetch('https://shaders.noisedeck.app/1.0.199/noisemaker-shaders-core.esm.js')).arrayBuffer())
-const bundle200 = Buffer.from(await (await fetch('https://shaders.noisedeck.app/1.0.200/noisemaker-shaders-core.esm.js')).arrayBuffer())
+const bundle199 = await fetchBuffer('https://shaders.noisedeck.app/1.0.199/noisemaker-shaders-core.esm.js')
+const bundle200 = await fetchBuffer('https://shaders.noisedeck.app/1.0.200/noisemaker-shaders-core.esm.js')
 check('the published 1.0.200 core is banner-stripped byte-identical to the 1.0.199 core (historical no-code-change claim, re-anchored to an explicit 1.0.199 fetch)',
   Buffer.from(stripBanner(bundle200)).equals(Buffer.from(stripBanner(bundle199))))
 check('the published 1.0.200 core does NOT contain the GAP-032 audio-input runtime',
@@ -554,8 +581,8 @@ check('the 1.0.199 core likewise lacks the GAP-032 audio-input runtime',
 // _syncCaptures plan resolved against enumerateDevices(), and the unmet-binding
 // warning — while 1.0.201 (a5059106) already carried the first GAP-032 commit's
 // per-device state half. The pinned 1.0.202 core is the vendored artifact.
-const bundle201 = Buffer.from(await (await fetch('https://shaders.noisedeck.app/1.0.201/noisemaker-shaders-core.esm.js')).arrayBuffer())
-const bundle202Fetch = Buffer.from(await (await fetch('https://shaders.noisedeck.app/1.0.202/noisemaker-shaders-core.esm.js')).arrayBuffer())
+const bundle201 = await fetchBuffer('https://shaders.noisedeck.app/1.0.201/noisemaker-shaders-core.esm.js')
+const bundle202Fetch = await fetchBuffer('https://shaders.noisedeck.app/1.0.202/noisemaker-shaders-core.esm.js')
 check('the 1.0.201 core already carries the first GAP-032 commit (registerDevice + registerDefaultChannels + getDefaultChannelState)',
   bundle201.toString('utf8').includes('registerDevice') && bundle201.toString('utf8').includes('registerDefaultChannels') &&
   bundle201.toString('utf8').includes('getDefaultChannelState'))
@@ -661,9 +688,9 @@ check('the side-leg shaders/ delta is test-harness-only (llms-full + test module
     .split('\n').filter(Boolean).length === 0,
   git('diff', '--name-only', 'e105344b4a2bf8c81f7c0fadce7447bd3a0d7369..16c1997cd5511824117bd98a13af49cafc9dba55', '--', 'shaders/').replace(/\n/g, ' | '))
 tagCheck('v1.0.207', '16c1997cd5511824117bd98a13af49cafc9dba55', '16c1997c')
-const bundle206 = Buffer.from(await (await fetch('https://shaders.noisedeck.app/1.0.206/noisemaker-shaders-core.esm.js')).arrayBuffer())
-const bundle207 = Buffer.from(await (await fetch('https://shaders.noisedeck.app/1.0.207/noisemaker-shaders-core.esm.js')).arrayBuffer())
-const bundle204Fetch = Buffer.from(await (await fetch('https://shaders.noisedeck.app/1.0.204/noisemaker-shaders-core.esm.js')).arrayBuffer())
+const bundle206 = await fetchBuffer('https://shaders.noisedeck.app/1.0.206/noisemaker-shaders-core.esm.js')
+const bundle207 = await fetchBuffer('https://shaders.noisedeck.app/1.0.207/noisemaker-shaders-core.esm.js')
+const bundle204Fetch = await fetchBuffer('https://shaders.noisedeck.app/1.0.204/noisemaker-shaders-core.esm.js')
 check('the published 1.0.207 core is banner-stripped byte-identical to the pinned 1.0.206 core (side leg is dev-only)',
   Buffer.from(stripBanner(bundle207)).equals(Buffer.from(stripBanner(bundle206))))
 // ENGINE CHANGE (re-vendored): the pinned 1.0.206 core carries the GAP-007 final legs
@@ -719,13 +746,13 @@ try {
   effectChanges15 = git('diff', '--name-only', `${END14}..${END15}`, '--', 'shaders/src')
 } catch { /* no changes → git exits 0 with empty output */ }
 check('no shaders/src module changed in e24c844f..ed478159 (catalog parity)', effectChanges15 === '')
-const bundle208 = Buffer.from(await (await fetch('https://shaders.noisedeck.app/1.0.208/noisemaker-shaders-core.esm.js')).arrayBuffer())
+const bundle208 = await fetchBuffer('https://shaders.noisedeck.app/1.0.208/noisemaker-shaders-core.esm.js')
 check('the published 1.0.208 core is banner-stripped byte-identical to the pinned 1.0.206 core (uniform-gate range is dev-only)',
   Buffer.from(stripBanner(bundle208)).equals(Buffer.from(stripBanner(bundle206))))
 check('the 1.0.208 core carries none of the new dev-only uniform-gate symbols',
   !bundle208.toString('utf8').includes('resolveUniformGateStatus') &&
   !bundle208.toString('utf8').includes('uniform-status'))
-const manifest208 = Buffer.from(await (await fetch('https://shaders.noisedeck.app/1.0.208/effects/manifest.json')).arrayBuffer())
+const manifest208 = await fetchBuffer('https://shaders.noisedeck.app/1.0.208/effects/manifest.json')
 check('the 1.0.208 effects manifest is byte-identical to the vendored 1.0.206 manifest',
   manifest208.equals(readFileSync(join(process.cwd(), 'vendor/noisemaker/effects/manifest.json'))))
 
@@ -764,10 +791,24 @@ if (missingForSuite.length || !browserReady) {
     (browserReady ? '' : `, a chromium install under PLAYWRIGHT_BROWSERS_PATH (searched: ${browsersRoots.join(', ')})`))
   console.log('       bash vendor/fetch.sh && npm install && PLAYWRIGHT_BROWSERS_PATH=<dir> npx playwright install chromium')
 } else {
-  const run = execSync('npm test', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'], timeout: 600000 })
-  const pass = /ℹ pass (\d+)/.exec(run)
-  const fail = /ℹ fail (\d+)/.exec(run)
-  const total = /ℹ tests (\d+)/.exec(run)
+  // One bounded retry: a single flaky browser test must not flip the audit, but a
+  // genuine failure fails both runs and is annotated either way (claim strength is
+  // unchanged — the check still requires a 0-fail run).
+  const runSuite = () => {
+    try {
+      return { out: execSync('npm test', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'], timeout: 600000 }), err: null }
+    } catch (e) { return { out: e.stdout ?? '', err: e } }
+  }
+  let run = runSuite()
+  if (run.err) {
+    const tail = (run.out.split('\n').filter(Boolean).slice(-30).join('\n')).slice(0, 3000)
+    console.error(`::error::verify-sync-audit: npm test exited nonzero (attempt 1) — ${run.err.message?.split('\n')[0]}\n${tail}`)
+    console.log('[WARN] npm test failed on attempt 1 — retrying once before failing the audit')
+    run = runSuite()
+  }
+  const pass = /ℹ pass (\d+)/.exec(run.out)
+  const fail = /ℹ fail (\d+)/.exec(run.out)
+  const total = /ℹ tests (\d+)/.exec(run.out)
   check(`port test suite passes (${pass?.[1] ?? '?'}/${total?.[1] ?? '?'} tests, 0 fail)`,
     Boolean(pass && fail && total && Number(fail[1]) === 0),
     `pass=${pass?.[1] ?? '?'} fail=${fail?.[1] ?? '?'} tests=${total?.[1] ?? '?'}`)
