@@ -274,8 +274,9 @@ flagged for a force-push / non-contiguous delivery with one observed range
 `16c1997c..ed478159` — audited directly in a local checkout: the previously synced tip
 `e24c844f` is an exact ancestor of the end `ed478159`, and the observed start `16c1997c` is a
 descendant of `e24c844f` and an ancestor of the end, so the uncovered delta is exactly the
-contiguous `e24c844f..ed478159` (3 commits; the `e105344b..16c1997c` side leg was already
-audited in the `4f5e0d28..e24c844f` section). Release tags **v1.0.207 (`16c1997c`) and
+contiguous `e24c844f..ed478159` (3 commits: `e105344b` is the direct child of the previous
+sync tip, followed by the `16c1997c`/`ed478159` pair whose `e105344b..16c1997c` side leg was
+already audited in the `4f5e0d28..e24c844f` section). Release tags **v1.0.207 (`16c1997c`) and
 v1.0.208 (`ed478159`)** point exactly at their recorded SHAs and the CDN was re-published —
 the v1.0.208 artifact's Build banner records the **`ed478159`** build.
 **No code change required; engine pin stays at v1.0.206 / build `e24c844f`:**
@@ -288,16 +289,24 @@ the v1.0.208 artifact's Build banner records the **`ed478159`** build.
   `e105344b` is docs-only (`docs/shaders/pipeline.rst` +8/−1 and `llms-full.txt` — the
   GAP-007 row's consequence column and the resource-validation note aligned with the
   recorded non-throwing diagnostics).
-- The three commits (all dev-only, GAP-010): `16c1997c` pins the harness
-  `--strict-uniforms` gate through a mirrored `resolveUniformGateStatus`
-  (`uniform-status.js` +16, its test +57, harness wiring 4 lines); `ed478159` classifies
-  unrecognized `testUniformResponsiveness` outer statuses as error (test +14,
-  `uniform-status.js` +8); `e105344b` is the docs alignment above. All live in
-  `shaders/tests/` + docs — outside the published bundle's import graph.
+- The three commits: `e105344b` is a **GAP-007 documentation-alignment commit** (a direct
+  child of the previous sync tip `e24c844f` — docs-only, `docs/shaders/pipeline.rst` +8/−1
+  and `llms-full.txt`: the GAP-007 row's consequence column and the resource-validation note
+  aligned with the recorded non-throwing diagnostics), while the GAP-010 uniform-gate pair
+  is dev-only: `16c1997c` pins the harness `--strict-uniforms` gate through a mirrored
+  `resolveUniformGateStatus` (`uniform-status.js` +16, its test +57, harness wiring 4 lines);
+  `ed478159` classifies unrecognized `testUniformResponsiveness` outer statuses as error
+  (test +14, `uniform-status.js` +8). The GAP-010 pair lives in `shaders/tests/`, the docs
+  commit in `docs/` + `llms-full.txt` — all outside the published bundle's import graph.
 - **The published 1.0.208 core is banner-stripped byte-identical to the pinned 1.0.206
   core** (`cmp` after stripping the `* Build:` / `* Date:` banner lines — only those two
   lines differ: Build `e24c844f`→`ed478159`, Date), the 1.0.208 `effects/manifest.json` is
-  byte-identical to the vendored 1.0.206 manifest, and the new dev-only symbols
+  byte-identical to the vendored 1.0.206 manifest, **every one of the 210 published 1.0.208
+  effect mini-bundles is sha256-identical to the vendored tree** (per-bundle sha256
+  comparison against `engine-hashes.json`, re-derived by `tools/verify-sync-audit.mjs` and
+  recorded in the job's evidence archive,
+  `noisemaker-1.0.208-mini-bundle-sha256.json`: 210 bundles, 0 mismatches), and the new
+  dev-only symbols
   (`resolveUniformGateStatus`, the `uniform-status` module name) are absent from the
   published bundle — so no re-vendor, no parity re-grade, and no generated-artifact
   refresh are needed. The port's own suite does not reference the upstream harness
@@ -307,7 +316,9 @@ the v1.0.208 artifact's Build banner records the **`ed478159`** build.
   re-derives every recorded claim including this range (ancestry of the covered tip and
   the observed start, v1.0.207/v1.0.208 pointing exactly at `16c1997c`/`ed478159`, the
   exact shaders/ numstat, catalog parity, the banner-stripped 1.0.208-vs-1.0.206 core
-  byte-identity, the manifest byte-identity, and the dev-only symbols' absence from the
+  byte-identity, the manifest byte-identity, the per-bundle sha256 identity of all 210
+  published mini-bundles against `engine-hashes.json`, and the dev-only symbols' absence
+  from the
   bundle). All **111 unit/integration tests pass, 0 fail** (`npm test` =
   `node --test test/*.test.js`; the range introduces no new behavior to mirror). Committed
   goldens carry by byte-identity: the pinned core is byte-identical to the previously

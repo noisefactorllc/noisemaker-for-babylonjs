@@ -726,7 +726,7 @@ check('the previous pinned 1.0.204 core lacks the GAP-007 final-leg symbols',
 // and the shaders/ delta is exactly the GAP-010 uniform-gate harness pinning
 // (test-harness/test_uniform_status/uniform-status) — test-only, no shaders/src change. The
 // published 1.0.208 core is banner-stripped byte-identical to the pinned 1.0.206 core, its
-// manifest and all effect mini-bundles are byte-identical to the vendored 1.0.206 tree, and it
+// manifest AND every effect mini-bundle are byte-identical to the vendored 1.0.206 tree, and it
 // carries none of the new dev-only symbols, so the engine pin stays at 1.0.206.
 check('e24c844f is an ancestor of ed478159 (uniform-gate range contiguous)',
   git('merge-base', '--is-ancestor', END14, END15) === '' && git('merge-base', END14, END15) === END14)
@@ -755,6 +755,26 @@ check('the 1.0.208 core carries none of the new dev-only uniform-gate symbols',
 const manifest208 = await fetchBuffer('https://shaders.noisedeck.app/1.0.208/effects/manifest.json')
 check('the 1.0.208 effects manifest is byte-identical to the vendored 1.0.206 manifest',
   manifest208.equals(readFileSync(join(process.cwd(), 'vendor/noisemaker/effects/manifest.json'))))
+// Exact mini-bundle parity (catalog parity of the PUBLISHED set, not just the source delta):
+// vendor/fetch.sh vendors core, manifest and per-effect mini-bundles as separate production
+// artifacts, so core+manifest identity alone does not prove the 1.0.208 bundle set is the
+// vendored one — compare every manifest bundle's sha256 against engine-hashes.json.
+const mbCreateHash = (await import('node:crypto')).createHash
+const manifestIds = Object.keys(JSON.parse(manifest208.toString('utf8')))
+const vendoredHashes = JSON.parse(readFileSync(join(process.cwd(), 'vendor/noisemaker/engine-hashes.json'), 'utf8'))
+const mbHashes = {}
+const mbMismatches = []
+for (const id of manifestIds) {
+  const rel = `effects/${id}.js`
+  const h = mbCreateHash('sha256')
+    .update(await fetchBuffer(`https://shaders.noisedeck.app/1.0.208/${rel}`))
+    .digest('hex')
+  mbHashes[rel] = h
+  if (h !== vendoredHashes[rel]) mbMismatches.push(`${rel} 1.0.208=${h.slice(0, 12)} vendored=${(vendoredHashes[rel] ?? 'ABSENT').slice(0, 12)}`)
+}
+check('every published 1.0.208 effect mini-bundle is sha256-identical to the vendored 1.0.206 tree (210/210)',
+  manifestIds.length === 210 && mbMismatches.length === 0,
+  mbMismatches.length ? mbMismatches.join(' | ').slice(0, 500) : `manifest bundles=${manifestIds.length}, all sha256-match engine-hashes.json`)
 
 // 7. The port's own test suite (`npm test`). In a prepared environment this check is
 //    REQUIRED: any failing test breaks the audit ("an absent run is not success"). In an
