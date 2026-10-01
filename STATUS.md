@@ -267,6 +267,55 @@ Source-side: `noisefactorllc/noisemaker` `246ff57f43cc..0ed489ec4684` (a tearoff
   candidate re-rendered and re-graded — **325/325 non-corpus programs (roster + mode matrix + the 4 new
   fixtures) byte-identical**, 3 skipped (`media`/`text`/`roll`, unchanged policy).
 
+## Vendor sync (ed478159..cb22a05e)
+
+Source-side: `noisefactorllc/noisemaker` `e24c844f8dad..cb22a05eff9a` (tearoff `ports-sync`,
+flagged for a force-push / non-contiguous delivery with one observed range
+`f5ca07cd..cb22a05e` — audited directly in a local checkout: the previously synced tip
+`ed478159` is an exact ancestor of the end `cb22a05e` and the observed start `f5ca07cd` is a
+descendant of `ed478159` and an ancestor of the end, so the uncovered delta is exactly the
+contiguous `ed478159..cb22a05e` — 9 commits: 8 docs-only (llms-full/ledger/gap-register
+checkpointing through `f5ca07cd`) plus the engine commit `cb22a05e`). Release tag
+**v1.0.209 points exactly at `cb22a05e`** and the CDN was re-published — the 1.0.209 core's
+Build banner records the **`cb22a05e`** build.
+**Engine change — re-vendored to v1.0.209 (build `cb22a05e`, 908465-byte core):**
+
+- `git diff --numstat ed478159..cb22a05e -- shaders/`: `shaders/src/renderer/canvas.js`
+  +92/−1, `shaders/tests/test_portable_registration.js` +146/−0. The engine delta is
+  `CanvasRenderer.registerPortableEffect()` — validated registration of Portable user-effect
+  definitions (pre-loaded `shaders[program].glsl/wgsl`, prototype-poisoning guards,
+  namespace/starter/globals/paramAliases checks, registry aliasing that preserves a built-in's
+  bare lookup) plus its upstream test. **No effect definition or lang module changed — catalog
+  parity holds (210 catalogued effects, 0 added / 0 removed)**, and no new shader source is
+  introduced, so there is no WGSL/GLSL/HLSL translation surface for this round.
+- The published 1.0.209 core is banner-stripped **byte-identical to the previous 1.0.206
+  pin plus exactly one contiguous 4884-byte insertion** (the `registerPortableEffect` method;
+  measured prefix/suffix/residual decomposition), the 1.0.209 `effects/manifest.json` is
+  byte-identical to the vendored manifest, and **every one of the 210 published 1.0.209 effect
+  mini-bundles is sha256-identical to the vendored tree** — so the committed parity goldens
+  carry by byte-identity and no re-grade is needed.
+- **Backend impact: none.** The new API is engine-side registration plumbing; the port's
+  `BabylonBackend` renders the same effect programs (the 210 mini-bundles are unchanged), and
+  the port consumes `registerPortableEffect` users only through the same `registerEffect`
+  registries it already mirrors. No port code change beyond the vendor pin bump.
+- **Verification**: `NM_UPSTREAM=<checkout> node tools/verify-sync-audit.mjs` exit 0 —
+  **156 re-derived claims, 0 fail**, including this range (ancestry of the covered tip and the
+  observed start, v1.0.209 pointing exactly at `cb22a05e`, the exact shaders/ numstat, catalog
+  parity, the 4884-byte banner-stripped core delta decomposition, manifest byte-identity, the
+  per-bundle sha256 identity of all 210 published 1.0.209 mini-bundles against
+  `engine-hashes.json`, and the `registerPortableEffect` symbol's presence with dev-only
+  validator symbols' absence). `parity/coverage-map.json` regenerated — only its two recorded
+  engine fields moved (1.0.206/`e24c844f`/903581 → 1.0.209/`cb22a05e`/908465; program roster
+  unchanged, 325 programs / 322 PASS / 3 policy skips). All **111 unit/integration tests pass,
+  0 fail** (`npm test`). Parity spot checks (`parity/run.sh`, tol 2.001): `bloom` and `adjust`
+  byte-identical (max-abs-diff 0.000, ssim 1.0); `morphology_dilate_round` and `wind_wind`
+  grade within 2 LSB; `edge_contour_upper` and `shadow` show high max-abs-diff against the
+  macOS-Metal-minted goldens on this container's SwiftShader driver — **the candidates are
+  byte-identical between 1.0.206- and 1.0.209-engine renders** (Worker Elves job 75b72440,
+  evidence archive `parity-spot-cb22a05e.txt`: `cmp` of the 1.0.206-engine and 1.0.209-engine
+  candidate PNGs identical for both programs), so they are
+  pre-existing container driver noise, unchanged by this sync.
+
 ## Vendor sync (e24c844f..ed478159)
 
 Source-side: `noisefactorllc/noisemaker` `e24c844f8dad..ed478159e5a3` (tearoff `ports-sync`,
