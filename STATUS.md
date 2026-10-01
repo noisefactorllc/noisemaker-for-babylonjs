@@ -303,9 +303,11 @@ the v1.0.208 artifact's Build banner records the **`ed478159`** build.
   lines differ: Build `e24c844f`→`ed478159`, Date), the 1.0.208 `effects/manifest.json` is
   byte-identical to the vendored 1.0.206 manifest, **every one of the 210 published 1.0.208
   effect mini-bundles is sha256-identical to the vendored tree** (per-bundle sha256
-  comparison against `engine-hashes.json`, re-derived by `tools/verify-sync-audit.mjs` and
-  recorded in the job's evidence archive,
-  `noisemaker-1.0.208-mini-bundle-sha256.json`: 210 bundles, 0 mismatches), and the new
+  comparison against `engine-hashes.json`, re-derived by `tools/verify-sync-audit.mjs`;
+  the measured per-bundle record is the job's evidence artifact
+  `noisemaker-1.0.208-mini-bundle-sha256.json` (210 bundles, 0 mismatches; the audit
+  tool re-derives the comparison itself on every run, so the record is also an
+  executable contract), and the new
   dev-only symbols
   (`resolveUniformGateStatus`, the `uniform-status` module name) are absent from the
   published bundle — so no re-vendor, no parity re-grade, and no generated-artifact
