@@ -1,7 +1,7 @@
 import { ensurePlaywrightBrowsersPath } from './browser-launch.mjs'
 import assert from 'node:assert/strict'
 import { execFile } from 'node:child_process'
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -63,7 +63,10 @@ test('packed artifact: pack, install, import exports, error recovery, first rend
   const fetchLine = recoveryMessage.split('\n').find(l => l.includes('Run: bash '))
   assert.ok(fetchLine, `missing-engine error must name the recovery command, got: ${recoveryMessage}`)
   const fetchScript = fetchLine.match(/Run: bash (\S+)/)[1]
-  assert.equal(fetchScript, join(installed, 'vendor', 'fetch.sh'))
+  const actualScript = statSync(fetchScript)
+  const expectedScript = statSync(join(installed, 'vendor', 'fetch.sh'))
+  assert.equal(actualScript.dev, expectedScript.dev)
+  assert.equal(actualScript.ino, expectedScript.ino)
   assert.equal(existsSync(fetchScript), true, 'recovery instruction must point at an existing script')
 
   // 5. Recover the engine the documented way: run the installed fetch script, which
