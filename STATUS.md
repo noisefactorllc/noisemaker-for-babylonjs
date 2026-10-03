@@ -1,7 +1,7 @@
 # Noisemaker for Babylon.js — status & parity
 
-*Last verified 2026-09-30 against the vendored engine **v1.0.206** (build `e24c844f`,
-`noisemaker-shaders-core.esm.js`, 903581 bytes): the recorded suite run at this
+*Last verified 2026-10-03 against the vendored engine **v1.0.215** (build `e30f09e6`,
+`noisemaker-shaders-core.esm.js`, 910200 bytes): the recorded suite run at this
 sync is **111 tests, 111 pass / 0 fail** (`node --test test/*.test.js`;
 107 at the v1.0.204 sync — the 94-test v1.0.193 recorded run + the 3 GAP-006
 qualification cases of commit `c84adde` + the 10 `test/lifecycle-hooks.test.js` engine v1.0.199
@@ -12,8 +12,8 @@ implementation commit (`9ad880e`), 82/82 in the v1.0.185 sync section), the mach
 (`tools/verify-sync-audit.mjs`)
 re-derives the `8eeb7b5a..6a0af04d`, `6a0af04d..403c2a4b`, `403c2a4b..7dc0f564`,
 `7dc0f564..12b4d74f`, `93229933..296e0138`, `296e0138..73c15be0`,
-`73c15be0..a5059106`, `a5059106..68273906`, `68273906..4f5e0d28`, `4f5e0d28..e24c844f`, and
-`e24c844f..ed478159` claims and the four external-input real-input fixtures
+`73c15be0..a5059106`, `a5059106..68273906`, `68273906..4f5e0d28`, `4f5e0d28..e24c844f`,
+`e24c844f..ed478159`, `ed478159..cb22a05e`, and `cb22a05e..e30f09e6` claims and the four external-input real-input fixtures
 grade byte-exact on both backends (see those sync sections and
 [`parity/external-input-grades.json`](parity/external-input-grades.json)). Those ranges changed no
 effect definitions (210 catalogued effects, 0 added / 0 removed), so the same-pass golden/candidate
@@ -42,10 +42,10 @@ Pick the command that matches the claim you are making — the gates differ:
 | `bash parity/corpus/sweep.sh` | **tolerance 2.001, SSIM 0.98** (hardcoded in the script — the same relaxed spot-check gate as `run.sh`, absorbing cross-driver driver noise), 1800-frame (~30 s) evolution per composition | the live corpus (historical denominator 40 raw / 39 gradeable + 1 reference-rejected, retained) | corpus grading. The recorded corpus grades in STATUS report the measured max-abs-diff per composition (the corpus evidence above is recorded **byte-identical outcomes**), but this gate does not itself enforce tolerance 0 — treat byte-exact corpus claims as recorded measured outcomes, not as an enforcement guarantee of this script |
 | `bash parity/run.sh <name>` | **defaults tolerance 2.001, SSIM 0.98** — a relaxed spot-check gate sized to cross-driver/cross-machine driver noise | one program | smoke check only. A PASS at these defaults is **not** byte-exact evidence (it can pass with a non-zero max-abs-diff). For the strict gate on one program: `bash parity/run.sh noise 0 0.999` |
 | `node --test test/*.test.js` | suite pass | **111 tests** at this tree (107 at the v1.0.204 sync — the 94-test v1.0.193 recorded run + the 3 GAP-006 qualification cases of commit `c84adde` + the 10 `test/lifecycle-hooks.test.js` production-lifecycle mirror tests — plus the 4 GAP-007 final-leg mirror tests of this sync); the recorded GAP-004 run was **89 pass / 0 fail** at commit `9ad880e` (docs/COMPLETION_GAPS.md GAP-004); the current run is **111 pass / 0 fail** (see the `4f5e0d28..e24c844f` sync section) | unit/integration incl. `test/coverage-map.test.js`, which re-derives `parity/coverage-map.json` |
-| `node tools/verify-sync-audit.mjs` | exit 0 = every recorded sync-audit claim re-derived | the pinned engine revision (`vendor/fetch.sh` default, currently 1.0.206 / `e24c844f`) | authority / sync-audit re-derivation |
+| `node tools/verify-sync-audit.mjs` | exit 0 = every recorded sync-audit claim re-derived | the pinned engine revision (`vendor/fetch.sh` default, currently 1.0.215 / `e30f09e6`) | authority / sync-audit re-derivation |
 
 Denominator and coverage authority: [`parity/coverage-map.json`](parity/coverage-map.json)
-(210/210 catalogued effects bound to graded evidence at engine 1.0.206 / build `e24c844f`, 0
+(210/210 catalogued effects bound to graded evidence at engine 1.0.215 / build `e30f09e6`, 0
 explicitly excluded; skipped and refused cases retained in the counts) and
 [`parity/ledger.json`](parity/ledger.json) (325 programs: 322 PASS, 3 SKIP, 0 FAIL — the
 v1.0.181-era full-roster artifact, retained verbatim; the fresh-sweep roster at this tree is
@@ -266,6 +266,64 @@ Source-side: `noisefactorllc/noisemaker` `246ff57f43cc..0ed489ec4684` (a tearoff
   parity/sweep.sh`, mints golden + candidate together per the documented discipline above) and every
   candidate re-rendered and re-graded — **325/325 non-corpus programs (roster + mode matrix + the 4 new
   fixtures) byte-identical**, 3 skipped (`media`/`text`/`roll`, unchanged policy).
+
+## Vendor sync (cb22a05e..e30f09e6)
+
+Source-side: `noisefactorllc/noisemaker` `e30f09e62704` (tearoff `ports-sync`, flagged for a
+force-push / non-contiguous delivery with four observed ranges — audited directly in a local
+checkout: the previously synced tip `cb22a05e` is an exact ancestor of the first observed start
+`1fd89348`, and the four observed ranges chain `1fd89348`→`41d1ead1`→`109c00ac`→`058ca32e`→
+`e30f09e6`, so the uncovered delta is exactly the contiguous `cb22a05e..e30f09e6` — 22 commits:
+14 docs/ledger/deps-only, 2 test-only vendored source guards, 1 attestation re-stamp, and the 5
+engine commits `29e76468`, `bd773801`, `3c1e47e5`, `71d805eb`, `109c00ac`). Release tag
+**v1.0.215 points exactly at `e30f09e6`** and the CDN was re-published (Last-Modified
+2026-10-02T21:50:44Z, shortly after the 21:39:25Z tag) — the 1.0.215 core's Build banner records
+the **`e30f09e6`** build.
+**Engine change — re-vendored to v1.0.215 (build `e30f09e6`, 910200-byte core):**
+
+- `git diff --numstat cb22a05e..e30f09e6 -- shaders/src shaders/effects`:
+  `shaders/src/lang/validator.js` +14/−2 (a parameter's own choice names — inline choices or
+  enum members — bind to that choice instead of shadowing a state value, so regenerated programs
+  like `sacredGeometry(geometry: seed)` read back as written),
+  `shaders/src/renderer/canvas.js` +30/−11, `shaders/src/runtime/expander.js` +8/−1 and new
+  `shaders/src/runtime/uniform-aliases.js` +32 (the expander records a pass's differently-named
+  uniform→global mappings as `uniformAliases`; ProgramState and both CanvasRenderer parameter
+  paths write the aliased uniform whenever they write the parameter, and single-effect alias
+  writes are scoped to that effect's own passes via the shared `_isEffectPass` test
+  `buildUniformBindings` uses),
+  `shaders/src/runtime/effect-validator.js` +4/−1 and `shaders/src/runtime/effect.js` +3/−0
+  (new `ui.resetOnChange` flag for parameters read only when the effect's state is reseeded),
+  plus the `ui.resetOnChange` flags in the `pointsEmit` (+6/−2) and `cellularAutomata3d`
+  (+3/−1) definitions and the three `parity-attestation.json` hash re-stamps. **No shader source
+  (GLSL/WGSL/HLSL) changed — translation surface unchanged; catalog parity holds (210 catalogued
+  effects, 0 added / 0 removed).**
+- Published 1.0.215 artifacts: the core is 910200 bytes; its banner-stripped delta over the
+  previous 1.0.209 pin is one interleaved region between byte-identical 89280-byte prefix and
+  187828-byte suffix anchors carrying the `uniformAliases`/`_isEffectPass`/`isOwnChoice` engine
+  symbols; `effects/manifest.json` is byte-identical; **exactly the `pointsEmit` and
+  `cellularAutomata3d` mini-bundles changed** (their `ui.resetOnChange` flags — ui metadata
+  only), all other 208 bundles sha256-identical to the vendored tree.
+- **Backend impact: none.** The engine delta is live-parameter plumbing inside the vendored core
+  (uniform-alias write-through, alias scoping, own-choice binding, validator ui-key) — the port's
+  `BabylonBackend` renders the same effect programs; the two changed mini-bundles carry ui
+  metadata only, so no shader source moves through the backend and rendered frames are
+  unchanged by construction. No port code change beyond the vendor pin bump.
+- **Verification**: `NM_UPSTREAM=<checkout> node tools/verify-sync-audit.mjs` exit 0 —
+  **165 re-derived claims, 0 fail**, including this range (ancestry through the four observed
+  starts, v1.0.215 pointing exactly at `e30f09e6`, the exact shaders/ numstat, catalog parity,
+  the 1.0.209→1.0.215 core delta decomposition with the new engine symbols, manifest
+  byte-identity, the per-bundle sha256 identity of all 210 published 1.0.215 mini-bundles
+  against `engine-hashes.json`, and the exactly-two changed definition bundles).
+  `parity/coverage-map.json` regenerated — only its two recorded engine fields moved
+  (1.0.209/`cb22a05e`/908465 → 1.0.215/`e30f09e6`/910200; program roster unchanged, 325
+  programs / 322 PASS / 3 policy skips). All **111 unit/integration tests pass, 0 fail**
+  (`npm test`). Parity spot checks (`parity/run.sh`, tol 2.001, SwiftShader vs macOS-Metal
+  goldens): `ca3d` — the `cellularAutomata3d` chain carrying one of the two changed
+  definitions — and `noise` byte-identical (max-abs-diff 0.000, ssim 1.0); `heightGrid` shows
+  high max-abs-diff against its Metal-minted golden, and its candidates are **byte-identical
+  between the 1.0.209- and 1.0.215-engine renders** (`cmp` of the two candidate PNGs), so the
+  divergence is the documented pre-existing container driver noise, unchanged by this sync
+  (evidence `parity-spot-e30f09e6.txt`).
 
 ## Vendor sync (ed478159..cb22a05e)
 

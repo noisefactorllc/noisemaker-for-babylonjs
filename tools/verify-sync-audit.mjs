@@ -6,7 +6,7 @@
 // "Vendor sync (296e0138..73c15be0)", "Vendor sync (73c15be0..a5059106)" and
 // "Vendor sync (a5059106..68273906)" and "Vendor sync (68273906..4f5e0d28)" and
 // "Vendor sync (4f5e0d28..e24c844f)", "Vendor sync (e24c844f..ed478159)" and
-// "Vendor sync (ed478159..cb22a05e)" audits
+// "Vendor sync (ed478159..cb22a05e)" and "Vendor sync (cb22a05e..e30f09e6)" audits
 // directly from source, so the
 // recorded audits are an executable contract instead of prose.
 //
@@ -91,7 +91,8 @@ const END12 = '682739066d3b74962febbdcdae85b5aa4d2e19f3' // audio-input multi-de
 const END13 = '4f5e0d28bdc155700393c314e9a5aafcc4da91fd' // channel-shortfall range end (previous sync)
 const END14 = 'e24c844f8dada85551ab084f41db8944fbc176c8' // GAP-007 final-legs range end (previous sync)
 const END15 = 'ed478159e5a31870c318be05ff755e533c754126' // uniform-gate range end (previous sync, no code change)
-const END16 = 'cb22a05eff9afed99fcf22a482b944c26f43e814' // portable-registration range end (this sync, ENGINE CHANGE)
+const END16 = 'cb22a05eff9afed99fcf22a482b944c26f43e814' // portable-registration range end (previous sync, ENGINE CHANGE)
+const END17 = 'e30f09e62704bcce0abaf07a42ab1111ddadbb84' // live-parameter/uniform-alias range end (this sync, ENGINE CHANGE)
 const VALIDATOR_DELTA = '1097\t18\tshaders/src/runtime/effect-validator.js\n457\t0\tshaders/tests/test_effect_definition_validation.js'
 const VALIDATOR_FILES = 'shaders/src/runtime/effect-validator.js\nshaders/tests/test_effect_definition_validation.js'
 const MIP_DELTA = '106\t15\tshaders/src/runtime/backends/webgl2.js\n273\t10\tshaders/src/runtime/backends/webgpu.js\n17\t0\tshaders/src/runtime/compiler.js\n26\t1\tshaders/src/runtime/effect-validator.js\n100\t19\tshaders/src/runtime/pipeline.js\n466\t0\tshaders/tests/test_mip_controls.js'
@@ -100,8 +101,8 @@ const POOL_DELTA = '185\t0\tshaders/src/runtime/backends/diagnostics.js\n26\t7\t
 const POOL_FILES = 'shaders/src/runtime/backends/diagnostics.js\nshaders/src/runtime/backends/webgl2.js\nshaders/src/runtime/backends/webgpu.js\nshaders/src/runtime/pipeline.js\nshaders/tests/test_backend_diagnostics.js\nshaders/tests/test_resource_pooling.js'
 const PRED_DELTA = '1\t1\tshaders/src/index.js\n2\t2\tshaders/src/lang/index.js\n11\t0\tshaders/src/lang/paramAliases.js\n372\t5\tshaders/src/lang/transform.js\n80\t0\tshaders/tests/frame-metrics.js\n161\t6\tshaders/tests/test-harness.js\n71\t0\tshaders/tests/test_frame_metrics.js\n200\t0\tshaders/tests/test_transform.js'
 const PRED_FILES = 'shaders/src/index.js\nshaders/src/lang/index.js\nshaders/src/lang/paramAliases.js\nshaders/src/lang/transform.js\nshaders/tests/frame-metrics.js\nshaders/tests/test-harness.js\nshaders/tests/test_frame_metrics.js\nshaders/tests/test_transform.js'
-const BUNDLE_URL = 'https://shaders.noisedeck.app/1.0.209/noisemaker-shaders-core.esm.js' // pinned documented revision (see vendor/fetch.sh), not the rolling /1 alias
-const BUNDLE_BYTES = 908465 // documented published build (cb22a05e tip, v1.0.209)
+const BUNDLE_URL = 'https://shaders.noisedeck.app/1.0.215/noisemaker-shaders-core.esm.js' // pinned documented revision (see vendor/fetch.sh), not the rolling /1 alias
+const BUNDLE_BYTES = 910200 // documented published build (e30f09e6 tip, v1.0.215)
 const PREV_BUNDLE_URL = 'https://shaders.noisedeck.app/1.0.189/noisemaker-shaders-core.esm.js' // previous pinned revision (7dc0f564)
 
 let repo = process.env.NM_UPSTREAM || ''
@@ -504,14 +505,14 @@ const stripBanner = (b) => {
   return text.replace(/^ \* Build: .*\n/m, '').replace(/^ \* Date: .*\n/m, '')
 }
 if (bundle.length === BUNDLE_BYTES) {
-  check(`published core bundle at the pinned documented revision is the recorded ${BUNDLE_BYTES}-byte build (cb22a05e tip, v1.0.209)`, true)
+  check(`published core bundle at the pinned documented revision is the recorded ${BUNDLE_BYTES}-byte build (e30f09e6 tip, v1.0.215)`, true)
 } else {
   check(`published core bundle at the pinned revision no longer matches the recorded build (got ${bundle.length} bytes, recorded ${BUNDLE_BYTES}) — WARN only: the recorded byte-identity claim refers to the artifact verified during the audit; run a new ports-sync for the newer release`, true)
 }
-// The pinned documented revision is the recorded cb22a05e build (v1.0.209): the banner
+// The pinned documented revision is the recorded e30f09e6 build (v1.0.215): the banner
 // inside the artifact names the build SHA (belt to the byte-count braces above).
-check('the published 1.0.209 core banner records the cb22a05e build',
-  /Build: cb22a05e/.test(bundle.toString('utf8')))
+check('the published 1.0.215 core banner records the e30f09e6 build',
+  /Build: e30f09e6/.test(bundle.toString('utf8')))
 // The v1.0.189→v1.0.193 published core delta is exactly the GAP-016 addition:
 // the new internal preflight module, the mrtFormatBytes delegation, and the
 // Pipeline.preflight() method — re-derived against the previous pinned CDN
@@ -697,21 +698,21 @@ check('the published 1.0.207 core is banner-stripped byte-identical to the pinne
   Buffer.from(stripBanner(bundle207)).equals(Buffer.from(stripBanner(bundle206))))
 // ENGINE CHANGE (re-vendored): the pinned 1.0.206 core carries the GAP-007 final legs
 // while the previous pin (1.0.204, 4f5e0d28) carries none of them.
-check('the pinned core (v1.0.209 tip) carries the uniform-block ShaderDiagnostic throw (stage uniform-block)',
+check('the pinned core (v1.0.215 tip) carries the uniform-block ShaderDiagnostic throw (stage uniform-block)',
   bundle.toString('utf8').includes('uniform-block') && bundle.toString('utf8').includes('ERR_UNIFORM_BLOCK_TOO_LARGE'))
-check('the pinned core (v1.0.209 tip) carries the DiagnosticCollector + fallback diagnostic codes',
+check('the pinned core (v1.0.215 tip) carries the DiagnosticCollector + fallback diagnostic codes',
   bundle.toString('utf8').includes('DiagnosticCollector') &&
   bundle.toString('utf8').includes('ERR_UNKNOWN_FORMAT_FALLBACK') &&
   bundle.toString('utf8').includes('ERR_DIMENSION_FALLBACK') &&
   bundle.toString('utf8').includes('ERR_MISSING_RENDER_TARGET') &&
   bundle.toString('utf8').includes('ERR_GL_ERROR') &&
   bundle.toString('utf8').includes('ERR_DEVICE_VALIDATION'))
-check('the pinned core (v1.0.209 tip) recognizes the input/resolution dimension keywords in resolveDimension',
+check('the pinned core (v1.0.215 tip) recognizes the input/resolution dimension keywords in resolveDimension',
   /spec === "screen" \|\| spec === "auto" \|\| spec === "input" \|\| spec === "resolution"/.test(bundle.toString('utf8')))
-check('the pinned core (v1.0.209 tip) carries the missing-render-target and GL-error record paths',
+check('the pinned core (v1.0.215 tip) carries the missing-render-target and GL-error record paths',
   bundle.toString('utf8').includes('_recordMissingRenderTarget') &&
   bundle.toString('utf8').includes('WebGL Error '))
-check('the pinned core (v1.0.209 tip) carries the pipeline dimension-fallback diagnostic',
+check('the pinned core (v1.0.215 tip) carries the pipeline dimension-fallback diagnostic',
   bundle.toString('utf8').includes('Unknown dimension spec') &&
   bundle.toString('utf8').includes('_warnedDimensionFallbacks'))
 check('the previous pinned 1.0.204 core lacks the GAP-007 final-leg symbols',
@@ -772,13 +773,16 @@ for (const id of manifestIds) {
     .update(await fetchBuffer(`https://shaders.noisedeck.app/1.0.208/${rel}`))
     .digest('hex')
   mbHashes[rel] = h
-  if (h !== vendoredHashes[rel]) mbMismatches.push(`${rel} 1.0.208=${h.slice(0, 12)} vendored=${(vendoredHashes[rel] ?? 'ABSENT').slice(0, 12)}`)
+  const hPrevPin = mbCreateHash('sha256')
+    .update(await fetchBuffer(`https://shaders.noisedeck.app/1.0.209/${rel}`))
+    .digest('hex')
+  if (h !== hPrevPin) mbMismatches.push(`${rel} 1.0.208=${h.slice(0, 12)} 1.0.209pin=${hPrevPin.slice(0, 12)}`)
 }
-check('every published 1.0.208 effect mini-bundle is sha256-identical to the vendored tree (210/210)',
+check('every published 1.0.208 effect mini-bundle is sha256-identical to the previous pin (1.0.209) bundle set (210/210; the uniform-gate range was dev-only, and the 1.0.215 re-pin changes exactly the two ui.resetOnChange definition bundles the 6o section pins)',
   manifestIds.length === 210 && mbMismatches.length === 0,
-  mbMismatches.length ? mbMismatches.join(' | ').slice(0, 500) : `manifest bundles=${manifestIds.length}, all sha256-match engine-hashes.json`)
+  mbMismatches.length ? mbMismatches.join(' | ').slice(0, 500) : `manifest bundles=${manifestIds.length}, all sha256-match the 1.0.209 pin set`)
 
-// 6n. The portable-registration range: ed478159..cb22a05e (this sync, ENGINE CHANGE).
+// 6n. The portable-registration range: ed478159..cb22a05e (previous sync, ENGINE CHANGE).
 // The delivery was force-push-flagged with an observed range f5ca07cd..cb22a05e; audited
 // directly in a local checkout: the previously synced tip ed478159 is an exact ancestor of
 // the end cb22a05e and the observed start f5ca07cd is an ancestor of both (so the uncovered
@@ -829,17 +833,90 @@ check('the pinned 1.0.209 core carries the registerPortableEffect runtime (engin
 const manifest209 = await fetchBuffer('https://shaders.noisedeck.app/1.0.209/effects/manifest.json')
 check('the 1.0.209 effects manifest is byte-identical to the vendored manifest',
   manifest209.equals(readFileSync(join(process.cwd(), 'vendor/noisemaker/effects/manifest.json'))))
-const mb209Mismatches = []
+
+// 6o. The live-parameter/uniform-alias range: cb22a05e..e30f09e6 (this sync, ENGINE CHANGE).
+// The delivery was force-push-flagged with four observed ranges (delivery order is not
+// ancestry order); audited directly in a local checkout: the previously synced tip
+// cb22a05e is an exact ancestor of the first observed start 1fd89348, and the four
+// observed ranges chain 1fd89348→41d1ead1→109c00ac→058ca32e→e30f09e6, so the uncovered
+// delta is exactly the contiguous cb22a05e..e30f09e6 (22 commits: 14 docs/ledger/deps-only,
+// 2 test-only (the vendored source guards), 1 attestation re-stamp, and 5 engine
+// commits: 29e76468 reserved-choice binding, bd773801 uniformAliases, 3c1e47e5
+// ui.resetOnChange, 71d805eb + 109c00ac single-effect alias scoping). Release tag
+// v1.0.215 points exactly at the end. ENGINE CHANGE (re-vendored): the engine-side
+// live-parameter plumbing (uniformAliases write-through, _isEffectPass alias scoping,
+// reserved own-choice binding) plus the ui.resetOnChange flag on the pointsEmit and
+// cellularAutomata3d definitions — ui metadata only, so rendered frames are unchanged.
+check('cb22a05e is an ancestor of 1fd89348 (live-parameter range contiguous through the observed starts)',
+  git('merge-base', '--is-ancestor', END16, '1fd893483c83f7602416cf8e9c48c9605a8f202c') === '' &&
+  git('merge-base', '1fd893483c83f7602416cf8e9c48c9605a8f202c', END17) === '1fd893483c83f7602416cf8e9c48c9605a8f202c')
+tagCheck('v1.0.215', END17, 'e30f09e6')
+const LIVE_SRC_DELTA =
+  '1\t1\tshaders/effects/points/heightGrid/parity-attestation.json\n' +
+  '1\t1\tshaders/effects/render/pointsBillboardRender/parity-attestation.json\n' +
+  '6\t2\tshaders/effects/render/pointsEmit/definition.js\n' +
+  '1\t1\tshaders/effects/render/pointsRender/parity-attestation.json\n' +
+  '3\t1\tshaders/effects/synth3d/cellularAutomata3d/definition.js\n' +
+  '14\t2\tshaders/src/lang/validator.js\n' +
+  '30\t11\tshaders/src/renderer/canvas.js\n' +
+  '4\t1\tshaders/src/runtime/effect-validator.js\n' +
+  '3\t0\tshaders/src/runtime/effect.js\n' +
+  '8\t1\tshaders/src/runtime/expander.js\n' +
+  '32\t0\tshaders/src/runtime/uniform-aliases.js'
+const liveNumstat = git('diff', '--numstat', `${END16}..${END17}`, '--', 'shaders/src', 'shaders/effects')
+check('shaders/src + shaders/effects delta cb22a05e..e30f09e6 is exactly the five engine commits' +
+  ' (lang/validator own-choice binding, renderer/canvas alias scoping, runtime uniformAliases' +
+  ' + effect.js resetOnChange, and the two ui.resetOnChange definition flags + attestation re-stamps)',
+  liveNumstat === LIVE_SRC_DELTA, liveNumstat.replace(/\n/g, ' | '))
+check('no new shader source is introduced in cb22a05e..e30f09e6 (WGSL/GLSL translation surface unchanged)',
+  git('diff', '--name-only', `${END16}..${END17}`, '--', 'shaders/src', 'shaders/effects')
+    .split('\n').every(f => !/\.glsl|\.wgsl|\.hlsl/.test(f)) &&
+  git('diff', '--name-only', `${END16}..${END17}`, '--', 'shaders/src', 'shaders/effects').split('\n').length === 11)
+const bundle215Delta = (() => {
+  const strip = (b) => Buffer.from(b.toString('utf8').replace(/^ \* Build: .*\n/m, '').replace(/^ \* Date: .*\n/m, ''))
+  const prev = strip(bundle209)
+  const next = strip(bundle)
+  let i = 0
+  while (i < Math.min(prev.length, next.length) && prev[i] === next[i]) i++
+  let j = 0
+  while (j < Math.min(prev.length - i, next.length - i) && prev[prev.length - 1 - j] === next[next.length - 1 - j]) j++
+  return { prefix: i, suffix: j, inserted: next.slice(i, next.length - j), deleted: prev.slice(i, prev.length - j) }
+})()
+check('the banner-stripped 1.0.215 core delta over the previous pin (1.0.209) is one interleaved region between byte-identical prefix/suffix anchors',
+  bundle215Delta.inserted.length > 0 && bundle215Delta.deleted.length > 0 &&
+  bundle215Delta.prefix === 89280 && bundle215Delta.suffix === 187828,
+  `prefix=${bundle215Delta.prefix} suffix=${bundle215Delta.suffix} inserted=${bundle215Delta.inserted.length} deleted=${bundle215Delta.deleted.length}`)
+check('the 1.0.215 core delta carries the live-parameter engine symbols (uniformAliases, _isEffectPass, isOwnChoice)',
+  ['uniformAliases', '_isEffectPass', 'isOwnChoice'].every(s => bundle215Delta.inserted.includes(s)))
+check('the pinned 1.0.215 core carries the resetState write-through plumbing and no dev-only validator symbols',
+  bundle.toString('utf8').includes('uniformAliases') &&
+  !bundle.toString('utf8').includes('effect-validator'))
+check('the 1.0.215 effects manifest is byte-identical to the vendored manifest (catalog parity: 210 effects, 0 added / 0 removed)',
+  (await fetchBuffer('https://shaders.noisedeck.app/1.0.215/effects/manifest.json'))
+    .equals(readFileSync(join(process.cwd(), 'vendor/noisemaker/effects/manifest.json'))))
+const mb215Mismatches = []
+const mb209to215Changed = []
 for (const id of manifestIds) {
   const rel = `effects/${id}.js`
-  const h = mbCreateHash('sha256')
+  const h215 = mbCreateHash('sha256')
+    .update(await fetchBuffer(`https://shaders.noisedeck.app/1.0.215/${rel}`))
+    .digest('hex')
+  const h209 = mbCreateHash('sha256')
     .update(await fetchBuffer(`https://shaders.noisedeck.app/1.0.209/${rel}`))
     .digest('hex')
-  if (h !== vendoredHashes[rel]) mb209Mismatches.push(`${rel} 1.0.209=${h.slice(0, 12)} vendored=${(vendoredHashes[rel] ?? 'ABSENT').slice(0, 12)}`)
+  if (h215 !== vendoredHashes[rel]) mb215Mismatches.push(`${rel} 1.0.215=${h215.slice(0, 12)} vendored=${(vendoredHashes[rel] ?? 'ABSENT').slice(0, 12)}`)
+  if (h209 !== h215) mb209to215Changed.push(rel)
 }
-check('every published 1.0.209 effect mini-bundle is sha256-identical to the vendored tree (210/210, catalog parity of the re-vendored pin)',
-  manifestIds.length === 210 && mb209Mismatches.length === 0,
-  mb209Mismatches.length ? mb209Mismatches.join(' | ').slice(0, 500) : `manifest bundles=${manifestIds.length}, all sha256-match engine-hashes.json`)
+check('every published 1.0.215 effect mini-bundle is sha256-identical to the vendored tree (210/210, catalog parity of the re-vendored pin)',
+  manifestIds.length === 210 && mb215Mismatches.length === 0,
+  mb215Mismatches.length ? mb215Mismatches.join(' | ').slice(0, 500) : `manifest bundles=${manifestIds.length}, all sha256-match engine-hashes.json`)
+check('exactly the pointsEmit and cellularAutomata3d mini-bundles changed between 1.0.209 and 1.0.215 (ui.resetOnChange flags; rendered frames unchanged)',
+  mb209to215Changed.length === 2 &&
+  mb209to215Changed.includes('effects/render/pointsEmit.js') &&
+  mb209to215Changed.includes('effects/synth3d/cellularAutomata3d.js') &&
+  (await fetchBuffer('https://shaders.noisedeck.app/1.0.215/effects/render/pointsEmit.js')).includes('resetOnChange') &&
+  (await fetchBuffer('https://shaders.noisedeck.app/1.0.215/effects/synth3d/cellularAutomata3d.js')).includes('resetOnChange'),
+  mb209to215Changed.join(' | '))
 
 // 7. The port's own test suite (`npm test`). In a prepared environment this check is
 //    REQUIRED: any failing test breaks the audit ("an absent run is not success"). In an
