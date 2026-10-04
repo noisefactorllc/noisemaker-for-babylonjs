@@ -7,9 +7,9 @@
 // "Vendor sync (a5059106..68273906)" and "Vendor sync (68273906..4f5e0d28)" and
 // "Vendor sync (4f5e0d28..e24c844f)", "Vendor sync (e24c844f..ed478159)" and
 // "Vendor sync (ed478159..cb22a05e)", "Vendor sync (cb22a05e..e30f09e6)",
-// and "Vendor sync (e30f09e6..06852d3d)" audits
-// directly from source, so the
-// recorded audits are an executable contract instead of prose.
+// "Vendor sync (e30f09e6..06852d3d)", and "Vendor sync (06852d3d..058d15dc)"
+// audits directly from source, so the recorded audits are an executable
+// contract instead of prose.
 //
 //   node tools/verify-sync-audit.mjs
 //   NM_UPSTREAM=/path/to/noisemaker-checkout node tools/verify-sync-audit.mjs
@@ -95,6 +95,7 @@ const END15 = 'ed478159e5a31870c318be05ff755e533c754126' // uniform-gate range e
 const END16 = 'cb22a05eff9afed99fcf22a482b944c26f43e814' // portable-registration range end (previous sync, ENGINE CHANGE)
 const END17 = 'e30f09e62704bcce0abaf07a42ab1111ddadbb84' // live-parameter/uniform-alias range end (this sync, ENGINE CHANGE)
 const END18 = '06852d3dcd273f48be78092cb3996d73fa810c77' // degauss tile-awareness release (v1.0.220)
+const END19 = '058d15dc742f91dbab067229dae196d1477adad1' // octaveWarp hash-conversion release (v1.0.221)
 const VALIDATOR_DELTA = '1097\t18\tshaders/src/runtime/effect-validator.js\n457\t0\tshaders/tests/test_effect_definition_validation.js'
 const VALIDATOR_FILES = 'shaders/src/runtime/effect-validator.js\nshaders/tests/test_effect_definition_validation.js'
 const MIP_DELTA = '106\t15\tshaders/src/runtime/backends/webgl2.js\n273\t10\tshaders/src/runtime/backends/webgpu.js\n17\t0\tshaders/src/runtime/compiler.js\n26\t1\tshaders/src/runtime/effect-validator.js\n100\t19\tshaders/src/runtime/pipeline.js\n466\t0\tshaders/tests/test_mip_controls.js'
@@ -896,9 +897,10 @@ check('the pinned 1.0.215 core carries the resetState write-through plumbing and
 check('the 1.0.215 effects manifest is byte-identical to the vendored manifest (catalog parity: 210 effects, 0 added / 0 removed)',
   (await fetchBuffer('https://shaders.noisedeck.app/1.0.215/effects/manifest.json'))
     .equals(readFileSync(join(process.cwd(), 'vendor/noisemaker/effects/manifest.json'))))
-const mb220Mismatches = []
+const mb221Mismatches = []
 const mb209to215Changed = []
 const mb215to220Changed = []
+const mb220to221Changed = []
 for (const id of manifestIds) {
   const rel = `effects/${id}.js`
   const h215 = mbCreateHash('sha256')
@@ -907,16 +909,20 @@ for (const id of manifestIds) {
   const h220 = mbCreateHash('sha256')
     .update(await fetchBuffer(`https://shaders.noisedeck.app/1.0.220/${rel}`))
     .digest('hex')
+  const h221 = mbCreateHash('sha256')
+    .update(await fetchBuffer(`https://shaders.noisedeck.app/1.0.221/${rel}`))
+    .digest('hex')
   const h209 = mbCreateHash('sha256')
     .update(await fetchBuffer(`https://shaders.noisedeck.app/1.0.209/${rel}`))
     .digest('hex')
-  if (h220 !== vendoredHashes[rel]) mb220Mismatches.push(`${rel} 1.0.220=${h220.slice(0, 12)} vendored=${(vendoredHashes[rel] ?? 'ABSENT').slice(0, 12)}`)
+  if (h221 !== vendoredHashes[rel]) mb221Mismatches.push(`${rel} 1.0.221=${h221.slice(0, 12)} vendored=${(vendoredHashes[rel] ?? 'ABSENT').slice(0, 12)}`)
   if (h209 !== h215) mb209to215Changed.push(rel)
   if (h215 !== h220) mb215to220Changed.push(rel)
+  if (h220 !== h221) mb220to221Changed.push(rel)
 }
-check('every published 1.0.220 effect mini-bundle is sha256-identical to the vendored tree (210/210)',
-  manifestIds.length === 210 && mb220Mismatches.length === 0,
-  mb220Mismatches.length ? mb220Mismatches.join(' | ').slice(0, 500) : `manifest bundles=${manifestIds.length}, all sha256-match engine-hashes.json`)
+check('every published 1.0.221 effect mini-bundle is sha256-identical to the vendored tree (210/210)',
+  manifestIds.length === 210 && mb221Mismatches.length === 0,
+  mb221Mismatches.length ? mb221Mismatches.join(' | ').slice(0, 500) : `manifest bundles=${manifestIds.length}, all sha256-match engine-hashes.json`)
 check('exactly the pointsEmit and cellularAutomata3d mini-bundles changed between 1.0.209 and 1.0.215 (ui.resetOnChange flags; rendered frames unchanged)',
   mb209to215Changed.length === 2 &&
   mb209to215Changed.includes('effects/render/pointsEmit.js') &&
@@ -947,9 +953,8 @@ check('shaders/src and shaders/effects delta e30f09e6..06852d3d is exactly degau
 check('the v1.0.220 source range changes no engine runtime module',
   git('diff', '--name-only', `${END17}..${END18}`, '--', 'shaders/src') === '')
 const bundle220 = await fetchBuffer('https://shaders.noisedeck.app/1.0.220/noisemaker-shaders-core.esm.js')
-check('published 1.0.220 core is a 910200-byte 06852d3d build, byte-identical to the vendored core',
-  bundle220.length === 910200 && /Build: 06852d3d/.test(bundle220.toString('utf8')) &&
-  bundle220.equals(readFileSync(join(process.cwd(), 'vendor/noisemaker/noisemaker-shaders-core.esm.js'))))
+check('published 1.0.220 core is the recorded 910200-byte 06852d3d build',
+  bundle220.length === 910200 && /Build: 06852d3d/.test(bundle220.toString('utf8')))
 check('the v1.0.220 core is banner-stripped byte-identical to v1.0.215',
   stripBanner(bundle220) === stripBanner(bundle))
 check('the v1.0.220 effects manifest is byte-identical to the vendored manifest',
@@ -961,6 +966,31 @@ check('only degauss and the two help-text mini-bundles changed between v1.0.215 
     'effects/render/pointsEmit.js',
     'effects/synth3d/cellularAutomata3d.js'
   ].join('\n'), mb215to220Changed.join(' | '))
+
+// 6q. The octaveWarp hash conversion range: 06852d3d..058d15dc (v1.0.221).
+check('06852d3d and 48d25116 are ancestors of the v1.0.221 tip',
+  [END18, '48d25116def5'].every(sha => git('merge-base', '--is-ancestor', sha, END19) === ''))
+tagCheck('v1.0.221', END19, '058d15dc')
+const OCTAVE_WARP_DELTA =
+  '3\t3\tshaders/effects/filter/octaveWarp/glsl/octaveWarp.glsl\n' +
+  '37\t0\tshaders/effects/filter/octaveWarp/parity-attestation.json\n' +
+  '9\t0\tshaders/effects/filter/octaveWarp/parity-case.json\n' +
+  '3\t3\tshaders/effects/filter/octaveWarp/wgsl/octaveWarp.wgsl'
+check('shaders/src and shaders/effects delta 06852d3d..058d15dc is exactly octaveWarp hash conversion and parity evidence',
+  git('diff', '--numstat', `${END18}..${END19}`, '--', 'shaders/src', 'shaders/effects') === OCTAVE_WARP_DELTA)
+check('the v1.0.221 source range changes no engine runtime module or effect definition',
+  git('diff', '--name-only', `${END18}..${END19}`, '--', 'shaders/src', 'shaders/effects/filter/octaveWarp/definition.js') === '')
+const bundle221 = await fetchBuffer('https://shaders.noisedeck.app/1.0.221/noisemaker-shaders-core.esm.js')
+check('published 1.0.221 core is the 910200-byte 058d15dc build, byte-identical to the vendored core',
+  bundle221.length === 910200 && /Build: 058d15dc/.test(bundle221.toString('utf8')) &&
+  bundle221.equals(readFileSync(join(process.cwd(), 'vendor/noisemaker/noisemaker-shaders-core.esm.js'))))
+check('the v1.0.221 core is banner-stripped byte-identical to v1.0.220',
+  stripBanner(bundle221) === stripBanner(bundle220))
+check('the v1.0.221 effects manifest is byte-identical to v1.0.220 and the vendored manifest',
+  (await fetchBuffer('https://shaders.noisedeck.app/1.0.221/effects/manifest.json'))
+    .equals(readFileSync(join(process.cwd(), 'vendor/noisemaker/effects/manifest.json'))))
+check('only the octaveWarp mini-bundle changed between v1.0.220 and v1.0.221',
+  mb220to221Changed.join('\n') === 'effects/filter/octaveWarp.js', mb220to221Changed.join(' | '))
 
 // 7. The port's own test suite (`npm test`). In a prepared environment this check is
 //    REQUIRED: any failing test breaks the audit ("an absent run is not success"). In an
