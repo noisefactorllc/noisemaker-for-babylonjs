@@ -17,6 +17,8 @@ on:
       - "src/**"
       - "package-lock.json"
 
+permissions: {}
+
 concurrency:
   group: export-kit-${{ github.ref }}
   cancel-in-progress: false
