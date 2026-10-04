@@ -138,7 +138,7 @@ function mipLevelSize (dim, level) {
 // Parse `uniform <type> <name>[N];` declarations out of GLSL source so we can declare
 // them to Babylon's Effect and dispatch the correct setter by type. (webgl2.js gets this
 // from gl.getActiveUniform; we read it from source — same result for our shaders.)
-const UNIFORM_RE = /\buniform\s+(?:highp\s+|mediump\s+|lowp\s+)?(\w+)\s+(\w+)\s*(?:\[\s*\d+\s*\])?\s*;/g
+const UNIFORM_RE = /\buniform\s+(?:highp\s+|mediump\s+|lowp\s+)?(\w+)\s+(\w+)\s*(?:\[\s*\d+\s*\]\s*)?;/g
 function parseUniforms (source) {
   const uniformTypes = {} // name -> 'float'|'int'|'bool'|'vec2'|...
   const samplerNames = []
