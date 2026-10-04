@@ -1,6 +1,6 @@
 # Noisemaker for Babylon.js — status & parity
 
-*Last verified 2026-10-03 against the vendored engine **v1.0.215** (build `e30f09e6`,
+*Last verified 2026-10-03 against the vendored engine **v1.0.220** (build `06852d3d`,
 `noisemaker-shaders-core.esm.js`, 910200 bytes): the recorded suite run at this
 sync is **111 tests, 111 pass / 0 fail** (`node --test test/*.test.js`;
 107 at the v1.0.204 sync — the 94-test v1.0.193 recorded run + the 3 GAP-006
@@ -13,9 +13,9 @@ implementation commit (`9ad880e`), 82/82 in the v1.0.185 sync section), the mach
 re-derives the `8eeb7b5a..6a0af04d`, `6a0af04d..403c2a4b`, `403c2a4b..7dc0f564`,
 `7dc0f564..12b4d74f`, `93229933..296e0138`, `296e0138..73c15be0`,
 `73c15be0..a5059106`, `a5059106..68273906`, `68273906..4f5e0d28`, `4f5e0d28..e24c844f`,
-`e24c844f..ed478159`, `ed478159..cb22a05e`, and `cb22a05e..e30f09e6` claims and the four external-input real-input fixtures
+`e24c844f..ed478159`, `ed478159..cb22a05e`, `cb22a05e..e30f09e6`, and `e30f09e6..06852d3d` claims and the four external-input real-input fixtures
 grade byte-exact on both backends (see those sync sections and
-[`parity/external-input-grades.json`](parity/external-input-grades.json)). Those ranges changed no
+[`parity/external-input-grades.json`](parity/external-input-grades.json)). The ranges through `e30f09e6` changed no
 effect definitions (210 catalogued effects, 0 added / 0 removed), so the same-pass golden/candidate
 byte-exact re-grade recorded below against the v1.0.183 build (build tag `8eeb7b5a`, 858616 bytes,
 `noisefactorllc/noisemaker` @ `8eeb7b5ac14e`, 2026-09-25: **66/66 PASS** at that revision, sync
@@ -42,10 +42,10 @@ Pick the command that matches the claim you are making — the gates differ:
 | `bash parity/corpus/sweep.sh` | **tolerance 2.001, SSIM 0.98** (hardcoded in the script — the same relaxed spot-check gate as `run.sh`, absorbing cross-driver driver noise), 1800-frame (~30 s) evolution per composition | the live corpus (historical denominator 40 raw / 39 gradeable + 1 reference-rejected, retained) | corpus grading. The recorded corpus grades in STATUS report the measured max-abs-diff per composition (the corpus evidence above is recorded **byte-identical outcomes**), but this gate does not itself enforce tolerance 0 — treat byte-exact corpus claims as recorded measured outcomes, not as an enforcement guarantee of this script |
 | `bash parity/run.sh <name>` | **defaults tolerance 2.001, SSIM 0.98** — a relaxed spot-check gate sized to cross-driver/cross-machine driver noise | one program | smoke check only. A PASS at these defaults is **not** byte-exact evidence (it can pass with a non-zero max-abs-diff). For the strict gate on one program: `bash parity/run.sh noise 0 0.999` |
 | `node --test test/*.test.js` | suite pass | **111 tests** at this tree (107 at the v1.0.204 sync — the 94-test v1.0.193 recorded run + the 3 GAP-006 qualification cases of commit `c84adde` + the 10 `test/lifecycle-hooks.test.js` production-lifecycle mirror tests — plus the 4 GAP-007 final-leg mirror tests of this sync); the recorded GAP-004 run was **89 pass / 0 fail** at commit `9ad880e` (docs/COMPLETION_GAPS.md GAP-004); the current run is **111 pass / 0 fail** (see the `4f5e0d28..e24c844f` sync section) | unit/integration incl. `test/coverage-map.test.js`, which re-derives `parity/coverage-map.json` |
-| `node tools/verify-sync-audit.mjs` | exit 0 = every recorded sync-audit claim re-derived | the pinned engine revision (`vendor/fetch.sh` default, currently 1.0.215 / `e30f09e6`) | authority / sync-audit re-derivation |
+| `node tools/verify-sync-audit.mjs` | exit 0 = every recorded sync-audit claim re-derived | the pinned engine revision (`vendor/fetch.sh` default, currently 1.0.220 / `06852d3d`) | authority / sync-audit re-derivation |
 
 Denominator and coverage authority: [`parity/coverage-map.json`](parity/coverage-map.json)
-(210/210 catalogued effects bound to graded evidence at engine 1.0.215 / build `e30f09e6`, 0
+(210/210 catalogued effects bound to graded evidence at engine 1.0.220 / build `06852d3d`, 0
 explicitly excluded; skipped and refused cases retained in the counts) and
 [`parity/ledger.json`](parity/ledger.json) (325 programs: 322 PASS, 3 SKIP, 0 FAIL — the
 v1.0.181-era full-roster artifact, retained verbatim; the fresh-sweep roster at this tree is
@@ -266,6 +266,28 @@ Source-side: `noisefactorllc/noisemaker` `246ff57f43cc..0ed489ec4684` (a tearoff
   parity/sweep.sh`, mints golden + candidate together per the documented discipline above) and every
   candidate re-rendered and re-graded — **325/325 non-corpus programs (roster + mode matrix + the 4 new
   fixtures) byte-identical**, 3 skipped (`media`/`text`/`roll`, unchanged policy).
+
+## Vendor sync (e30f09e6..06852d3d)
+
+Source-side: `noisefactorllc/noisemaker` release v1.0.220 points to `06852d3dcd27`.
+The previously covered `e30f09e6` precedes the observed `d143cb51..48d25116`
+delivery range, and `48d25116` precedes the release tip. The complete
+`e30f09e6..06852d3d` shaders/source delta changes only `filter/degauss`
+(definition, GLSL, WGSL, parity metadata) and help text for `render/pointsEmit`
+and `synth3d/cellularAutomata3d`; no engine runtime module changes.
+
+Re-vendored the published v1.0.220 core, manifest, and 210 mini-bundles. The
+910200-byte core is banner-stripped byte-identical to v1.0.215; only the
+degauss bundle and the two help-text bundles differ. `BabylonBackend` already
+binds the degauss GLSL's plain uniforms, so no backend change is needed. The
+coverage map retains 210 effects and 325 ledger programs (322 PASS, 3 SKIP).
+`npm test`: 111 pass, 0 fail. Degauss rendered from the v1.0.220 reference
+WebGL2 engine and Babylon backend on the same driver is byte-exact
+(max-abs-diff 0, SSIM 1.0, 256×256 at time 0.25). The prior committed golden
+differs slightly from the current-driver render (max-abs-diff 17,
+mean-abs-diff 0.0107, SSIM 1.0), consistent with the documented cross-driver
+golden variance. `tools/verify-sync-audit.mjs` checks the release SHA, exact
+source delta, published core and manifest, and all 210 bundle hashes.
 
 ## Vendor sync (cb22a05e..e30f09e6)
 
