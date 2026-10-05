@@ -1,4 +1,4 @@
-import { mkdirSync, existsSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs'
+import { mkdirSync, existsSync, readdirSync, rmSync, statSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
@@ -13,50 +13,25 @@ import { fileURLToPath } from 'node:url'
 // environments keep the browsers on an exec-mounted cache instead. When the
 // caller left PLAYWRIGHT_BROWSERS_PATH unset AND the default registry holds no
 // chromium install, point it at the first known exec-mounted cache that has
-// one. A registry that can serve the required build is always left untouched —
-// this only repairs the bare `npm test` case.
-//
-// Registry readiness is checked per BUILD: a registry that holds a chromium
-// build other than the one the installed playwright-core launches (its
-// browsers.json names the required chromium-headless-shell revision) cannot
-// serve it — launch fails hard with "Executable doesn't exist". This covers
-// prepared registries kept in step with a different playwright version (the
-// macOS host's native browsers cache, for example) and stale repo-local
-// caches left by a previous pin. When NO candidate registry — including an
-// explicitly configured one — holds the required build, the browsers are
-// installed ONCE into the repo-local `.cache/ms-playwright` directory so
-// every later bare `npm test` — including in fresh clones/containers with no
-// prepared cache — finds an executable. The install runs under an exclusive
-// lock directory so concurrent node --test workers don't race.
+// one. An explicit PLAYWRIGHT_BROWSERS_PATH or a populated default registry is
+// always left untouched — this only repairs the bare `npm test` case.
 //
 // The resolution runs at MODULE-EVALUATION time (and this module must be
 // imported before 'playwright'): the Playwright registry reads
 // PLAYWRIGHT_BROWSERS_PATH when the module is first imported, so an env var
 // set later in the same process is ignored.
+//
+// If NO known cache holds a chromium install (a fresh container that has never
+// prepared one), the browsers are installed ONCE into the repo-local
+// `.cache/ms-playwright` directory so every later bare `npm test` — including
+// in fresh clones/containers with no prepared cache — finds an executable.
+// The install runs under an exclusive lock directory so concurrent node --test
+// workers don't race; a registry without a chromium entry is treated as absent.
 const FALLBACK_BROWSER_ROOTS = [
   join(dirname(fileURLToPath(import.meta.url)), '..', '.cache', 'ms-playwright'),
   '/state/cache/pw-browsers'
 ]
 const REPO_BROWSER_ROOT = FALLBACK_BROWSER_ROOTS[0]
-
-// The exact browser build the installed playwright-core launches: its
-// browsers.json names the chromium-headless-shell revision. Unknown (no
-// node_modules yet, unexpected layout) falls back to the historical
-// any-chromium-directory readiness check.
-const requiredRevision = (() => {
-  try {
-    const manifest = JSON.parse(readFileSync(
-      join(dirname(dirname(fileURLToPath(import.meta.url))), 'node_modules', 'playwright-core', 'browsers.json'),
-      'utf8'))
-    const shell = manifest.browsers.find(b => b.name === 'chromium-headless-shell') ||
-      manifest.browsers.find(b => b.name === 'chromium')
-    return shell ? String(shell.revision) : null
-  } catch {
-    return null
-  }
-})()
-
-const headlessShellDir = requiredRevision === null ? null : `chromium_headless_shell-${requiredRevision}`
 
 // A chromium directory exists only when its INSTALLATION_COMPLETE marker is
 // present: Playwright creates the browser directory BEFORE extracting the
@@ -65,9 +40,6 @@ const headlessShellDir = requiredRevision === null ? null : `chromium_headless_s
 // cache with several node --test workers racing the one installer).
 const hasChromium = (root) => {
   try {
-    if (headlessShellDir !== null) {
-      return existsSync(join(root, headlessShellDir, 'INSTALLATION_COMPLETE'))
-    }
     for (const d of readdirSync(root)) {
       if (d.startsWith('chromium') && existsSync(join(root, d, 'INSTALLATION_COMPLETE'))) return true
     }
@@ -77,25 +49,25 @@ const hasChromium = (root) => {
   }
 }
 
-const candidateRoots = [
-  process.env.PLAYWRIGHT_BROWSERS_PATH,
-  join(homedir(), '.cache', 'ms-playwright'),
-  ...FALLBACK_BROWSER_ROOTS
-].filter(Boolean)
-const usableRoot = candidateRoots.find(root => existsSync(root) && hasChromium(root))
-if (usableRoot) {
-  // Leave a registry that can serve the required build untouched; adopt the
-  // first usable fallback when the default registry holds nothing usable.
-  if (usableRoot !== process.env.PLAYWRIGHT_BROWSERS_PATH) {
-    process.env.PLAYWRIGHT_BROWSERS_PATH = usableRoot
+if (!process.env.PLAYWRIGHT_BROWSERS_PATH &&
+    !hasChromium(join(homedir(), '.cache', 'ms-playwright'))) {
+  let resolved = null
+  for (const root of FALLBACK_BROWSER_ROOTS) {
+    if (existsSync(root) && hasChromium(root)) {
+      resolved = root
+      break
+    }
   }
-} else {
-  installRepoLocalBrowsers()
-  // The install targets the repo-local root; point the registry there even
-  // when the install is owned by another concurrent worker still in flight —
-  // the launching test then fails loudly with the exact missing path instead
-  // of silently probing an unprepared default registry.
-  process.env.PLAYWRIGHT_BROWSERS_PATH = REPO_BROWSER_ROOT
+  if (resolved === null) {
+    installRepoLocalBrowsers()
+    // The install targets the repo-local root; point the registry there even
+    // when the install is owned by another concurrent worker still in flight —
+    // the launching test then fails loudly with the exact missing path instead
+    // of silently probing an unprepared default registry.
+    process.env.PLAYWRIGHT_BROWSERS_PATH = REPO_BROWSER_ROOT
+  } else {
+    process.env.PLAYWRIGHT_BROWSERS_PATH = resolved
+  }
 }
 
 function installRepoLocalBrowsers () {
@@ -136,36 +108,6 @@ function installRepoLocalBrowsers () {
     } catch { /* vanished between mkdir and stat — retry */ }
     Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2000)
   }
-}
-
-// The Worker Elves macOS host sandbox permits loopback binds only inside the
-// 43117-43126 window — an ephemeral bind there fails with `listen EPERM` —
-// while CI runners and dev containers allow any ephemeral port. Try an
-// ephemeral bind first, then fall back to the sanctioned window on
-// EPERM/EADDRINUSE, so the same render probes run unchanged in both.
-const SANCTIONED_LOOPBACK_WINDOW = [43117, 43126]
-
-export async function listenOnAvailablePort (server, host = '127.0.0.1') {
-  const attempts = [0]
-  for (let port = SANCTIONED_LOOPBACK_WINDOW[0]; port <= SANCTIONED_LOOPBACK_WINDOW[1]; port++) attempts.push(port)
-  let lastError = null
-  for (const port of attempts) {
-    try {
-      await new Promise((resolve, reject) => {
-        const onError = (e) => reject(e)
-        server.once('error', onError)
-        server.listen(port, host, () => {
-          server.removeListener('error', onError)
-          resolve()
-        })
-      })
-      return server.address().port
-    } catch (e) {
-      lastError = e
-      if (e.code !== 'EPERM' && e.code !== 'EADDRINUSE') throw e
-    }
-  }
-  throw lastError
 }
 
 export const ensurePlaywrightBrowsersPath = () => {}

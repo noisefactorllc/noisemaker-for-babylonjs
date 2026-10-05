@@ -1,4 +1,5 @@
-import { ensurePlaywrightBrowsersPath, listenOnAvailablePort } from './browser-launch.mjs'
+import { ensurePlaywrightBrowsersPath } from './browser-launch.mjs'
+import { listenOnAvailablePort } from './probe-port.mjs'
 import assert from 'node:assert/strict'
 import { execFile } from 'node:child_process'
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
