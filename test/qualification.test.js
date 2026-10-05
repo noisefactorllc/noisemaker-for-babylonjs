@@ -1,4 +1,4 @@
-import { ensurePlaywrightBrowsersPath } from './browser-launch.mjs'
+import { ensurePlaywrightBrowsersPath, listenOnAvailablePort } from './browser-launch.mjs'
 import assert from 'node:assert/strict'
 import { execFile } from 'node:child_process'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -253,7 +253,7 @@ async function renderProbe (consumer, fat, probeJsPath) {
       body => { res.writeHead(200, { 'content-type': extname(rel) === '.html' ? 'text/html' : 'text/javascript' }); res.end(body) },
       () => { res.writeHead(404); res.end() })
   })
-  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve))
+  await listenOnAvailablePort(server)
   let browser
   try {
     browser = await chromium.launch({

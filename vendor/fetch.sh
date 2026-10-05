@@ -8,14 +8,14 @@
 # a core ESM engine bundle + per-effect "mini-bundles" (production pre-fetches these).
 #
 # The default VERSION below is the DOCUMENTED engine revision this port is verified against
-# (STATUS.md "Vendor sync" record: build `058d15dc`, v1.0.221, 910200-byte core). Bumping it
+# (build `4b4a1ed9`, v1.0.230, 913906-byte core). Bumping it
 # is an authority change: re-run the parity checks and update the STATUS.md record.
 #
 #   bash vendor/fetch.sh             # fetch the pinned, documented revision
 #   VERSION=1.0.187 bash vendor/fetch.sh  # deliberate authority bump (requires re-verification)
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
-VERSION="${VERSION:-1.0.221}"
+VERSION="${VERSION:-1.0.230}"
 BASE="https://shaders.noisedeck.app/${VERSION}"
 OUT="$HERE/noisemaker"
 EFFECTS="$OUT/effects"
