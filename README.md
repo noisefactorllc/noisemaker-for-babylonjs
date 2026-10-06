@@ -190,6 +190,9 @@ shaders are GLSL ES 3.00, used as-is.
 
 ## Contributing
 
+Contributions follow the Noise Factor [contributing policy](https://github.com/noisefactorllc/.github/blob/main/CONTRIBUTING.md) and
+[Code of Conduct](https://github.com/noisefactorllc/.github/blob/main/CODE_OF_CONDUCT.md). The notes below cover this repository's own tooling.
+
 The port consumes the published engine, so it needs nothing else checked out. The **dev/parity
 tooling** renders both the reference goldens and the Babylon candidates through that same vendored
 engine (only the backend differs), so a same-engine diff is exact:
