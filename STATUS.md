@@ -1,9 +1,9 @@
 # Noisemaker for Babylon.js — status & parity
 
-*Last verified 2026-10-03 against the vendored engine **v1.0.221** (build `058d15dc`,
-`noisemaker-shaders-core.esm.js`, 910200 bytes): the recorded suite run at this
-sync is **111 tests, 111 pass / 0 fail** (`node --test test/*.test.js`;
-107 at the v1.0.204 sync — the 94-test v1.0.193 recorded run + the 3 GAP-006
+*Last verified 2026-10-07 against the vendored engine **v1.0.262** (build `76308ab6`,
+`noisemaker-shaders-core.esm.js`, 919962 bytes): the recorded suite run at this
+sync is **112 tests, 112 pass / 0 fail** (`node --test test/*.test.js`;
+111 at the v1.0.221 sync, 107 at the v1.0.204 sync — the 94-test v1.0.193 recorded run + the 3 GAP-006
 qualification cases of commit `c84adde` + the 10 `test/lifecycle-hooks.test.js` engine v1.0.199
 production-lifecycle mirror tests — plus the 4 `test/backend-diagnostics.test.js` GAP-007
 final-leg mirror tests of this sync; earlier recorded runs: 107/107 at the
@@ -14,7 +14,7 @@ re-derives the `8eeb7b5a..6a0af04d`, `6a0af04d..403c2a4b`, `403c2a4b..7dc0f564`,
 `7dc0f564..12b4d74f`, `93229933..296e0138`, `296e0138..73c15be0`,
 `73c15be0..a5059106`, `a5059106..68273906`, `68273906..4f5e0d28`, `4f5e0d28..e24c844f`,
 `e24c844f..ed478159`, `ed478159..cb22a05e`, `cb22a05e..e30f09e6`,
-`e30f09e6..06852d3d`, and `06852d3d..058d15dc` claims and the four external-input real-input fixtures
+`e30f09e6..06852d3d`, `06852d3d..058d15dc`, `058d15dc..4b4a1ed9`, and `4b4a1ed9..76308ab6` claims and the four external-input real-input fixtures
 grade byte-exact on both backends (see those sync sections and
 [`parity/external-input-grades.json`](parity/external-input-grades.json)). The ranges through `e30f09e6` changed no
 effect definitions (210 catalogued effects, 0 added / 0 removed), so the same-pass golden/candidate
@@ -42,11 +42,11 @@ Pick the command that matches the claim you are making — the gates differ:
 | `bash parity/sweep.sh` | **tolerance 0, SSIM 0.999** (flat byte-exact policy — the per-effect relaxed map was retired, see Parity below) | every current-roster program with a golden: **329 programs at this tree** (332 committed DSL fixtures minus the 3 retired `bc`/`hs`/`colorspace`, per `parity/current-programs.mjs`'s vendored-manifest roster) — the 325 committed-ledger programs (322 PASS / 3 policy skips retained: the `media`/`text`/`roll` no-input fallbacks) **plus the 4 GAP-004 real-input fixtures** (`media_image`, `text_glyphs`, `roll_midi`, `mesh_obj`), which are graded here, not skipped | the acceptance evidence for parity claims. Note the distinction: `parity/ledger.json` still records only its 325 v1.0.181-era rows (it was not rewritten with the 4 newer fixtures); 325 is the ledger artifact, 329 is what a fresh sweep grades |
 | `bash parity/corpus/sweep.sh` | **tolerance 2.001, SSIM 0.98** (hardcoded in the script — the same relaxed spot-check gate as `run.sh`, absorbing cross-driver driver noise), 1800-frame (~30 s) evolution per composition | the live corpus (historical denominator 40 raw / 39 gradeable + 1 reference-rejected, retained) | corpus grading. The recorded corpus grades in STATUS report the measured max-abs-diff per composition (the corpus evidence above is recorded **byte-identical outcomes**), but this gate does not itself enforce tolerance 0 — treat byte-exact corpus claims as recorded measured outcomes, not as an enforcement guarantee of this script |
 | `bash parity/run.sh <name>` | **defaults tolerance 2.001, SSIM 0.98** — a relaxed spot-check gate sized to cross-driver/cross-machine driver noise | one program | smoke check only. A PASS at these defaults is **not** byte-exact evidence (it can pass with a non-zero max-abs-diff). For the strict gate on one program: `bash parity/run.sh noise 0 0.999` |
-| `node --test test/*.test.js` | suite pass | **111 tests** at this tree (107 at the v1.0.204 sync — the 94-test v1.0.193 recorded run + the 3 GAP-006 qualification cases of commit `c84adde` + the 10 `test/lifecycle-hooks.test.js` production-lifecycle mirror tests — plus the 4 GAP-007 final-leg mirror tests of this sync); the recorded GAP-004 run was **89 pass / 0 fail** at commit `9ad880e` (docs/COMPLETION_GAPS.md GAP-004); the current run is **111 pass / 0 fail** (see the `4f5e0d28..e24c844f` sync section) | unit/integration incl. `test/coverage-map.test.js`, which re-derives `parity/coverage-map.json` |
-| `node tools/verify-sync-audit.mjs` | exit 0 = every recorded sync-audit claim re-derived | the pinned engine revision (`vendor/fetch.sh` default, currently 1.0.221 / `058d15dc`) | authority / sync-audit re-derivation |
+| `node --test test/*.test.js` | suite pass | **112 tests** at this tree (111 at the v1.0.221 sync, 107 at the v1.0.204 sync — the 94-test v1.0.193 recorded run + the 3 GAP-006 qualification cases of commit `c84adde` + the 10 `test/lifecycle-hooks.test.js` production-lifecycle mirror tests — plus the 4 GAP-007 final-leg mirror tests of this sync); the recorded GAP-004 run was **89 pass / 0 fail** at commit `9ad880e` (docs/COMPLETION_GAPS.md GAP-004); the current run is **112 pass / 0 fail** | unit/integration incl. `test/coverage-map.test.js`, which re-derives `parity/coverage-map.json` |
+| `node tools/verify-sync-audit.mjs` | exit 0 = every recorded sync-audit claim re-derived | the pinned engine revision (`vendor/fetch.sh` default, currently 1.0.262 / `76308ab6`) | authority / sync-audit re-derivation |
 
 Denominator and coverage authority: [`parity/coverage-map.json`](parity/coverage-map.json)
-(210/210 catalogued effects bound to graded evidence at engine 1.0.221 / build `058d15dc`, 0
+(210/210 catalogued effects bound to graded evidence at engine 1.0.262 / build `76308ab6`, 0
 explicitly excluded; skipped and refused cases retained in the counts) and
 [`parity/ledger.json`](parity/ledger.json) (325 programs: 322 PASS, 3 SKIP, 0 FAIL — the
 v1.0.181-era full-roster artifact, retained verbatim; the fresh-sweep roster at this tree is

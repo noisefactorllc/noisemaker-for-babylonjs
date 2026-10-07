@@ -107,6 +107,16 @@ export class DiagnosticCollector {
 
 // rgba8/rgba16f/rgba32f/r8/r16f/r32f → Babylon { type, format } (mirrors webgl2 resolveFormat)
 export const KNOWN_FORMATS = new Set(['rgba8', 'rgba16f', 'rgba32f', 'r8', 'r16f', 'r32f'])
+// WebGPU spellings of the same formats, which definitions may use (filter/bloom's
+// rgba16float, points/buddhabrot's rgba32float); webgl2 resolveFormat accepts them too.
+export const FORMAT_ALIASES = {
+  rgba8unorm: 'rgba8',
+  rgba16float: 'rgba16f',
+  rgba32float: 'rgba32f',
+  r8unorm: 'r8',
+  r16float: 'r16f',
+  r32float: 'r32f'
+}
 function resolveFormat (format) {
   const RGBA = Constants.TEXTUREFORMAT_RGBA
   const RED = Constants.TEXTUREFORMAT_R
@@ -121,7 +131,7 @@ function resolveFormat (format) {
     r16f: { type: HF, format: RED },
     r32f: { type: F, format: RED }
   }
-  return table[format] || table.rgba8
+  return table[FORMAT_ALIASES[format] ?? format] || table.rgba8
 }
 
 // Full mip chain length for a 2D texture dimension pair (mirrors webgl2 mipLevelCount).
@@ -334,7 +344,7 @@ export class BabylonBackend {
   // accepted input) but surface a deduplicated structured diagnostic instead of
   // pure silence. An absent format is the default, not a fallback.
   _resolveFormat (format) {
-    if (format !== undefined && format !== null && !KNOWN_FORMATS.has(format)) {
+    if (format !== undefined && format !== null && !KNOWN_FORMATS.has(FORMAT_ALIASES[format] ?? format)) {
       this._recordFormatFallback(format)
     }
     return resolveFormat(format)

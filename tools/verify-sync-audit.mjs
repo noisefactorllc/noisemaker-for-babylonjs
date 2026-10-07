@@ -7,8 +7,8 @@
 // "Vendor sync (a5059106..68273906)" and "Vendor sync (68273906..4f5e0d28)" and
 // "Vendor sync (4f5e0d28..e24c844f)", "Vendor sync (e24c844f..ed478159)" and
 // "Vendor sync (ed478159..cb22a05e)", "Vendor sync (cb22a05e..e30f09e6)",
-// "Vendor sync (e30f09e6..06852d3d)", "Vendor sync (06852d3d..058d15dc)", and
-// "Vendor sync (058d15dc..4b4a1ed9)"
+// "Vendor sync (e30f09e6..06852d3d)", "Vendor sync (06852d3d..058d15dc)",
+// "Vendor sync (058d15dc..4b4a1ed9)", and "Vendor sync (4b4a1ed9..76308ab6)"
 // audits directly from source, so the recorded audits are an executable
 // contract instead of prose.
 //
@@ -97,7 +97,8 @@ const END16 = 'cb22a05eff9afed99fcf22a482b944c26f43e814' // portable-registratio
 const END17 = 'e30f09e62704bcce0abaf07a42ab1111ddadbb84' // live-parameter/uniform-alias range end (this sync, ENGINE CHANGE)
 const END18 = '06852d3dcd273f48be78092cb3996d73fa810c77' // degauss tile-awareness release (v1.0.220)
 const END19 = '058d15dc742f91dbab067229dae196d1477adad1' // octaveWarp hash-conversion release (v1.0.221)
-const END20 = '4b4a1ed968cf179298c42927be5e17f604201745' // unparser-precision → contract-guard delivery (v1.0.230, this sync, ENGINE CHANGE)
+const END20 = '4b4a1ed968cf179298c42927be5e17f604201745' // unparser-precision → contract-guard delivery (v1.0.230, previous sync, ENGINE CHANGE)
+const END21 = '76308ab656a4c95ba51cc50e256d36a50aa58b8b' // stabilization delivery (v1.0.262, this sync, ENGINE CHANGE)
 const VALIDATOR_DELTA = '1097\t18\tshaders/src/runtime/effect-validator.js\n457\t0\tshaders/tests/test_effect_definition_validation.js'
 const VALIDATOR_FILES = 'shaders/src/runtime/effect-validator.js\nshaders/tests/test_effect_definition_validation.js'
 const MIP_DELTA = '106\t15\tshaders/src/runtime/backends/webgl2.js\n273\t10\tshaders/src/runtime/backends/webgpu.js\n17\t0\tshaders/src/runtime/compiler.js\n26\t1\tshaders/src/runtime/effect-validator.js\n100\t19\tshaders/src/runtime/pipeline.js\n466\t0\tshaders/tests/test_mip_controls.js'
@@ -899,8 +900,6 @@ check('the pinned 1.0.215 core carries the resetState write-through plumbing and
 check('the 1.0.215 effects manifest is byte-identical to the vendored manifest (catalog parity: 210 effects, 0 added / 0 removed)',
   (await fetchBuffer('https://shaders.noisedeck.app/1.0.215/effects/manifest.json'))
     .equals(readFileSync(join(process.cwd(), 'vendor/noisemaker/effects/manifest.json'))))
-const mb221Mismatches = []
-const mb230Mismatches = []
 const mb209to215Changed = []
 const mb215to220Changed = []
 const mb220to221Changed = []
@@ -922,19 +921,11 @@ for (const id of manifestIds) {
   const h230 = mbCreateHash('sha256')
     .update(await fetchBuffer(`https://shaders.noisedeck.app/1.0.230/${rel}`))
     .digest('hex')
-  if (h221 !== vendoredHashes[rel]) mb221Mismatches.push(`${rel} 1.0.221=${h221.slice(0, 12)} vendored=${(vendoredHashes[rel] ?? 'ABSENT').slice(0, 12)}`)
-  if (h230 !== vendoredHashes[rel]) mb230Mismatches.push(`${rel} 1.0.230=${h230.slice(0, 12)} vendored=${(vendoredHashes[rel] ?? 'ABSENT').slice(0, 12)}`)
   if (h209 !== h215) mb209to215Changed.push(rel)
   if (h215 !== h220) mb215to220Changed.push(rel)
   if (h220 !== h221) mb220to221Changed.push(rel)
   if (h221 !== h230) mb221to230Changed.push(rel)
 }
-check('every published 1.0.221 effect mini-bundle is sha256-identical to the vendored tree (210/210)',
-  manifestIds.length === 210 && mb221Mismatches.length === 0,
-  mb221Mismatches.length ? mb221Mismatches.join(' | ').slice(0, 500) : `manifest bundles=${manifestIds.length}, all sha256-match engine-hashes.json`)
-check('every published 1.0.230 effect mini-bundle is sha256-identical to the vendored tree (210/210)',
-  manifestIds.length === 210 && mb230Mismatches.length === 0,
-  mb230Mismatches.length ? mb230Mismatches.join(' | ').slice(0, 500) : `manifest bundles=${manifestIds.length}, all sha256-match engine-hashes.json`)
 check('exactly the pointsEmit and cellularAutomata3d mini-bundles changed between 1.0.209 and 1.0.215 (ui.resetOnChange flags; rendered frames unchanged)',
   mb209to215Changed.length === 2 &&
   mb209to215Changed.includes('effects/render/pointsEmit.js') &&
@@ -1086,10 +1077,9 @@ check('published 1.0.229 core is the 913906-byte e443e8b9 build and carries the 
   bundle229.length === 913906 && /Build: e443e8b9/.test(bundle229.toString('utf8')) &&
   bundle229.toString('utf8').includes('key === "__proto__" || key === "constructor" || key === "prototype"'))
 const bundle230 = await fetchBuffer('https://shaders.noisedeck.app/1.0.230/noisemaker-shaders-core.esm.js')
-check('published 1.0.230 core is the 913906-byte 4b4a1ed9 build, banner-stripped byte-identical to 1.0.229, and byte-identical to the vendored core',
+check('published 1.0.230 core is the 913906-byte 4b4a1ed9 build, banner-stripped byte-identical to 1.0.229',
   bundle230.length === 913906 && /Build: 4b4a1ed9/.test(bundle230.toString('utf8')) &&
-  Buffer.from(stripBanner(bundle230)).equals(Buffer.from(stripBanner(bundle229))) &&
-  bundle230.equals(readFileSync(join(process.cwd(), 'vendor/noisemaker/noisemaker-shaders-core.esm.js'))))
+  Buffer.from(stripBanner(bundle230)).equals(Buffer.from(stripBanner(bundle229))))
 const manifest230 = await fetchBuffer('https://shaders.noisedeck.app/1.0.230/effects/manifest.json')
 check('the v1.0.230 effects manifest is byte-identical to the v1.0.221 manifest and the vendored manifest (catalog parity: 210 effects, 0 added / 0 removed)',
   manifestIds.length === 210 &&
@@ -1097,6 +1087,71 @@ check('the v1.0.230 effects manifest is byte-identical to the v1.0.221 manifest 
   manifest230.equals(readFileSync(join(process.cwd(), 'vendor/noisemaker/effects/manifest.json'))))
 check('no effect mini-bundle changed between 1.0.221 and 1.0.230 (all 210 sha256-identical)',
   mb221to230Changed.length === 0, mb221to230Changed.join(' | '))
+
+// 6s. The stabilization delivery: 4b4a1ed9..76308ab6 (v1.0.231–v1.0.262, this sync, ENGINE
+// CHANGE). Twenty-one observed ranges, delivered out of ancestry order; every observed range end
+// lies on the contiguous 4b4a1ed9..76308ab6 path, so the uncovered delta is exactly that range.
+// Engine changes that reach this port: the WebGL2 backend resolves the WebGPU spellings of
+// supported texture formats (91a6e505; mirrored in BabylonBackend's FORMAT_ALIASES, since
+// filter/bloom asks for rgba16float and points/buddhabrot for rgba32float), Effect carries
+// textures3d/shaders/externalTexture/externalMesh/builtinMeshes from its config (every effect
+// mini-bundle embeds Effect, so all 210 changed), and Pipeline.setUniform writes pass uniform
+// aliases, the palette uniform itself, and regenerates async overlays from their drawn values.
+// The WebGPU-only changes (WGSL sampling, boolean uniform packing) do not reach this port, which
+// renders GLSL. Catalog parity: the effects manifest is byte-identical to 1.0.230 (210 effects,
+// 0 added / 0 removed).
+check('4b4a1ed9 is an ancestor of the delivery tip 76308ab6 and every observed range end lies on that path',
+  git('merge-base', '--is-ancestor', END20, END21) === '' &&
+  ['41ba5e19ea2ed8a5d6dc3975b4cfbe381743b9b8', 'a06b897712ac6c964d3d1aa873ba253d581a39bc',
+   '90dd6ca56b20e160c5dcf816d73709bab1fc3db6', '888dd85f93ff7f6997802c8cdf0054b195f0642e',
+   '61dc5b887cb7bbf14ecbb73ead77d937b996b778', '88b4f174d0bff3084b818d640e2d09e94f260d8f',
+   '41fe7323f67102255df1f4bb12404c020f5cae2c', '91a6e50594536ff60ebab43808c74490f2695435',
+   '5578cf7c3021f7a8b4cfb07c448a733d4650da32', 'cabe6ee3f594e9de3d9a9c091f11018361ec0947',
+   '7be0e96cfde97c7801b5592e663026d15e47634d', '48b3a0bd5d3aacf1272c09096d4e567806b93356',
+   'dd91e0904710b11db7335fea1fc2362a69226cd3', '0dd892f80bfd751f485f6d753c56902e01a1dc6b',
+   '204102a27bbbc5b3a781f21e4ce9e687b22eea1b', '56e371b0e36c8123113c8d6eaa723bb50f6de81d',
+   'be6bb0eb524d4704e73c2c54c61ae04a51234de6', '0b9fdd6bb8cf456620f064c76d73099a6dc973dc',
+   '050dcd893c56438ed460595b54926df9a6560cbe', '6963388af87d53854d69e68e26911664fe9574b4',
+   END21].every(end =>
+    git('merge-base', '--is-ancestor', END20, end) === '' &&
+    git('merge-base', '--is-ancestor', end, END21) === ''))
+tagCheck('v1.0.262', END21, '76308ab6')
+const STABILIZATION_DELTA =
+  '2\t2\tshaders/src/lang/parser.js\n' +
+  '1\t1\tshaders/src/lang/transform.js\n' +
+  '1\t1\tshaders/src/lang/validator.js\n' +
+  '1\t1\tshaders/src/runtime/backends/diagnostics.js\n' +
+  '16\t5\tshaders/src/runtime/backends/webgl2.js\n' +
+  '38\t4\tshaders/src/runtime/backends/webgpu.js\n' +
+  '33\t3\tshaders/src/runtime/effect-validator.js\n' +
+  '10\t0\tshaders/src/runtime/effect.js\n' +
+  '1\t1\tshaders/src/runtime/expander.js\n' +
+  '109\t19\tshaders/src/runtime/pipeline.js\n' +
+  '27\t14\tshaders/src/runtime/preflight.js'
+const stabilizationNumstat = git('diff', '--numstat', `${END20}..${END21}`, '--', 'shaders/src')
+check('shaders/src delta 4b4a1ed9..76308ab6 is exactly the stabilization engine changes',
+  stabilizationNumstat === STABILIZATION_DELTA, stabilizationNumstat.replace(/\n/g, ' | '))
+const bundle262 = await fetchBuffer('https://shaders.noisedeck.app/1.0.262/noisemaker-shaders-core.esm.js')
+check('published 1.0.262 core is the 919962-byte 76308ab6 build, resolves the WebGPU format spellings, and is byte-identical to the vendored core',
+  bundle262.length === 919962 && /Build: 76308ab6/.test(bundle262.toString('utf8')) &&
+  bundle262.toString('utf8').includes("rgba16float") &&
+  bundle262.equals(readFileSync(join(process.cwd(), 'vendor/noisemaker/noisemaker-shaders-core.esm.js'))))
+const manifest262 = await fetchBuffer('https://shaders.noisedeck.app/1.0.262/effects/manifest.json')
+check('the v1.0.262 effects manifest is byte-identical to the v1.0.230 manifest and the vendored manifest (catalog parity: 210 effects, 0 added / 0 removed)',
+  manifestIds.length === 210 &&
+  manifest262.equals(manifest230) &&
+  manifest262.equals(readFileSync(join(process.cwd(), 'vendor/noisemaker/effects/manifest.json'))))
+const mb262Mismatches = []
+for (const id of manifestIds) {
+  const rel = `effects/${id}.js`
+  const h262 = mbCreateHash('sha256')
+    .update(await fetchBuffer(`https://shaders.noisedeck.app/1.0.262/${rel}`))
+    .digest('hex')
+  if (h262 !== vendoredHashes[rel]) mb262Mismatches.push(`${rel} 1.0.262=${h262.slice(0, 12)} vendored=${(vendoredHashes[rel] ?? 'ABSENT').slice(0, 12)}`)
+}
+check('every published 1.0.262 effect mini-bundle is sha256-identical to the vendored tree (210/210)',
+  manifestIds.length === 210 && mb262Mismatches.length === 0,
+  mb262Mismatches.length ? mb262Mismatches.join(' | ').slice(0, 500) : `manifest bundles=${manifestIds.length}, all sha256-match engine-hashes.json`)
 
 // 7. The port's own test suite (`npm test`). In a prepared environment this check is
 //    REQUIRED: any failing test breaks the audit ("an absent run is not success"). In an

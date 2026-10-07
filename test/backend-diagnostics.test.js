@@ -137,6 +137,22 @@ test('unknown texture format keeps the rgba8 fallback but records a structured d
   assert.equal(backend.diagnostics.records.length, 1, 'records are deduplicated per format')
 })
 
+test('WebGPU spellings of supported formats resolve without a fallback', () => {
+  // Mirrors upstream 91a6e505 (engine v1.0.262): filter/bloom (rgba16float) and
+  // points/buddhabrot (rgba32float) used to fall back to rgba8.
+  const backend = Object.create(BabylonBackend.prototype)
+  backend.diagnostics = new DiagnosticCollector()
+  backend._warnedFormatFallbacks = new Set()
+  const pairs = [
+    ['rgba8unorm', 'rgba8'], ['rgba16float', 'rgba16f'], ['rgba32float', 'rgba32f'],
+    ['r8unorm', 'r8'], ['r16float', 'r16f'], ['r32float', 'r32f']
+  ]
+  for (const [alias, canonical] of pairs) {
+    assert.deepEqual(backend._resolveFormat(alias), backend._resolveFormat(canonical), alias)
+  }
+  assert.equal(backend.diagnostics.records.length, 0, 'no fallback diagnostic')
+})
+
 test('missing render-target paths record structured diagnostics without changing behavior', () => {
   const backend = Object.create(BabylonBackend.prototype)
   backend.textures = new Map()
