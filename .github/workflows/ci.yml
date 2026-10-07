@@ -1,17 +1,19 @@
 name: CI
 
 # Required checks for the exact source SHA:
-#   - installed package and distribution contents: the full npm suite
-#     (`node --test test/*.test.js`), which includes the packed-tarball
-#     end-to-end install/import/render/recovery check and the packaging
-#     guards.
+#   - installed package and distribution contents: the npm suite
+#     (`node --test test/*.test.js`). On push it runs everything but the
+#     packed-tarball installs and the supported-matrix qualification, which
+#     install real consumers from the network; the weekly and manual runs
+#     run the whole suite.
 #   - public host workflow: the built examples loaded in headless Chromium
 #     (examples/verify.mjs + examples/verify-cubemap.mjs).
 #   - strict parity: the full-roster same-pass sweep (NM_DUAL=1, tolerance 0,
 #     SSIM 0.999) with goldens re-minted in the same browser session as the
 #     candidate, so the byte-exact gate does not depend on the CI driver.
-#     Simulations evolve 120 frames on push. The weekly scheduled run, and a
-#     manual run with `deep`, evolves them 1800 frames to their steady state.
+#     It renders on SwiftShader, so it runs weekly and on manual dispatch,
+#     never on push. The weekly run evolves simulations 1800 frames to their
+#     steady state; a manual run evolves 120, or 1800 with `deep`.
 #
 # Every job uploads its raw test output, the engine authority hashes
 # (vendor/noisemaker/engine-meta.json + engine-hashes.json written by
@@ -85,7 +87,14 @@ jobs:
           npm ci --ignore-scripts
           bash vendor/fetch.sh
           npx playwright install --with-deps chromium
-      - name: Full test suite (installed package, packaging, compiler, runtime)
+      - name: Test suite (packaging, compiler, runtime)
+        # The packed-tarball installs and the supported-matrix qualification install
+        # real consumers from the network; they run in the weekly and manual runs.
+        if: github.event_name == 'push'
+        run: |
+          node --test $(ls test/*.test.js | grep -v -e installed-package -e qualification) 2>&1 | tee "$RUNNER_TEMP/test-suite.log"
+      - name: Full test suite (installed package, qualification, packaging, compiler, runtime)
+        if: github.event_name != 'push'
         run: node --test test/*.test.js 2>&1 | tee "$RUNNER_TEMP/test-suite.log"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
@@ -137,6 +146,8 @@ jobs:
 
   parity:
     name: Strict parity ${{ matrix.shard }} (same-pass byte-exact sweep)
+    # Software-rendered (SwiftShader) parity is a weekly true-up, never a push gate.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 180
     strategy:
