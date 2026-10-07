@@ -9,7 +9,8 @@
 #
 # The default VERSION below is the DOCUMENTED engine revision this port is verified against
 # (build `76308ab6`, v1.0.262, 919962-byte core). Bumping it
-# is an authority change: re-run the parity checks and update the STATUS.md record.
+# is an authority change: re-run `NM_DUAL=1 bash parity/sweep.sh` and `node tools/coverage-map.mjs`,
+# and commit the ledger, goldens and coverage map with the new pin.
 #
 #   bash vendor/fetch.sh             # fetch the pinned, documented revision
 #   VERSION=1.0.187 bash vendor/fetch.sh  # deliberate authority bump (requires re-verification)

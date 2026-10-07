@@ -1,5 +1,5 @@
 /**
- * Production lifecycle hooks (engine GAP-026, upstream 73c15be0, v1.0.197–v1.0.199).
+ * Production lifecycle hooks.
  *
  * Mirrors the focused upstream `shaders/tests/test_lifecycle_hooks.js` cases
  * against the vendored published engine. v1.0.199 makes the production

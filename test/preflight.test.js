@@ -1,5 +1,5 @@
 /**
- * Static effect preflight (engine GAP-016, upstream 12b4d74f, v1.0.190–v1.0.193).
+ * Static effect preflight.
  *
  * Mirrors the focused upstream `shaders/tests/test_preflight.js` Pipeline-level
  * cases against the vendored published engine. v1.0.193 adds

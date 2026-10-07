@@ -1,6 +1,6 @@
 name: Corpus
-# GAP-008 (docs/COMPLETION_GAPS.md): every fetched live-corpus composition is
-# graded against the reference backend on a stable long-session runner.
+# Every fetched live-corpus composition is graded against the reference
+# backend on a stable long-session runner.
 #
 #   fetch:  run parity/corpus/fetch.sh against the live NoiseBLASTER! feed and
 #           re-derive the gradeable manifest exactly as corpus/sweep.sh does

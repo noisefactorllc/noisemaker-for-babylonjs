@@ -2790,6 +2790,24 @@
     }
   },
   {
+    "program": "media_image",
+    "effect": null,
+    "mode": "default",
+    "golden": "parity/out/media_image.golden.png",
+    "candidate": "parity/out/media_image.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
+    "passed": true,
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
+  },
+  {
     "program": "median",
     "effect": "filter/median",
     "mode": "default",
@@ -2813,6 +2831,24 @@
     "mode": "default",
     "golden": "parity/out/mesh_basic.golden.png",
     "candidate": "parity/out/mesh_basic.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
+    "passed": true,
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
+  },
+  {
+    "program": "mesh_obj",
+    "effect": "filter/meshRender",
+    "mode": "default",
+    "golden": "parity/out/mesh_obj.golden.png",
+    "candidate": "parity/out/mesh_obj.candidate.png",
     "status": "PASS",
     "max_abs_diff": 0.0,
     "mean_abs_diff": 0.0,
@@ -4068,6 +4104,24 @@
     }
   },
   {
+    "program": "roll_midi",
+    "effect": null,
+    "mode": "default",
+    "golden": "parity/out/roll_midi.golden.png",
+    "candidate": "parity/out/roll_midi.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
+    "passed": true,
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
+    }
+  },
+  {
     "program": "rotate",
     "effect": "filter/rotate",
     "mode": "default",
@@ -5145,6 +5199,24 @@
       "tolerance": 0.0,
       "ssim_min": 0.999,
       "reason": "numeric fallback passed; external input is not supplied"
+    }
+  },
+  {
+    "program": "text_glyphs",
+    "effect": "filter/text",
+    "mode": "glyphs",
+    "golden": "parity/out/text_glyphs.golden.png",
+    "candidate": "parity/out/text_glyphs.candidate.png",
+    "status": "PASS",
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ssim": 1.0,
+    "passed": true,
+    "skipped": false,
+    "policy": {
+      "tolerance": 0.0,
+      "ssim_min": 0.999,
+      "reason": "strict byte-exact comparison passed"
     }
   },
   {

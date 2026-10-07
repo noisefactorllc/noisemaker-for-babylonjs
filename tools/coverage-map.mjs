@@ -1,8 +1,6 @@
 #!/usr/bin/env node
-// coverage-map.mjs — build the GAP-004 coverage map: bind every catalogued effect branch and
-// representative developer workflow to explicit, source-bound acceptance evidence or an explicit
-// exclusion (GAP-004 acceptance: "every claimed branch has source-bound evidence or an explicit
-// exclusion. Counts retain skipped and refused cases.").
+// coverage-map.mjs — build the coverage map: bind every catalogued effect branch to the graded
+// parity programs that exercise it, or to an explicit exclusion. Counts keep skipped cases.
 //
 //   node tools/coverage-map.mjs [parity/coverage-map.json]   # writes JSON, human summary on stderr
 //
@@ -11,7 +9,6 @@
 //   - parity/programs/*.dsl compiled via tools/export-fat-graph.mjs (effect → fixture programs)
 //   - parity/ledger.json (graded fixture status incl. policy-skipped rows)
 //   - parity/mode-coverage.json (the (effect, mode) matrix)
-//   - parity/external-input-grades.json (real-input fixture grades recorded with full commands)
 //   - parity/render-batch.mjs EVOLVE map (stateful-sequence programs, parsed from source)
 
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs'
@@ -45,7 +42,6 @@ export async function buildCoverageMap ({ log = () => {} } = {}) {
   const ledger = JSON.parse(readFileSync(join(ROOT, 'parity', 'ledger.json'), 'utf8'))
   const modeCoverage = JSON.parse(readFileSync(join(ROOT, 'parity', 'mode-coverage.json'), 'utf8'))
   const { EXTERNAL_FIXTURES } = await import(pathToFileURL(join(ROOT, 'parity', 'render-candidate.mjs')).href)
-  const extGrades = JSON.parse(readFileSync(join(ROOT, 'parity', 'external-input-grades.json'), 'utf8'))
   const { exportFatGraph } = await import(pathToFileURL(join(ROOT, 'tools', 'export-fat-graph.mjs')).href)
 
   const ledgerByProgram = new Map(ledger.map(r => [r.program, r]))
@@ -61,8 +57,8 @@ export async function buildCoverageMap ({ log = () => {} } = {}) {
     try {
       fat = await exportFatGraph(dsl)
     } catch (e) {
-      // retired fixtures (bc/hs/colorspace) no longer compile against the current catalog; they
-      // are absent from the manifest too, so they cannot contribute evidence.
+      // a program for an effect the engine no longer ships does not compile; it is absent from
+      // the manifest too, so it cannot contribute evidence.
       log(`[coverage-map] WARN: cannot compile ${name}: ${String(e?.message || e).split('\n')[0]}`)
       continue
     }
@@ -119,14 +115,14 @@ export async function buildCoverageMap ({ log = () => {} } = {}) {
     row.externalInput = kind
     if (kind) {
       const kindFixture = REAL_INPUT_FIXTURE[kind]
-      const grade = extGrades.grades[kindFixture]
-      if (!grade) throw new Error(`coverage-map: no recorded grade for real-input fixture ${kindFixture} (${id})`)
+      const grade = ledgerByProgram.get(kindFixture)
+      if (!grade) throw new Error(`coverage-map: real-input fixture ${kindFixture} (${id}) has no row in parity/ledger.json`)
       if (!(programEffects.get(kindFixture) || []).includes(id)) {
         throw new Error(`coverage-map: real-input fixture ${kindFixture} does not exercise ${id}`)
       }
       row.realInputFixture = {
         program: kindFixture,
-        recorded: { date: grade.date, maxAbsDiff: grade.maxAbsDiff, ssim: grade.ssim, command: grade.command }
+        ledger: { status: grade.status, maxAbsDiff: grade.max_abs_diff ?? null }
       }
       row.fallbackPolicySkipped = progs.filter(n => !modeByProgram.has(n) && ledgerByProgram.get(n)?.status === 'SKIP')
     }
@@ -147,7 +143,7 @@ export async function buildCoverageMap ({ log = () => {} } = {}) {
     effectsExplicitlyExcluded: effects.filter(e => e.exclusion).length,
     externalInput: {
       total: effects.filter(e => e.externalInput).length,
-      realInputFixtured: effects.filter(e => e.externalInput && e.realInputFixture && e.realInputFixture.recorded).length,
+      realInputFixtured: effects.filter(e => e.externalInput && e.realInputFixture?.ledger.status === 'PASS').length,
       fallbackPolicySkippedRetained: ledger.filter(r => r.status === 'SKIP').length
     },
     ledger: {
@@ -161,24 +157,20 @@ export async function buildCoverageMap ({ log = () => {} } = {}) {
       choiceBearingParams: params,
       choiceBearingEffects: choiceEffects,
       namedChoices: choices,
-      rule: 'representative (effect, mode) fixtures + default-program parity only; the full parameter-interaction Cartesian product is explicitly NOT tested (see the exclusion in docs/COMPLETION_GAPS.md GAP-004)'
+      rule: 'representative (effect, mode) fixtures + default-program parity only; the full parameter-interaction Cartesian product is explicitly NOT tested'
     },
     statefulSequences: {
       evolvePrograms: [...new Set(evolvePrograms)].sort(),
-      evolveFrames: 1800,
-      corpus: extGrades.corpus
+      evolveFrames: 1800
     },
-    engine: { version: meta.version, build: meta.coreBuild, coreBytes: meta.coreBytes, effectCount: meta.effectCount },
-    engineCaveat: 'ledger.json full-roster grades were recorded against the 1.0.181-era artifact; later sync sections (STATUS.md) carry the per-build re-verification status. The 1.0.181→1.0.185 ranges changed no effect definitions (0 added/0 removed; tools/verify-sync-audit.mjs re-derives).'
+    engine: { version: meta.version, build: meta.coreBuild, coreBytes: meta.coreBytes, effectCount: meta.effectCount }
   }
 
   return {
-    _comment: 'Generated by node tools/coverage-map.mjs — GAP-004 acceptance map: every catalogued effect branch bound to fixture evidence (parity/ledger.json, parity/mode-coverage.json, parity/external-input-grades.json) or an explicit exclusion. Counts retain skipped and refused cases. Re-derived by node tools/coverage-map.mjs (workflows copied verbatim from parity/external-input-grades.json). Record note: the 2026-09-26 GAP-007 reconciliation clarified one recorded-run evidence string identically in this file and in parity/external-input-grades.json, so this file remains byte-consistent with a fresh regeneration; no measured value, count, grade, or engine record was hand-altered.',
+    _comment: 'Generated by node tools/coverage-map.mjs: every catalogued effect bound to the graded parity programs that exercise it (parity/ledger.json, parity/mode-coverage.json) or an explicit exclusion. Re-checked by test/coverage-map.test.js.',
     engine: counts.engine,
-    engineCaveat: counts.engineCaveat,
     effects,
-    counts,
-    workflows: extGrades.workflows
+    counts
   }
 }
 

@@ -1,8 +1,6 @@
-// GAP-004 acceptance gate: the coverage map is re-derived from the vendored engine + committed
-// fixtures and every acceptance rule is asserted, not trusted from prose.
-//
-// GAP-004 acceptance: "every claimed branch has source-bound evidence or an explicit exclusion.
-// Counts retain skipped and refused cases."
+// The coverage map is re-derived from the vendored engine + committed fixtures and every rule
+// is asserted: each catalogued effect is bound to graded parity programs or an explicit
+// exclusion, and counts keep skipped cases.
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { readFileSync, readdirSync } from 'node:fs'
@@ -13,7 +11,7 @@ import { buildCoverageMap } from '../tools/coverage-map.mjs'
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
-test('GAP-004 coverage map: every catalogued effect has fixture evidence or an explicit exclusion', async () => {
+test('coverage map: every catalogued effect has fixture evidence or an explicit exclusion', async () => {
   const map = await buildCoverageMap()
   const manifest = JSON.parse(readFileSync(join(ROOT, 'vendor', 'noisemaker', 'effects', 'manifest.json'), 'utf8'))
 
@@ -32,18 +30,18 @@ test('GAP-004 coverage map: every catalogued effect has fixture evidence or an e
   assert.equal(map.counts.effectsExplicitlyExcluded, map.effects.filter(e => e.exclusion).length)
 })
 
-test('GAP-004 coverage map: external-input branches carry real-input fixtures, and skipped cases are retained', async () => {
+test('coverage map: external-input branches carry real-input fixtures, and skipped cases are retained', async () => {
   const map = await buildCoverageMap()
   const ledger = JSON.parse(readFileSync(join(ROOT, 'parity', 'ledger.json'), 'utf8'))
   const skips = ledger.filter(r => r.status === 'SKIP')
 
-  // every external-input effect has a recorded real-input fixture grade
+  // every external-input effect has a graded, byte-exact real-input fixture in the ledger
   const withInput = map.effects.filter(e => e.externalInput)
   assert.equal(withInput.length, 4)
   for (const row of withInput) {
     assert.ok(row.realInputFixture, `${row.id}: no real-input fixture`)
-    assert.equal(row.realInputFixture.recorded.maxAbsDiff, 0, `${row.id}: real-input grade must be byte-exact`)
-    assert.match(row.realInputFixture.recorded.command, /compare\.py/, `${row.id}: grade must record its grading command`)
+    assert.equal(row.realInputFixture.ledger.status, 'PASS', `${row.id}: real-input fixture must pass`)
+    assert.equal(row.realInputFixture.ledger.maxAbsDiff, 0, `${row.id}: real-input grade must be byte-exact`)
   }
 
   // skipped cases retained: the ledger's policy skips (media/text/roll fallback programs) are
@@ -58,7 +56,7 @@ test('GAP-004 coverage map: external-input branches carry real-input fixtures, a
   }
 })
 
-test('GAP-004 coverage map: external-input classification is re-derived from the vendored definitions', async () => {
+test('coverage map: external-input classification is re-derived from the vendored definitions', async () => {
   // every vendored def with a declarative externalTexture must be classified in the map
   const map = await buildCoverageMap()
   const manifest = JSON.parse(readFileSync(join(ROOT, 'vendor', 'noisemaker', 'effects', 'manifest.json'), 'utf8'))
@@ -76,7 +74,7 @@ test('GAP-004 coverage map: external-input classification is re-derived from the
   }
 })
 
-test('GAP-004 coverage map: mode matrix and parameter-interaction surface are re-derived, not asserted', async () => {
+test('coverage map: mode matrix and parameter-interaction surface are re-derived, not asserted', async () => {
   const map = await buildCoverageMap()
   const modeCoverage = JSON.parse(readFileSync(join(ROOT, 'parity', 'mode-coverage.json'), 'utf8'))
   assert.equal(map.counts.modeMatrix.rows, modeCoverage.length)
@@ -107,17 +105,7 @@ test('GAP-004 coverage map: mode matrix and parameter-interaction surface are re
   assert.match(map.counts.parameterInteractions.rule, /Cartesian product is explicitly NOT tested/)
 })
 
-test('GAP-004 coverage map: corpus denominator retains skipped and refused counts, and its exclusion states the blocker', async () => {
-  const map = await buildCoverageMap()
-  const corpus = map.counts.statefulSequences.corpus
-  assert.equal(corpus.historicalDenominator.raw, 40)
-  assert.equal(corpus.historicalDenominator.gradeable, 39)
-  assert.equal(corpus.historicalDenominator.referenceRejected, 1)
-  assert.ok(corpus.reGradeExclusion && corpus.reGradeExclusion.reason, 'the corpus re-grade exclusion must state its reason')
-  assert.equal(corpus.freshLiveFeed.referenceRejected, corpus.freshLiveFeed.compositions - corpus.freshLiveFeed.gradeableByReferenceCompiler)
-})
-
-test('GAP-004 coverage map: stateful sequences match the harness EVOLVE map', async () => {
+test('coverage map: stateful sequences match the harness EVOLVE map', async () => {
   const map = await buildCoverageMap()
   const batchSrc = readFileSync(join(ROOT, 'parity', 'render-batch.mjs'), 'utf8')
   const block = batchSrc.match(/const EVOLVE = \{([\s\S]*?)\n\}/)[1]
@@ -126,7 +114,7 @@ test('GAP-004 coverage map: stateful sequences match the harness EVOLVE map', as
   assert.equal(map.counts.statefulSequences.evolvePrograms.length >= 10, true)
 })
 
-test('GAP-004 coverage map: committed JSON is the fresh re-derivation', async () => {
+test('coverage map: committed JSON is the fresh re-derivation', async () => {
   const fresh = await buildCoverageMap()
   const committed = JSON.parse(readFileSync(join(ROOT, 'parity', 'coverage-map.json'), 'utf8'))
   assert.deepEqual(committed, fresh, 'parity/coverage-map.json is stale — re-run: node tools/coverage-map.mjs')

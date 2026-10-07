@@ -832,8 +832,8 @@
     "points": false,
     "compute": false,
     "staged": false,
-    "hasDefault": false,
-    "defaultProgram": null,
+    "hasDefault": true,
+    "defaultProgram": "search filter, synth\n\npattern(type: stripes, scale: 10, rotation: 30, smoothness: 0.001, bgColor: #666666)\n  .fxaa()\n  .write(o0)",
     "seed": false,
     "have": true
   },
@@ -1230,8 +1230,8 @@
     "points": false,
     "compute": false,
     "staged": false,
-    "hasDefault": false,
-    "defaultProgram": null,
+    "hasDefault": true,
+    "defaultProgram": "search filter, synth\n\npattern(type: dots, smoothness: 0.2, fgColor: #c08060, bgColor: #304050)\n  .normalize()\n  .write(o0)",
     "seed": false,
     "have": true
   },
@@ -1521,7 +1521,7 @@
     "compute": false,
     "staged": false,
     "hasDefault": true,
-    "defaultProgram": "search filter, synth\n\nnoise(ridges: true, colorMode: mono)\n.prismaticAberration(modulate: true)\n.write(o0)",
+    "defaultProgram": "search filter, synth\n\nnoise(ridges: true)\n.prismaticAberration(modulate: true)\n.write(o0)",
     "seed": false,
     "have": true
   },
@@ -1755,7 +1755,7 @@
     "compute": false,
     "staged": false,
     "hasDefault": true,
-    "defaultProgram": "search filter, synth\n\npattern(type: dots, smoothness: 0.04)\n  .sharpen(amount: 5)\n  .write(o0)",
+    "defaultProgram": "search filter, synth\n\npattern(type: dots, smoothness: 0.04, rotation: 15)\n  .sharpen(amount: 5)\n  .write(o0)",
     "seed": false,
     "have": true
   },
@@ -1827,7 +1827,7 @@
     "compute": false,
     "staged": false,
     "hasDefault": true,
-    "defaultProgram": "search filter, synth\n\nmodPattern()\n.smooth(type: blur, radius: 4)\n.write(o0)",
+    "defaultProgram": "search filter, synth\n\npattern(type: stripes, scale: 5, rotation: 88, smoothness: 0.001, bgColor: #808080)\n.smooth(type: blur, radius: 4)\n.write(o0)",
     "seed": false,
     "have": true
   },
@@ -1953,7 +1953,7 @@
     "compute": false,
     "staged": false,
     "hasDefault": true,
-    "defaultProgram": "search filter, synth\n\nperlin()\n  .spookyTicker()\n  .write(o0)",
+    "defaultProgram": "search filter, synth\n\nsolid(color: #101820)\n  .spookyTicker()\n  .write(o0)",
     "seed": true,
     "have": true
   },
@@ -2025,7 +2025,7 @@
     "compute": false,
     "staged": false,
     "hasDefault": true,
-    "defaultProgram": "search filter, synth\n\nperlin(scale: 100)\n  .strayHair()\n  .write(o0)",
+    "defaultProgram": "search filter, synth\n\nperlin(scale: 100)\n  .strayHair(density: 1, alpha: 1)\n  .write(o0)",
     "seed": true,
     "have": true
   },
@@ -2240,8 +2240,8 @@
     "points": false,
     "compute": false,
     "staged": false,
-    "hasDefault": false,
-    "defaultProgram": null,
+    "hasDefault": true,
+    "defaultProgram": "search filter, synth\n\nnoise(scaleX: 20, scaleY: 20, octaves: 4)\n  .unsharpMask()\n  .write(o0)",
     "seed": false,
     "have": true
   },
@@ -3022,8 +3022,8 @@
     "points": true,
     "compute": false,
     "staged": true,
-    "hasDefault": false,
-    "defaultProgram": null,
+    "hasDefault": true,
+    "defaultProgram": "search render\n\nmeshLoader()\n  .meshRender(rotateX: 20, rotateY: -30, offsetX: 0.35, offsetY: 0.2, specularIntensity: 0.5, shininess: 16)\n  .write(o0)",
     "seed": false,
     "have": false
   },
@@ -3169,7 +3169,7 @@
     "compute": false,
     "staged": true,
     "hasDefault": true,
-    "defaultProgram": "search synth3d, filter3d, render\n\nnoise3d()\n.renderLit3d(specularIntensity: 2, shininess: 256)\n.write(o0)",
+    "defaultProgram": "search synth3d, filter3d, render\n\nnoise3d()\n.renderLit3d(specularIntensity: 2, shininess: 64)\n.write(o0)",
     "seed": false,
     "have": true
   },
@@ -3564,7 +3564,7 @@
     "compute": false,
     "staged": false,
     "hasDefault": true,
-    "defaultProgram": "search synth\n\nremap(bgColor: #336699, bgAlpha: 1)\n  .write(o0)",
+    "defaultProgram": "search synth\n\nnoise(ridges: true).write(o1)\nperlin(scale: 50).write(o2)\n\nremap(bgColor: #336699, bgAlpha: 1, zoneCount: 8, smoothEdge: 0.1,\n  zone0_tex: read(o1), zone0_count: 4, zone0_v0: [0.2, 0.44, 0.04, 0.46], zone0_v1: [0.06, 0.06, 0.22, 0.04],\n  zone1_tex: read(o2), zone1_count: 4, zone1_v0: [0.46, 0.44, 0.28, 0.44], zone1_v1: [0.28, 0.06, 0.46, 0.06],\n  zone2_tex: read(o1), zone2_count: 4, zone2_v0: [0.72, 0.44, 0.52, 0.42], zone2_v1: [0.5, 0.06, 0.7, 0.08],\n  zone3_tex: read(o2), zone3_count: 4, zone3_v0: [0.92, 0.44, 0.76, 0.46], zone3_v1: [0.78, 0.06, 0.94, 0.04],\n  zone4_tex: read(o1), zone4_count: 4, zone4_v0: [0.22, 0.94, 0.04, 0.94], zone4_v1: [0.04, 0.56, 0.22, 0.56],\n  zone5_tex: read(o2), zone5_count: 4, zone5_v0: [0.48, 0.94, 0.28, 0.92], zone5_v1: [0.26, 0.56, 0.46, 0.58],\n  zone6_tex: read(o1), zone6_count: 4, zone6_v0: [0.68, 0.94, 0.52, 0.96], zone6_v1: [0.54, 0.56, 0.7, 0.54],\n  zone7_tex: read(o2), zone7_count: 4, zone7_v0: [0.94, 0.94, 0.76, 0.94], zone7_v1: [0.76, 0.56, 0.94, 0.56]\n).write(o0)\nrender(o0)",
     "seed": false,
     "have": true
   },

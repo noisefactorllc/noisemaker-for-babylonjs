@@ -186,15 +186,9 @@ NM_VIA_RENDERER=1 node parity/render-candidate.mjs noise
 
 Readback matches the golden exactly: read the surface as float, quantize `round(v*255)` clamped to
 0..255, flip rows bottom-up→top-down. Result: **the entire catalog is byte-identical** through the
-vendored engine, except `media`/`text`/`roll` (external input the headless harness can't supply —
-policy-skipped even though all three numerically pass on their no-input fallback) and `meshLoader`
-(no fixture at all).
-
-> **2026-09-26 update (GAP-004):** the paragraph above describes the historical round. Deterministic
-> host fixtures now exist for all four external-input effects and their real-input branches grade
-> byte-exact on both backends (`media_image`, `text_glyphs`, `roll_midi`, `mesh_obj` — see
-> `parity/external-input-grades.json` and `parity/coverage-map.json`; the fallbacks stay
-> policy-skipped with the skips retained).
+vendored engine, including the four external-input effects through deterministic host fixtures on
+their real input path (`media_image`, `text_glyphs`, `roll_midi`, `mesh_obj`). The no-input fallback
+programs of `media`, `text` and `roll` are skipped by policy and counted as skips in the ledger.
 
 **Mint goldens and candidates in the same pass — don't grade a stale golden.** A handful of effects
 (`watercolor`, and the chaotic iterative solvers `navierStokes`/`target`/`reactionDiffusion`) are not
@@ -203,30 +197,21 @@ apart from the original can drift by a few percent, evidently uninitialized-text
 GPU-scheduling sensitivity **in the published shader itself** (present in `WebGL2Backend` too, so it
 is not a `BabylonBackend` bug). Confirmed by direct test: a golden and a candidate minted back-to-back
 are always byte-identical (max-abs-diff 0); a golden minted hours earlier compared against a
-just-rendered candidate can show a spurious few-percent diff purely from that time gap. `parity/sweep.sh`
-does **not** mint goldens (it only re-renders candidates against whatever's already committed) — when
-re-verifying from scratch, always re-mint goldens immediately before running the sweep:
+just-rendered candidate can show a spurious few-percent diff purely from that time gap. Plain
+`bash parity/sweep.sh` grades against the committed goldens; with `NM_DUAL=1` it re-mints each golden
+in the same browser session as its candidate, which is what CI does:
 ```bash
-NM_GOLDEN=1 node parity/render-batch.mjs $(ls parity/programs/*.dsl | xargs -n1 basename | sed 's/\.dsl$//' | grep -v '^corpus_')
-bash parity/sweep.sh
+NM_DUAL=1 bash parity/sweep.sh
 ```
 
 ## What's left
 
-Every pass type is implemented and parity-verified: MRT, `drawMode:'points'|'billboards'` (agent
-deposit), `drawMode:'triangles'` (mesh raster), 3D-volume raymarch, single-face + 6-face-baked
-cubemaps, the std140 **UBO** path (`remap`), and raw data-texture upload (`uploadDataTexture`, the
-`roll`/MIDI note-grid path) — **206/210 byte-identical** (the 4 external-input effects
-media/text/roll/meshLoader aside; three of those four are themselves byte-identical on their no-input
-fallback). The one remaining feature:
-- **Host OBJ loading for `meshLoader`** — parse `share/meshes/*.obj` and upload to the mesh surfaces
-  (a `NoisemakerRenderer` concern, like wiring an external texture for `media`). The triangle raster it
-  feeds is already proven byte-identical, but **the `meshLoader` effect itself is not yet vetted**.
-
-> **2026-09-26 update (GAP-004):** the mesh upload path is now implemented
-> (`BabylonBackend.uploadMeshData`, mirroring `webgl2.js`) and vetted — the engine's own
-> `loadOBJFromString` parse/pack feeds it, and the real-input fixture `mesh_obj` grades byte-exact
-> on both backends (see `parity/external-input-grades.json`).
+Nothing in the catalog. Every pass type is implemented and parity-verified: MRT,
+`drawMode:'points'|'billboards'` (agent deposit), `drawMode:'triangles'` (mesh raster), 3D-volume
+raymarch, single-face + 6-face-baked cubemaps, the std140 **UBO** path (`remap`), raw data-texture
+upload (`uploadDataTexture`, the `roll`/MIDI note-grid path) and host mesh upload
+(`BabylonBackend.uploadMeshData`, mirroring `webgl2.js`, fed by the engine's own `loadOBJFromString`
+parse/pack). All 210 effects are byte-identical.
 
 The engine is fetched, not vendored-in: `vendor/fetch.sh` pulls the published distribution
 (`shaders.noisedeck.app`) into `vendor/noisemaker/` (gitignored, never committed — see the top of

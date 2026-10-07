@@ -1,5 +1,4 @@
-// Port-side coverage for the upstream 8eeb7b5a..6a0af04d backend-diagnostics sync
-// (GAP-007): the BabylonBackend's shader compile/missing-source failures surface one
+// Port-side coverage for the upstream backend diagnostics: the BabylonBackend's shader compile/missing-source failures surface one
 // structured `ShaderDiagnostic` union — a real `Error` carrying the legacy machine
 // `code`, `backend: 'babylon'`, the `stage`, the program id, the byte-identical legacy
 // `detail` string, the parsed compiler `messages`, and the offending `source` — mirroring
@@ -109,8 +108,7 @@ test('compile timeouts keep their plain Error (not a diagnostic union)', async (
 })
 
 // ---------------------------------------------------------------------------
-// The GAP-007 final legs (upstream dd4606ea/a0e9bbff/e24c844f, engine v1.0.205/206):
-// recorded (non-throwing) diagnostics for the historically-silent unknown-format
+// Recorded (non-throwing) diagnostics for the historically-silent unknown-format
 // rgba8 fallback and the missing-render-target warnings, plus the Pipeline-side
 // unknown-dimension-form fallback diagnostic. Mirrors the upstream
 // shaders/tests/test_backend_diagnostics.js cases that apply to this port.

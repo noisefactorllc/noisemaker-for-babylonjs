@@ -79,7 +79,7 @@ export function bundleInputsAreFresh (bundle, inputs) {
   return inputs.every(input => existsSync(input) && statSync(input).mtimeMs <= bundleTime)
 }
 
-// Deterministic external-input fixtures (GAP-004): the host sources fed to BOTH backends for the
+// Deterministic external-input fixtures: the host sources fed to BOTH backends for the
 // real-input branch of each external-input effect (see parity/harness/entry.js). Applied whenever
 // the rendered program appears here. The OBJ mesh is parsed + packed by the ENGINE's own
 // loadOBJFromString (its internal parseOBJ/packMeshDataForTextures) and uploaded through

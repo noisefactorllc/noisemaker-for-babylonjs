@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import test from 'node:test'
 
-// GAP-002 regression guard: the export kit bundles @babylonjs/core (Apache-2.0), so its
+// Regression guard: the export kit bundles @babylonjs/core (Apache-2.0), so its
 // distribution must carry Babylon's license text and NOTICE file. The kit system only
 // ships what kit.config.json's `licenses` list names, so the committed copies under
 // export-kit/licenses/ must be byte-identical to the exact dependency distribution

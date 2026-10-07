@@ -26,7 +26,7 @@ function reconstruct (fat) {
 }
 
 // ---------------------------------------------------------------------------
-// Deterministic external-input fixtures (GAP-004).
+// Deterministic external-input fixtures.
 //
 // The four external-input effects (`media`, `text`, `roll`, `meshLoader`) are host-fed by
 // contract: the HOST parses/uploads a deterministic source through the engine's own
@@ -154,7 +154,7 @@ window.nmRunFatGraph = async function (fat, opts = {}) {
   const pipeline = new Pipeline(graph, backend)
 
   await pipeline.init(size, size)
-  // Deterministic external-input fixtures (GAP-004): feed the real host-input path (media canvas /
+  // Deterministic external-input fixtures: feed the real host-input path (media canvas /
   // glyph canvas / MIDI state / OBJ mesh) when this run requests it. No-op by default.
   let appliedExternal = null
   if (opts.external) {
@@ -474,7 +474,7 @@ window.nmRunFatGraphWebGL2 = async function (fat, opts = {}) {
   const graph = reconstruct(fat)
   const pipeline = new Pipeline(graph, backend)
   await pipeline.init(size, size)
-  // Deterministic external-input fixtures (GAP-004): identical host sources on the reference
+  // Deterministic external-input fixtures: identical host sources on the reference
   // backend (see nmRunFatGraph above). No-op by default.
   let appliedExternal = null
   if (opts.external) {

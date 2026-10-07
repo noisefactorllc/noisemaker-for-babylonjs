@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 import test from 'node:test'
 
-// GAP-006: supported-matrix qualification of the PACKED artifact. The peer range
+// Supported-matrix qualification of the PACKED artifact. The peer range
 // (^9.13.0) admits later 9.x versions, so the matrix below qualifies the cells a
 // release claim can honestly name and that this host can actually execute:
 //   - Babylon floor 9.13.0 (the recorded minimum) — install, first output, resource
@@ -20,7 +20,7 @@ import test from 'node:test'
 //     view-only page whose interactive surface stays keyboard-accessible (native
 //     links only, no custom widgets).
 // Platforms/backends this container cannot execute (real-GPU browsers, macOS/Windows,
-// Firefox/Safari) stay unqualified in docs/COMPATIBILITY.md — they are not claimed here.
+// Firefox/Safari) stay unqualified — they are not claimed here.
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
 const DOCUMENTED_PROGRAM = 'search synth, filter\nnoise(scaleX: 60).bloom().write(o0)\nrender(o0)'
@@ -88,7 +88,7 @@ test('exported kit page: announced alert and keyboard-accessible view-only surfa
   assert.match(page, /errEl\.appendChild/)
 })
 
-// ---- shared helpers (pack + install a real consumer, as GAP-001 does) ------------
+// ---- shared helpers (pack + install a real consumer, as installed-package.test.js does) ------------
 
 async function installConsumer () {
   const tmp = mkdtempSync(join(tmpdir(), 'nm-gap006-'))

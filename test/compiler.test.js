@@ -809,7 +809,7 @@ test('compiler specializes landscape isosurface define and preserves voxel defau
   }
 })
 
-test('compiler exportFatGraph propagates GAP-005 pass fields onto expanded passes', async () => {
+test('compiler exportFatGraph propagates pass fields onto expanded passes', async () => {
   const fat = await exportFatGraph(`
     search synth, synth3d, render
     heightmap3d().renderLandscape3d().write(o0)
@@ -826,7 +826,7 @@ test('compiler exportFatGraph propagates GAP-005 pass fields onto expanded passe
     height: { param: 'volumeSize', power: 2, default: 4096 }
   })
 
-  // Verify all expanded effect passes contain the GAP-005 contract fields
+  // Verify all expanded effect passes contain the pass contract fields
   for (const pass of fat.passes) {
     if (pass.program === 'blit') continue
     assert.ok('name' in pass, `Pass ${pass.id} must have name property`)

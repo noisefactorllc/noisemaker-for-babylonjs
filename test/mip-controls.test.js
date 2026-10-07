@@ -1,4 +1,4 @@
-// Port-side coverage for the upstream 9d3474df..2f47612c texture-policy sync (GAP-004):
+// Port-side coverage for the upstream texture policies:
 // authorable 2D `mipmaps` (full chain allocation + per-frame regeneration) and `persistent`
 // (contents preserved through recreation at a new size). Mirrors the upstream
 // shaders/tests/test_mip_controls.js Pipeline/backend parts against the vendored v1.0.182

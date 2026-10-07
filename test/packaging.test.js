@@ -5,7 +5,7 @@ import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import test from 'node:test'
 
-// GAP-001 regression guard: every advertised package entry point — plus its whole
+// Regression guard: every advertised package entry point — plus its whole
 // relative-import closure (the compiler tool, the vendored-engine loader, the vendor fetch
 // script) — must be in the packed tarball. The closure is DERIVED from the actual import
 // statements, so a future excluded dependency cannot pass this guard silently.

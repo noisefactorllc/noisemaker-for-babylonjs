@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 import test from 'node:test'
 
-// GAP-001 acceptance checks against the PACKED artifact:
+// Acceptance checks against the PACKED artifact:
 // pack -> install the tarball in an empty consumer -> import every advertised entry point ->
 // observe the recoverable missing-engine error -> recover the engine -> compile the
 // documented program through the INSTALLED compiler -> render it visibly in a real browser

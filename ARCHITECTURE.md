@@ -87,34 +87,24 @@ isolates `BabylonBackend` vs `WebGL2Backend`). Both render in **headless Chromiu
 WebGL2 driver** (a
 real GPU; `NullEngine` does no GPU work). `parity/compare.py` grades max-abs-diff + SSIM.
 
-**Result: 206 of 210 effects BYTE-IDENTICAL to the reference** (max-diff 0) — the entire catalog
-except 4 external-input effects (three of those four are themselves byte-identical on their no-input
-fallback path — see STATUS.md). That's 179 renderable-2D effects (including all 25 of the 2026-07
+**Result: all 210 effects BYTE-IDENTICAL to the reference** (max-diff 0). That's 179 renderable-2D effects (including all 25 of the 2026-07
 artistic-filter release: `chrome`, `strokes`, `hatch`, `texture`'s new modes, …) + all 10 agent/points
 sims + `reactionDiffusion`/`navierStokes` + the **full 3D-volume raymarch** (7 synth3d generators ×
 `render3d`/`renderLit3d` × isosurface/voxel + `flow3d`/`palette3d`) + **single-face cubemaps**
 (`renderCubemapSurface`/`renderCubemap3d`) + the **SMRTicles wrappers** (`pointsEmit`/`pointsRender`/
 `pointsBillboardRender`) + **`loopBegin`/`loopEnd`** + points-based `wormhole` + the **`remap`
 polygon-zone router** (std140 UBO — see below). Because candidate and golden share the
-WebGL2/ANGLE/Metal driver, parity is exact — **zero effects need relaxed tolerances** (the
-per-effect safety-net map `parity/sweep.sh` used to carry for `newton`/`shadow`/`uvRemap`/
-`distortion`/`edge`/`pinch`/`crt` was retired this round once a full re-grade proved all of them
-byte-exact too), and the stateful/continuous/agent effects (including `reactionDiffusion`) converge
+WebGL2/ANGLE/Metal driver, parity is exact — **zero effects need relaxed tolerances**, and the stateful/continuous/agent effects (including `reactionDiffusion`) converge
 to a bit-identical steady state when evolved ~30s (the `EVOLVE` map in `render-batch.mjs`). The 4
-non-byte-identical effects all require an external source the headless harness can't supply:
-**media** (texture), **text** (glyphs), **roll** (MIDI), **meshLoader** (OBJ — not yet vetted).
-
-> **2026-09-26 update (GAP-004):** the paragraph above describes the historical round. Deterministic
-> host fixtures now supply all four external-input branches, and each grades **byte-exact on both
-> backends** (`media_image`, `text_glyphs`, `roll_midi`, `mesh_obj` — recorded in
-> `parity/external-input-grades.json`, bound per effect in `parity/coverage-map.json`); the
-> no-input fallback programs remain policy-skipped with the skips retained in the ledger.
+external-input effects grade through deterministic host fixtures on their real input path:
+**media** (`media_image`, an uploaded image), **text** (`text_glyphs`, an overlay canvas), **roll**
+(`roll_midi`, the engine's `MidiState`) and **meshLoader** (`mesh_obj`, an OBJ the engine parses and
+packs). Their no-input fallback programs are skipped by policy and counted as skips in the ledger.
 
 **Beyond defaults: every mode of every artistic filter.** 101 (effect, mode) fixtures across 19
 effects — every enum/define-selected mode of `texture` (15), `hatch` (6), `morphology`
 (dilate/erode × square/round), etc., not just each effect's default configuration — are individually
-fixtured, minted, and graded, all byte-identical. See STATUS.md's "Mode coverage" section and
-`parity/mode-coverage.json`.
+fixtured, minted, and graded, all byte-identical. See `parity/mode-coverage.json`.
 
 **`remap` was mis-filed as external-input.** Its inputs are engine surfaces (`zoneN_tex: read(oN)`),
 not external data — the only "external" part is the 8-zone polygon config the Remap web app produces,
@@ -137,14 +127,14 @@ stays a guard). The only three genuinely-new backend pieces were the mesh `drawM
 (`_executeTriangles`: a `DEPTH_COMPONENT24` renderbuffer + depth test + back-face cull + `gl_VertexID`
 geometry fetch from an empty VAO, plus a `_chain_\d+$` strip in input/count resolution so chain-scoped
 mesh refs find the unscoped surface — mirrors `webgl2.bindTextures`), the std140 **UBO** path
-(`_bindUniformBlocks`/`_extractUniformBlocks`/`_packUniformsWithLayout`) for `remap`, and (this round)
+(`_bindUniformBlocks`/`_extractUniformBlocks`/`_packUniformsWithLayout`) for `remap`, and
 `uploadDataTexture` for `roll`'s MIDI note-grid.
 
 **End-to-end validation.** The complex emergent test program (3D perlin → 1M-agent flow-field
 particles [MRT+points+billboards] → blur → navierStokes ×40 → palette/lighting/adjust/bloom/lens/
 vignette) is byte-identical at every 5s sample over 30s. The **live NoiseBLASTER! corpus** —
-real shared compositions fetched from `blaster.noisedeck.app` (`parity/corpus/`) — matches the
-reference; see STATUS.md for the current pass count. The **mesh triangle raster** was proven byte-identical by injecting an
+real shared compositions fetched from `blaster.noisedeck.app` (`parity/corpus/`) — is graded against
+the reference on every push (`.github/workflows/corpus.yml`). The **mesh triangle raster** was proven byte-identical by injecting an
 identical procedural sphere into both engines' mesh textures — a depth-tested, back-face-culled,
 Blinn-Phong-lit sphere, max-abs-diff 0. The one load-bearing fix
 that unlocked the agent sims + corpus was the additive deposit blend: raw `blendFunc(ONE,ONE)`, not
@@ -156,7 +146,7 @@ Babylon's `ALPHA_ADD` (= `SRC_ALPHA, ONE`, which crushes HDR trail accumulation)
   2-/3-input mixers, blit, blend, uniforms, half-float, readback, **MRT, points/billboards-deposit
   agent sims, 3D-volume raymarch, `meshRender` triangle raster, `loopBegin`/`loopEnd`, SMRTicles
   wrappers, std140 UBO (`remap`), `uploadDataTexture` (`roll`)**); `NoisemakerRenderer` (+
-  `renderCubemap()` → 6-face bake to a Babylon cube texture); the parity sweep (206/210
+  `renderCubemap()` → 6-face bake to a Babylon cube texture); the parity sweep (210/210
   byte-identical, 101/101 mode-matrix fixtures byte-identical) + the live-corpus + mesh-raster +
   cubemap-bake harnesses; two Babylon example scenes (procedural texture, baked-cubemap skybox). The
   test target + live corpus + all 6 cube faces byte-identical.

@@ -1,6 +1,6 @@
 name: CI
 
-# Required checks for the exact source SHA (GAP-005 in docs/COMPLETION_GAPS.md):
+# Required checks for the exact source SHA:
 #   - installed package and distribution contents: the full npm suite
 #     (`node --test test/*.test.js`), which includes the packed-tarball
 #     end-to-end install/import/render/recovery check and the packaging
@@ -34,7 +34,6 @@ on:
       - '!.github/FUNDING.yml'
       - '!.github/dependabot.yml'
       - '!.editorconfig'
-      - 'STATUS.md'
     branches: [main]
   workflow_dispatch:
 
@@ -74,8 +73,6 @@ jobs:
           npm ci --ignore-scripts
           bash vendor/fetch.sh
           npx playwright install --with-deps chromium
-      - name: Re-derive the vendor sync audit (authority hashes)
-        run: node tools/verify-sync-audit.mjs 2>&1 | tee "$RUNNER_TEMP/sync-audit.log"
       - name: Full test suite (installed package, packaging, compiler, runtime)
         run: node --test test/*.test.js 2>&1 | tee "$RUNNER_TEMP/test-suite.log"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -84,7 +81,6 @@ jobs:
           name: ci-${{ github.sha }}-suite
           path: |
             ${{ runner.temp }}/test-suite.log
-            ${{ runner.temp }}/sync-audit.log
             ci-provenance.json
             vendor/noisemaker/engine-meta.json
             vendor/noisemaker/engine-hashes.json

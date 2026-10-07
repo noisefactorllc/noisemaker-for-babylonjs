@@ -1,5 +1,5 @@
 /**
- * Replacement preflight prediction (engine GAP-008, upstream 403c2a4b, v1.0.187).
+ * Replacement preflight prediction.
  *
  * Mirrors the focused upstream `shaders/tests/test_transform.js` prediction
  * cases against the vendored published engine, using real manifest effects.

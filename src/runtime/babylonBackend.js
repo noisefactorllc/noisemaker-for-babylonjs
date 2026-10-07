@@ -35,7 +35,7 @@ import { FrameExportQueue } from './frameExport.js'
 const FULLSCREEN_VS = '#version 300 es\nprecision highp float;\nin vec2 position;\nout vec2 v_texCoord;\nvoid main(){ v_texCoord = position * 0.5 + 0.5; gl_Position = vec4(position, 0.0, 1.0); }\n'
 
 // One structured diagnostic union for backend shader/compiler failures (port of the
-// reference backends' diagnostics.js, GAP-007): every compile/link/missing-source
+// reference backends' diagnostics.js): every compile/link/missing-source
 // failure surfaces as a real `Error` carrying the legacy machine `code`, the
 // `backend` ('babylon'), the `stage`, the program id, a `detail` string, the parsed
 // compiler `messages`, and the offending `source`. `code`/`detail`/`program`/`source`
@@ -84,8 +84,7 @@ export function parseGLSLInfoLog (log) {
 }
 
 // Capped, queryable collector for structured diagnostics that are RECORDED rather than
-// thrown (port of the reference backends' diagnostics.js DiagnosticCollector, GAP-007
-// final legs dd4606ea/e24c844f): the historically-silent unknown-format rgba8 fallback
+// thrown (port of the reference backends' diagnostics.js DiagnosticCollector): the historically-silent unknown-format rgba8 fallback
 // and the missing-render-target warnings keep their behavior but surface deduplicated
 // structured records on `backend.diagnostics`.
 export class DiagnosticCollector {
@@ -206,7 +205,7 @@ export class BabylonBackend {
     this._rawFbos = new Map() // glTex → raw FBO for mipmapped-target pass rendering
     this._destroyed = false
     // Queryable structured diagnostics for the historically-silent unknown-format
-    // fallback and the missing-render-target warnings (GAP-007 final legs).
+    // fallback and the missing-render-target warnings.
     this.diagnostics = new DiagnosticCollector()
     this._warnedFormatFallbacks = new Set()
     this._warnedMissingRenderTargets = new Set()
@@ -214,8 +213,8 @@ export class BabylonBackend {
 
   getName () { return 'Babylon' }
 
-  // Record an unknown texture-format rgba8 fallback as a structured diagnostic
-  // (GAP-007). The legacy silent fallback is unchanged; the record is deduplicated
+  // Record an unknown texture-format rgba8 fallback as a structured diagnostic.
+  // The legacy silent fallback is unchanged; the record is deduplicated
   // per format string. An absent format is the default, not a fallback.
   _recordFormatFallback (format) {
     const key = String(format)
@@ -231,7 +230,7 @@ export class BabylonBackend {
   }
 
   // Record a missing render target (single-output or MRT output texture) as a
-  // structured diagnostic (GAP-007). The legacy console warning is unchanged and
+  // structured diagnostic. The legacy console warning is unchanged and
   // still fires on every occurrence; the record is deduplicated per
   // kind|output|pass so per-frame rendering cannot grow it unboundedly.
   _recordMissingRenderTarget (kind, outputId, passId) {
@@ -339,7 +338,7 @@ export class BabylonBackend {
 
   // ---- textures --------------------------------------------------------------
 
-  // Format resolution with the GAP-007 structured fallback record: unknown formats
+  // Format resolution with a structured fallback record: unknown formats
   // keep the historical silent rgba8 fallback (no new rejection of previously
   // accepted input) but surface a deduplicated structured diagnostic instead of
   // pure silence. An absent format is the default, not a fallback.
@@ -795,7 +794,7 @@ export class BabylonBackend {
         if (eff && eff.isReady && eff.isReady()) return resolve()
         const err = eff && typeof eff.getCompilationError === 'function' ? eff.getCompilationError() : null
         if (err) {
-          // Structured diagnostic union (GAP-007 port): the legacy detail string stays
+          // Structured diagnostic union: the legacy detail string stays
           // byte-identical; parsed compiler messages + the offending source ride along.
           const detail = typeof err === 'string' ? err : String(err && err.message ? err.message : err)
           return reject(new ShaderDiagnostic({

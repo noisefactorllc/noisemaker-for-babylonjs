@@ -1,5 +1,5 @@
-// Port-side coverage for the upstream 8eeb7b5a..6a0af04d vendor sync (GAP-006 runtime
-// texture pooling + the 95743621 viewport-without-clear pooling guard): the vendored
+// Port-side coverage for the upstream runtime texture pooling and its
+// viewport-without-clear pooling guard: the vendored
 // engine's Pipeline consumes the analyzer's physical allocation plan behind the opt-in
 // `texturePooling: true` and reports it through `getResourcePlan()`; the port's
 // BabylonBackend supplies the `backend.textures` records that sharing materializes
