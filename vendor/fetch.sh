@@ -49,20 +49,17 @@ fi
 core_build=$(sed -n 's/^ \* Build: //p' "$OUT/noisemaker-shaders-core.esm.js" | head -1)
 node - "$VERSION" "$OUT" "$core_build" <<'NODE'
 const { createHash } = require('node:crypto')
-const { readFileSync, writeFileSync, readdirSync, statSync } = require('node:fs')
-const { join, relative } = require('node:path')
+const { readFileSync, writeFileSync, statSync } = require('node:fs')
+const { join } = require('node:path')
 const [version, out, coreBuild] = process.argv.slice(2)
 const sha256 = p => createHash('sha256').update(readFileSync(p)).digest('hex')
 const hashes = { 'noisemaker-shaders-core.esm.js': sha256(join(out, 'noisemaker-shaders-core.esm.js')) }
-const walk = d => {
-  for (const e of readdirSync(d, { withFileTypes: true })) {
-    const p = join(d, e.name)
-    if (e.isDirectory()) walk(p)
-    else if (e.name.endsWith('.js')) hashes[relative(out, p)] = sha256(p)
-    else if (e.name === 'manifest.json') hashes[relative(out, p)] = sha256(p)
-  }
+// Hash exactly what this fetch delivered (the manifest and its mini-bundles), so a bundle left in
+// the folder by an older fetch can never enter the integrity record.
+hashes['effects/manifest.json'] = sha256(join(out, 'effects/manifest.json'))
+for (const id of Object.keys(JSON.parse(readFileSync(join(out, 'effects/manifest.json'), 'utf8')))) {
+  hashes[`effects/${id}.js`] = sha256(join(out, 'effects', `${id}.js`))
 }
-walk(join(out, 'effects'))
 const sortedHashes = Object.fromEntries(Object.entries(hashes).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0))
 writeFileSync(join(out, 'engine-meta.json'), JSON.stringify({
   version, coreBuild, coreBytes: statSync(join(out, 'noisemaker-shaders-core.esm.js')).size,
