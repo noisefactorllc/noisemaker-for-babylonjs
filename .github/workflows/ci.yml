@@ -69,6 +69,8 @@ jobs:
           printf '{\n  "workflow": "ci.yml",\n  "job": "suite",\n  "sha": "%s",\n  "run_id": "%s",\n  "run_number": "%s",\n  "ref": "%s"\n}\n' \
             "$GITHUB_SHA" "$GITHUB_RUN_ID" "$GITHUB_RUN_NUMBER" "$GITHUB_REF" > ci-provenance.json
       - name: Install dependencies, engine, and browser
+
+        timeout-minutes: 15
         run: |
           npm ci --ignore-scripts
           bash vendor/fetch.sh
@@ -101,6 +103,8 @@ jobs:
           printf '{\n  "workflow": "ci.yml",\n  "job": "public-host",\n  "sha": "%s",\n  "run_id": "%s",\n  "run_number": "%s",\n  "ref": "%s"\n}\n' \
             "$GITHUB_SHA" "$GITHUB_RUN_ID" "$GITHUB_RUN_NUMBER" "$GITHUB_REF" > ci-provenance.json
       - name: Install dependencies, engine, and browser
+
+        timeout-minutes: 15
         run: |
           npm ci --ignore-scripts
           bash vendor/fetch.sh
@@ -140,6 +144,8 @@ jobs:
           printf '{\n  "workflow": "ci.yml",\n  "job": "parity",\n  "shard": "%s",\n  "sha": "%s",\n  "run_id": "%s",\n  "run_number": "%s",\n  "ref": "%s"\n}\n' \
             "${{ matrix.shard }}" "$GITHUB_SHA" "$GITHUB_RUN_ID" "$GITHUB_RUN_NUMBER" "$GITHUB_REF" > ci-provenance.json
       - name: Install dependencies, engine, browser, and comparison deps
+
+        timeout-minutes: 15
         run: |
           npm ci --ignore-scripts
           bash vendor/fetch.sh

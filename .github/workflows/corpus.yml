@@ -67,6 +67,8 @@ jobs:
           node-version: 24
           cache: npm
       - name: Install dependencies, engine, and browser
+
+        timeout-minutes: 15
         run: |
           npm ci --ignore-scripts
           bash vendor/fetch.sh
@@ -139,6 +141,8 @@ jobs:
           node-version: 24
           cache: npm
       - name: Install dependencies, engine, browser, and comparison deps
+
+        timeout-minutes: 15
         run: |
           npm ci --ignore-scripts
           bash vendor/fetch.sh
