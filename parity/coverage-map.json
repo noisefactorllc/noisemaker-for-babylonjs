@@ -6442,7 +6442,7 @@
         "target_particles",
         "wormhole"
       ],
-      "evolveFrames": 1800
+      "evolveFrames": 120
     },
     "engine": {
       "version": "1.0.262",

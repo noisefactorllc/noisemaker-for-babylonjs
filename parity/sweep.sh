@@ -25,7 +25,7 @@ tol_for() { echo "0 0.999"; }
 # evidence — it doesn't exercise the actual external-data upload (a real image/glyph atlas/MIDI
 # stream), which the headless harness can't supply deterministically. Everything else is graded,
 # including the continuous solvers AND the agent/points sims, all of which evolve to a
-# bit-identical steady state (the EVOLVE map in render-batch.mjs runs them ~30s; the additive
+# bit-identical state (the EVOLVE map in render-batch.mjs steps them the same frames; the additive
 # deposit blend is exact — raw blendFunc(ONE,ONE)).
 is_skip() { case "$1" in media|text|roll) return 0;; *) return 1;; esac; }
 

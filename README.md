@@ -137,8 +137,9 @@ re-checked by `test/coverage-map.test.js`) binds each effect to the programs tha
 - **Every mode of every artistic filter**, not just its default: a 101-row (effect, mode) matrix
   across 19 effects ([`parity/mode-coverage.json`](parity/mode-coverage.json)). This is
   representative coverage, not every combination of parameters.
-- **Particle/agent sims and fluid (navier–stokes)** match after evolving ~30 s to a steady state
-  (the `EVOLVE` map in `parity/render-batch.mjs`), including the perspective camera mode and
+- **Particle/agent sims and fluid (navier–stokes)** match frame for frame as they evolve (the
+  `EVOLVE` map in `parity/render-batch.mjs`: 120 frames on push, 1800 frames to a steady state in
+  the weekly run), including the perspective camera mode and
   depth-sorted/defocus billboard rendering.
 - **3D-volume raymarch, landscape rendering, and cubemap bake** match, usable as Babylon skyboxes
   and PBR reflections.
@@ -149,7 +150,7 @@ re-checked by `test/coverage-map.test.js`) binds each effect to the programs tha
   fallback programs of `media`, `text` and `roll` are skipped by policy and counted as skips in
   [`parity/ledger.json`](parity/ledger.json).
 - **The live NoiseBLASTER! corpus**: `.github/workflows/corpus.yml` fetches the 20 most recent
-  shared compositions on every push and grades each one, evolved 1800 frames, at the corpus
+  shared compositions once a week and grades each one, evolved 1800 frames, at the corpus
   gate (tolerance 2.001, SSIM 0.98).
 
 ## How it works
@@ -177,6 +178,7 @@ npm install && bash vendor/fetch.sh    # deps + fetch the published engine (giti
 python3 -m venv parity/.venv && parity/.venv/bin/pip install numpy pillow   # compare.py deps
 npx playwright install chromium        # headless browser for the candidate renders
 NM_DUAL=1 bash parity/sweep.sh          # the CI gate: golden and candidate rendered in the same pass
+NM_DUAL=1 NM_EVOLVE_FRAMES=1800 bash parity/sweep.sh   # the weekly deep run: simulations evolve 30 s
 bash parity/run.sh noise 0 0.999        # one program against its committed golden, strict gate
 ```
 

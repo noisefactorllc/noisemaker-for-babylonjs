@@ -17,12 +17,13 @@ import { exportFatGraph } from '../tools/export-fat-graph.mjs'
 import { ROOT, INDEX_HTML, encodePNG, ensureBundle, EXTERNAL_FIXTURES } from './render-candidate.mjs'
 import { currentPrograms } from './current-programs.mjs'
 
-// Effects that need TIME EVOLUTION to a steady state rather than a pinned frame: continuous
-// solvers (Gray-Scott / Navier-Stokes). Run ~30s at the demo's natural rate (1/600 normalized
-// per 60fps frame over a 10s loop); the chaotic transient washes out to a deterministic
-// attractor that is bit-identical to the golden (same ANGLE/Metal driver). Goldens for these
-// MUST be minted with the matching NM_GOLDEN=1 render-batch --frames/--timestep.
-const _EVO = { frames: 1800, timestep: 0.0016667 } // 30s at the demo's 1/600 rate
+// Effects that need TIME EVOLUTION rather than a pinned frame: continuous solvers (Gray-Scott /
+// Navier-Stokes) and the agent/points sims, stepped at the demo's natural rate (1/600 normalized
+// per 60fps frame over a 10s loop). Golden and candidate evolve the same frames, so any count
+// grades byte-exact. The default 120 frames (2 s) keeps push CI and local sweeps short; the weekly
+// deep run sets NM_EVOLVE_FRAMES=1800 (30 s), by which the chaotic transient has washed out to a
+// deterministic steady state. Goldens for these MUST be minted at the same frame count.
+const _EVO = { frames: Number(process.env.NM_EVOLVE_FRAMES) || 120, timestep: 0.0016667 }
 const EVOLVE = {
   reactionDiffusion: _EVO,
   navierStokes: _EVO,
@@ -34,7 +35,7 @@ const EVOLVE = {
   target: _EVO, target_particles: _EVO,
   // SMRTicles render-namespace wrappers (pointsEmit/behavior/pointsRender) + the loopBegin/loopEnd
   // accumulator + the points-based wormhole/billboard renderers — all stateful, evolve to steady
-  // state (their goldens are minted at the same 30s evolution). The pinned 3D-volume raymarch +
+  // state (their goldens are minted at the same evolution). The pinned 3D-volume raymarch +
   // single-face cubemap + empty-mesh programs are deterministic at frame 8 and need no EVOLVE entry.
   smrticle_physical: _EVO, smrticle_physarum: _EVO, loop_accum: _EVO,
   wormhole: _EVO, billboard_flow: _EVO

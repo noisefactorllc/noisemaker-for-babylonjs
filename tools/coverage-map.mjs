@@ -95,6 +95,7 @@ export async function buildCoverageMap ({ log = () => {} } = {}) {
   const batchSrc = readFileSync(join(ROOT, 'parity', 'render-batch.mjs'), 'utf8')
   const evolveBlock = batchSrc.match(/const EVOLVE = \{([\s\S]*?)\n\}/)[1]
   const evolvePrograms = [...evolveBlock.matchAll(/([A-Za-z0-9_]+): _EVO/g)].map(m => m[1])
+  const evolveFrames = Number(batchSrc.match(/NM_EVOLVE_FRAMES\) \|\| (\d+)/)[1])
 
   // --- assemble ----------------------------------------------------------------------
   const modeByProgram = new Map(modeCoverage.map(r => [r.program, r]))
@@ -161,7 +162,7 @@ export async function buildCoverageMap ({ log = () => {} } = {}) {
     },
     statefulSequences: {
       evolvePrograms: [...new Set(evolvePrograms)].sort(),
-      evolveFrames: 1800
+      evolveFrames
     },
     engine: { version: meta.version, build: meta.coreBuild, coreBytes: meta.coreBytes, effectCount: meta.effectCount }
   }

@@ -95,7 +95,8 @@ sims + `reactionDiffusion`/`navierStokes` + the **full 3D-volume raymarch** (7 s
 `pointsBillboardRender`) + **`loopBegin`/`loopEnd`** + points-based `wormhole` + the **`remap`
 polygon-zone router** (std140 UBO — see below). Because candidate and golden share the
 WebGL2/ANGLE/Metal driver, parity is exact — **zero effects need relaxed tolerances**, and the stateful/continuous/agent effects (including `reactionDiffusion`) converge
-to a bit-identical steady state when evolved ~30s (the `EVOLVE` map in `render-batch.mjs`). The 4
+to a bit-identical steady state when evolved 1800 frames (~30 s; the `EVOLVE` map in `render-batch.mjs`,
+which push CI runs at 120 frames and the weekly CI run at 1800). The 4
 external-input effects grade through deterministic host fixtures on their real input path:
 **media** (`media_image`, an uploaded image), **text** (`text_glyphs`, an overlay canvas), **roll**
 (`roll_midi`, the engine's `MidiState`) and **meshLoader** (`mesh_obj`, an OBJ the engine parses and
@@ -134,7 +135,7 @@ mesh refs find the unscoped surface — mirrors `webgl2.bindTextures`), the std1
 particles [MRT+points+billboards] → blur → navierStokes ×40 → palette/lighting/adjust/bloom/lens/
 vignette) is byte-identical at every 5s sample over 30s. The **live NoiseBLASTER! corpus** —
 real shared compositions fetched from `blaster.noisedeck.app` (`parity/corpus/`) — is graded against
-the reference on every push (`.github/workflows/corpus.yml`). The **mesh triangle raster** was proven byte-identical by injecting an
+the reference once a week (`.github/workflows/corpus.yml`). The **mesh triangle raster** was proven byte-identical by injecting an
 identical procedural sphere into both engines' mesh textures — a depth-tested, back-face-culled,
 Blinn-Phong-lit sphere, max-abs-diff 0. The one load-bearing fix
 that unlocked the agent sims + corpus was the additive deposit blend: raw `blendFunc(ONE,ONE)`, not

@@ -10,6 +10,8 @@ name: CI
 #   - strict parity: the full-roster same-pass sweep (NM_DUAL=1, tolerance 0,
 #     SSIM 0.999) with goldens re-minted in the same browser session as the
 #     candidate, so the byte-exact gate does not depend on the CI driver.
+#     Simulations evolve 120 frames on push. The weekly scheduled run, and a
+#     manual run with `deep`, evolves them 1800 frames to their steady state.
 #
 # Every job uploads its raw test output, the engine authority hashes
 # (vendor/noisemaker/engine-meta.json + engine-hashes.json written by
@@ -36,16 +38,24 @@ on:
       - '!.editorconfig'
     branches: [main]
   workflow_dispatch:
+    inputs:
+      deep:
+        description: Evolve simulations 1800 frames, as the weekly run does
+        type: boolean
+        default: false
+  schedule:
+    - cron: '23 7 * * 1'
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.ref }}-${{ (github.event_name == 'schedule' || inputs.deep) && 'deep' || 'gate' }}
   cancel-in-progress: false
 
 env:
   PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.playwright-browsers
+  NM_EVOLVE_FRAMES: ${{ (github.event_name == 'schedule' || inputs.deep) && '1800' || '120' }}
 
 # shell: bash runs every run step under `bash --noprofile --norc -eo pipefail`,
 # so piped tee logging cannot mask a failing test/sweep/verifier exit code.

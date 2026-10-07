@@ -181,7 +181,7 @@ window.nmRunFatGraph = async function (fat, opts = {}) {
   }
   // Pinned time (ts=0): feedback/state surfaces settle (8-frame default). ts>0 ADVANCES time
   // per frame (tt=(t+i*ts)%1) — matches the golden harness's --timestep, used to evolve
-  // continuous solvers (navierStokes/reactionDiffusion) over ~30s for a steady-state compare.
+  // continuous solvers and agent sims over the EVOLVE map's frames.
   const ts = opts.timestep || 0
   for (let i = 0; i < frames; i++) pipeline.render(ts > 0 ? (time + i * ts) % 1 : time)
 

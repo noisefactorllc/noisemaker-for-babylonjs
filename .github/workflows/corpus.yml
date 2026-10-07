@@ -1,6 +1,6 @@
 name: Corpus
 # Every fetched live-corpus composition is graded against the reference
-# backend on a stable long-session runner.
+# backend on a stable long-session runner, once a week.
 #
 #   fetch:  run parity/corpus/fetch.sh against the live NoiseBLASTER! feed and
 #           re-derive the gradeable manifest exactly as corpus/sweep.sh does
@@ -19,23 +19,11 @@ name: Corpus
 # run grades whatever that run fetched; outcomes are keyed by share code and
 # recorded per run in the merged corpus ledger artifact.
 
+# Weekly true-up, not a push gate: 18–20 compositions evolved 1800 frames on
+# software WebGL take up to ~90 minutes, too long to hold up every push.
 on:
-  push:
-    paths-ignore:
-      - '*.md'
-      - 'docs/**'
-      - 'doc/**'
-      - '.superpowers/**'
-      - '.claude/**'
-      - '.codex/**'
-      - '.github/ISSUE_TEMPLATE/**'
-      - '.github/PULL_REQUEST_TEMPLATE*'
-      - '.github/copilot-instructions.md'
-      - '.github/CODEOWNERS'
-      - '.github/FUNDING.yml'
-      - '.github/dependabot.yml'
-      - '.editorconfig'
-    branches: [main]
+  schedule:
+    - cron: '41 7 * * 1'
   workflow_dispatch:
 
 permissions:
