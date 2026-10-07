@@ -1,3 +1,3 @@
 search synth
-solid(0.2, 0.6, 0.9).write(o0)
+solid(color: #3399e6, alpha: 0.6).write(o0)
 render(o0)
