@@ -8,7 +8,7 @@
 # a core ESM engine bundle + per-effect "mini-bundles" (production pre-fetches these).
 #
 # The default VERSION below is the DOCUMENTED engine revision this port is verified against
-# (build `76308ab6`, v1.0.262, 919962-byte core). Bumping it
+# (build `5976b7a6`, v1.0.271, 920805-byte core). Bumping it
 # is an authority change: re-run `NM_DUAL=1 bash parity/sweep.sh` and `node tools/coverage-map.mjs`,
 # and commit the ledger, goldens and coverage map with the new pin.
 #
@@ -16,7 +16,7 @@
 #   VERSION=1.0.187 bash vendor/fetch.sh  # deliberate authority bump (requires re-verification)
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
-VERSION="${VERSION:-1.0.262}"
+VERSION="${VERSION:-1.0.271}"
 BASE="https://shaders.noisedeck.app/${VERSION}"
 OUT="$HERE/noisemaker"
 EFFECTS="$OUT/effects"
