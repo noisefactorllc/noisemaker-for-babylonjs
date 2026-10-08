@@ -4,31 +4,49 @@ name: Export kit
 # export-kit-release.yml, which builds this repo's export kit at this exact
 # SHA and ships it to kits.noisedeck.app. See scaffold
 # docs/runbook/export-kits.md.
+#
+# A kit is released only after a successful full CI run on main (the weekly
+# schedule or a workflow_dispatch of CI), which adds the rendered parity
+# sweep to the push gate. Pushes run only the push gate, so they release
+# nothing. A SHA that already carries a kit tag is not released again.
 
 on:
-  workflow_dispatch:
-  push:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
     branches: [main]
-    paths:
-      - "export-kit/**"
-      - ".github/workflows/export-kit.yml"
-      # LICENSE is shipped kit content (vendored into LICENSES/): a relicense must auto-publish.
-      - "LICENSE"
-      - "src/**"
-      - "package-lock.json"
 
 permissions: {}
 
 concurrency:
-  group: export-kit-${{ github.ref }}
+  group: export-kit-${{ github.event.workflow_run.head_branch }}
   cancel-in-progress: false
 
 jobs:
   dispatch:
-    if: github.ref == 'refs/heads/main'
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event != 'push' &&
+      github.event.workflow_run.head_branch == 'main'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
+      - name: Skip a SHA that is already released
+        id: released
+        env:
+          SHA: ${{ github.event.workflow_run.head_sha }}
+          REPO: ${{ github.repository }}
+        run: |
+          tags=$(git ls-remote --tags "https://github.com/$REPO.git" 'refs/tags/kit-*')
+          if printf '%s\n' "$tags" | awk '$2 ~ /\^\{\}$/ { print $1 }' | grep -qx "$SHA"; then
+            echo "$SHA already carries a kit tag; nothing to release."
+            echo "released=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "released=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Mint scaffold-dispatch token
+        if: steps.released.outputs.released == 'false'
         id: app-token
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
@@ -38,11 +56,13 @@ jobs:
           repositories: scaffold
 
       - name: Dispatch export-kit-release
+        if: steps.released.outputs.released == 'false'
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           gh workflow run export-kit-release.yml \
             --repo noisefactorllc/scaffold \
             --ref main \
             -f kit=babylonjs \
-            -f sha=${{ github.sha }}
+            -f sha="$SHA"
