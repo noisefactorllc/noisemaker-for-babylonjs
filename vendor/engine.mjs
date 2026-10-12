@@ -14,6 +14,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
+import { applyUpstreamShaderPatches } from './upstream-shader-patches.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const VENDOR = join(HERE, 'noisemaker')
@@ -91,6 +92,13 @@ export async function bootEngine () {
     }
     if (!instance.namespace) instance.namespace = ns
     const func = instance.func || eff
+
+    // Upstream shader sync (see upstream-shader-patches.mjs): apply the ported WebGL2 GLSL
+    // changes from the upstream range this port tracks BEFORE the effect registers, so every
+    // compiled fat graph — and therefore both parity backends — renders the patched GLSL.
+    // Fail-closed: a vendored engine that matches neither the pinned nor the patched GLSL
+    // aborts the boot instead of silently rendering stale shaders.
+    applyUpstreamShaderPatches(id, instance)
 
     // Same registration the reference's canvas.js does at load time (4 aliases + op + starter +
     // enums). The mini-bundle already carries GLSL in instance.shaders, so nothing else to attach.

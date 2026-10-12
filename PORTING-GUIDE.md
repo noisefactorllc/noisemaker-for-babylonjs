@@ -144,6 +144,21 @@ call via the backend's own `createTexture`, `texSubImage2D`-update it on every c
 any later sampler-input lookup already finds — no other code needed to change. Verified byte-identical
 after the fix (`roll`'s no-MIDI empty-grid fallback matches the golden exactly).
 
+## Upstream shader patches
+
+The engine bundle is a pinned product dependency (see `vendor/fetch.sh`), so upstream shader
+changes that land between engine releases cannot be picked up by re-pinning inside this job.
+When an upstream range changes a WebGL2 GLSL program without changing the effect catalog or
+parameter contracts, the delta is delivered as a port-owned patch instead:
+`vendor/upstream-shader-patches.mjs` holds the exact pinned-GLSL → upstream-GLSL text for each
+affected `effect/program`, and `vendor/engine.mjs` applies the patches fail-closed while loading
+the mini-bundles — before `registerEffect`, so every compiled fat graph (and therefore BOTH
+parity backends and the minted goldens) renders the patched GLSL. Adaptations (e.g. upstream
+GLSL that reads new CPU-supplied uniforms the pinned runtime does not set) keep the equivalent
+in-shader form and are documented in the patch file. `test/upstream-shader-patches.test.js`
+asserts every patch is applied at boot and reaches compiled graphs; the suite fails closed if
+the vendored engine ever matches neither the pinned nor the patched GLSL.
+
 ## Parity invariants (same as the WebGL2 reference)
 
 - Render targets: linear **half-float RGBA** (`rgba16f`), **NEAREST** min/mag, **CLAMP_TO_EDGE**
