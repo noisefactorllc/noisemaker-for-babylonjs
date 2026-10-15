@@ -41,3 +41,17 @@ test('patched GLSL reaches compiled fat graphs (pointsBillboardRender highp samp
   const depthCount = (sources.match(/precision highp float;\nprecision highp sampler2D;\nprecision highp int;/g) || []).length
   assert.ok(depthCount >= 2, `depthKeys and depthMerge reach compiled graphs (found ${depthCount} depth-stage declarations)`)
 })
+
+test('patched GLSL reaches compiled fat graphs (a1a3fa2a 8-bit quantize)', async () => {
+  // glitch: the quantize lands between the glitch() call and the scanlines mix chain.
+  const glitchFat = await exportFatGraph('search synth, classicNoisedeck\nnoise(seed: 1, scaleX: 50, scaleY: 50).glitch().write(o0)\nrender(o0)')
+  const glitchSources = Object.values(glitchFat.programs).map(p => `${p.glsl || ''}${p.fragment || ''}`).join('\n')
+  assert.ok(glitchSources.includes('floor(clamp(color.rgb, 0.0, 1.0) * 255.0 + 0.5) / 255.0'),
+    'compiled fat graph embeds the a1a3fa2a glitch 8-bit quantize')
+
+  // crt: the effect color is quantized before the alpha mix with the base sample.
+  const crtFat = await exportFatGraph('search synth, filter\nnoise(seed: 1, scaleX: 50, scaleY: 50).crt().write(o0)\nrender(o0)')
+  const crtSources = Object.values(crtFat.programs).map(p => `${p.glsl || ''}${p.fragment || ''}`).join('\n')
+  assert.ok(crtSources.includes('effectColor8'),
+    'compiled fat graph embeds the a1a3fa2a crt 8-bit quantize')
+})
