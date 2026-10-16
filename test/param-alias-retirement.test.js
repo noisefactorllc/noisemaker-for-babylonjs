@@ -6,10 +6,8 @@ import { exportFatGraph } from '../src/compiler/index.js'
 // Upstream noisemaker a1a3fa2a retired every deprecated parameter alias: the definition
 // paramAliases tables and the lang alias registry are gone, so each old param name now
 // fails argument validation. This port drives the PUBLISHED engine pinned in
-// vendor/fetch.sh (1.0.271, build 5976b7a6) through the same reference compiler; the
-// pinned revision predates the retirement, so the contract here is the PORT one: the
-// DSL front-end validates arguments against the op spec args and instance globals only,
-// and none of the retired alias names were ever accepted. Lock that contract for every
+// vendor/fetch.sh through the same reference compiler. Both the published engine
+// and port front-end reject retired aliases. Lock that contract for every
 // (effect, old -> new) pair the upstream range retired: the alias name is rejected with
 // S001 naming the retired param, and the canonical replacement compiles.
 // Cases are derived mechanically from the upstream range diff (82 pairs, 43 effects).
