@@ -10,7 +10,8 @@ import { fileURLToPath } from 'node:url'
 // default ~/.cache/ms-playwright. In the automation containers HOME sits on a
 // noexec tmpfs, so a browser downloaded to the default path cannot be executed
 // (launch fails with EACCES / "Executable doesn't exist"), and prepared
-// environments keep the browsers on an exec-mounted cache instead. When the
+// environments keep the browsers on an exec-mounted cache instead, named by
+// NOISEMAKER_BROWSER_CACHE. When the
 // caller left PLAYWRIGHT_BROWSERS_PATH unset AND the default registry holds no
 // chromium install, point it at the first known exec-mounted cache that has
 // one. An explicit PLAYWRIGHT_BROWSERS_PATH or a populated default registry is
@@ -29,7 +30,7 @@ import { fileURLToPath } from 'node:url'
 // workers don't race; a registry without a chromium entry is treated as absent.
 const FALLBACK_BROWSER_ROOTS = [
   join(dirname(fileURLToPath(import.meta.url)), '..', '.cache', 'ms-playwright'),
-  '/state/cache/pw-browsers'
+  ...(process.env.NOISEMAKER_BROWSER_CACHE ? [process.env.NOISEMAKER_BROWSER_CACHE] : [])
 ]
 const REPO_BROWSER_ROOT = FALLBACK_BROWSER_ROOTS[0]
 
