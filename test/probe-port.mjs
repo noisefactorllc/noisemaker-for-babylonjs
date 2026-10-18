@@ -1,6 +1,6 @@
 // Loopback bind for the render-probe test servers.
 //
-// The Workers Elves macOS host sandbox permits loopback binds only inside the
+// The automation's macOS host sandbox permits loopback binds only inside the
 // 43117-43126 window — an ephemeral bind there fails with `listen EPERM` —
 // while CI runners and dev containers allow any ephemeral port. Try an
 // ephemeral bind first, then fall back to the sanctioned window on

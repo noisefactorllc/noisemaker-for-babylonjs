@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url'
 // Resolve a Playwright chromium install for the headless engine tests.
 //
 // Playwright resolves its browser registry from PLAYWRIGHT_BROWSERS_PATH or the
-// default ~/.cache/ms-playwright. In the Worker Elves containers HOME sits on a
+// default ~/.cache/ms-playwright. In the automation containers HOME sits on a
 // noexec tmpfs, so a browser downloaded to the default path cannot be executed
 // (launch fails with EACCES / "Executable doesn't exist"), and prepared
 // environments keep the browsers on an exec-mounted cache instead. When the

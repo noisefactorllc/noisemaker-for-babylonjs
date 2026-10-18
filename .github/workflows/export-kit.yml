@@ -2,8 +2,7 @@ name: Export kit
 
 # Public repo: holds NO deploy credentials. Dispatches scaffold's
 # export-kit-release.yml, which builds this repo's export kit at this exact
-# SHA and ships it to kits.noisedeck.app. See scaffold
-# docs/runbook/export-kits.md.
+# SHA and ships it to kits.noisedeck.app.
 #
 # A kit is released only after a successful full CI run on main (the weekly
 # schedule or a workflow_dispatch of CI), which adds the rendered parity
