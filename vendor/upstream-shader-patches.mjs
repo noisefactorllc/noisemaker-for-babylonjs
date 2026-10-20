@@ -1,7 +1,7 @@
 // upstream-shader-patches.mjs — port-owned GLSL patches for the vendored engine.
 //
-// This port consumes the PUBLISHED engine pinned in vendor/fetch.sh (currently 1.0.295,
-// build 13eb5fb6). The guards below retain the earlier 1.0.271 shader sources.
+// This port consumes the PUBLISHED engine pinned in vendor/fetch.sh (currently 1.0.299,
+// build f6b196dc). The guards below retain the earlier 1.0.271 shader sources.
 // Upstream noisemaker 5976b7a6..a1a3fa2a changed the WebGL2 GLSL of the
 // effects listed below (commit map):
 //
@@ -35,7 +35,7 @@
 // parameter-alias retirement in the effect definitions and the lang, and the WGSL
 // twins of the GLSL edits above.
 //
-// The 1.0.295 engine includes the runtime fixes for persistent/feedback surfaces,
+// The 1.0.299 engine includes the runtime fixes for persistent/feedback surfaces,
 // storage writes and numeric allocation defaults. Its shaders already match the
 // targets below, so patch application is a guarded no-op for the current pin.
 // Recognized older shader sources are patched before registration by vendor/engine.mjs.
