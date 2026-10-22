@@ -55,7 +55,7 @@ export async function bootEngine () {
 
   const core = await import(pathToFileURL(CORE).href)
   const {
-    compileGraph, Pipeline, WebGL2Backend, Backend, Effect, getEffect,
+    compileGraph, Pipeline, WebGL2Backend, CanvasRenderer, Effect, getEffect,
     registerEffect, registerOp, registerStarterOps, mergeIntoEnums, stdEnums, sanitizeEnumName
   } = core
 
@@ -128,6 +128,15 @@ export async function bootEngine () {
     })
     if (registerOp) registerOp(`${ns}.${func}`, { name: func, args })
 
+    // The reference's registerEffectWithRuntime also feeds instance.paramAliases into the lang's
+    // alias registry (canvas.js): deprecated DSL param names resolve to the canonical global with
+    // an S007 diagnostic. registerParamAliases is not exported from the bundle, but the same
+    // CanvasRenderer method the reference runtime uses is — route through it.
+    if (instance.paramAliases) {
+      const ref = new CanvasRenderer({})
+      ref.registerEffectWithRuntime({ namespace: ns, name: eff, instance })
+    }
+
     const isStarter = !((instance.passes || []).some(p =>
       p.inputs && Object.values(p.inputs).some(v =>
         ['inputTex', 'inputTex3d', 'src', 'o0', 'o1'].includes(v))))
@@ -137,6 +146,6 @@ export async function bootEngine () {
 
   if (mergeIntoEnums && Object.keys(allChoices).length) await mergeIntoEnums(allChoices)
 
-  _booted = { compileGraph, Pipeline, WebGL2Backend, Backend, Effect, getEffect }
+  _booted = { compileGraph, Pipeline, WebGL2Backend, CanvasRenderer, Effect, getEffect }
   return _booted
 }

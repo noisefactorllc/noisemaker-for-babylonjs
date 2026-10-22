@@ -1,7 +1,7 @@
 // upstream-shader-patches.mjs — port-owned GLSL patches for the vendored engine.
 //
-// This port consumes the PUBLISHED engine pinned in vendor/fetch.sh (currently 1.0.306,
-// build 8e62508b). The guards below retain the earlier 1.0.271 shader sources.
+// This port consumes the PUBLISHED engine pinned in vendor/fetch.sh (currently 1.0.309,
+// build 12751c78). The guards below retain the earlier 1.0.271 shader sources.
 // Upstream noisemaker 5976b7a6..a1a3fa2a changed the WebGL2 GLSL of the
 // effects listed below (commit map):
 //
@@ -39,7 +39,11 @@
 // surfaces, storage writes and numeric allocation defaults. The 1.0.306 shaders
 // already match the targets below — including the synth/media tiled-sampling guard,
 // whose published GLSL equals its `to` text — so patch application is a guarded
-// no-op for the current pin.
+// no-op for the current pin. The 1.0.309 engine (build 12751c78) carries the same
+// GLSL for every program guarded below (verified segment-by-segment against the
+// published bundles), so the guards stay no-ops at that pin too; its points bundles
+// add the agent base-color MRT attachment and the fieldTex->heightTex rename with
+// the lang param-alias registry, which the pinned bundle supplies directly.
 // Recognized older shader sources are patched before registration by vendor/engine.mjs.
 //
 // Tile sync d0727f90/6cb1a3c3: full-image sampling and zoom tap bounds in
