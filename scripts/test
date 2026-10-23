@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# scripts/test — repository test entrypoint.
+#
+# Without NM_CHANGED_FILES the whole suite runs exactly as `npm test` runs it.
+# With NM_CHANGED_FILES (one repository-relative path per line) only the test
+# files whose source references the changed paths run, so the focused gate
+# stays inside its time budget while covering every changed path. A changed
+# test file selects itself, and a changed path that no test file references
+# fails the selection; it can never pass by omission.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+if [[ -z "${NM_CHANGED_FILES:-}" ]]; then
+  exec node --test test/*.test.js
+fi
+
+selected="$(node scripts/select-tests.mjs)"
+if [[ -z "$selected" ]]; then
+  echo "scripts/test: focused selection is empty" >&2
+  exit 2
+fi
+
+# shellcheck disable=SC2086
+exec node --test $selected
