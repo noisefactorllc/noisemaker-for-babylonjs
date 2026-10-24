@@ -10,10 +10,18 @@ import { chromium } from 'playwright'
 import { exportFatGraph } from '../tools/export-fat-graph.mjs'
 import { ensureBundle, INDEX_HTML, ROOT } from '../parity/render-candidate.mjs'
 
+// ANGLE's Metal backend exists only on macOS. On Linux the metal switch falls back
+// through a path that never signals GL fence syncs or fills pixel-pack buffers, so the
+// async frame-export queue stalls with no GL error; the SwiftShader GL path (the same
+// driver parity/render-batch.mjs uses for non-macOS sweeps) completes it.
+const LAUNCH_ARGS = process.platform === 'darwin'
+  ? ['--disable-gpu-sandbox', '--use-angle=metal']
+  : ['--disable-gpu-sandbox', '--enable-unsafe-swiftshader', '--use-gl=angle', '--use-angle=swiftshader']
+
 test('Babylon frame export matches synchronous top-down pixels in a real WebGL2 context', async () => {
   await ensureBundle(false)
   const fat = await exportFatGraph(readFileSync(join(ROOT, 'parity/programs/noise.dsl'), 'utf8'))
-  const browser = await chromium.launch({ headless: true, args: ['--disable-gpu-sandbox', '--use-angle=metal'] })
+  const browser = await chromium.launch({ headless: true, args: LAUNCH_ARGS })
 
   try {
     const page = await browser.newPage()
@@ -40,7 +48,7 @@ test('Babylon frame export matches synchronous top-down pixels in a real WebGL2 
 test('NoisemakerRenderer replaces lost GPU state and resumes rendering after context restoration', async () => {
   await ensureBundle(false)
   const fat = await exportFatGraph(readFileSync(join(ROOT, 'parity/programs/noise.dsl'), 'utf8'))
-  const browser = await chromium.launch({ headless: true, args: ['--disable-gpu-sandbox', '--use-angle=metal'] })
+  const browser = await chromium.launch({ headless: true, args: LAUNCH_ARGS })
 
   try {
     const page = await browser.newPage()
@@ -63,7 +71,7 @@ test('NoisemakerRenderer replaces lost GPU state and resumes rendering after con
 
 test('Babylon frame export applies alpha modes to odd-width RGBA8 pixels in real WebGL2', async () => {
   await ensureBundle(false)
-  const browser = await chromium.launch({ headless: true, args: ['--disable-gpu-sandbox', '--use-angle=metal'] })
+  const browser = await chromium.launch({ headless: true, args: LAUNCH_ARGS })
 
   try {
     const page = await browser.newPage()
@@ -94,7 +102,7 @@ test('Babylon frame export applies alpha modes to odd-width RGBA8 pixels in real
 
 test('BabylonBackend uploads borrowed VideoFrame and caller can close immediately', async () => {
   await ensureBundle(false)
-  const browser = await chromium.launch({ headless: true, args: ['--disable-gpu-sandbox', '--use-angle=metal'] })
+  const browser = await chromium.launch({ headless: true, args: LAUNCH_ARGS })
 
   try {
     const page = await browser.newPage()
