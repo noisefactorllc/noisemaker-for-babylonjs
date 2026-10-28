@@ -98,21 +98,31 @@ export const EXTERNAL_FIXTURE_OBJ = [
   'f 1/1/6 5/2/6 6/3/6 2/4/6'
 ].join('\n') + '\n'
 
+// One deterministic host source per external-input effect, shared by the bare program and its
+// fixture-suffixed variant (parity/programs/media.dsl and media_image.dsl grade the same
+// real-input branch; text/text_glyphs and roll/roll_midi likewise).
+const MEDIA_INPUT = { media: { width: 161, height: 97 } }
+const TEXT_INPUT = { text: {} }
+const MIDI_INPUT = { midi: { clockCount: 96, notes: [
+  { ch: 1, key: 60, velocity: 100, order: 1 },
+  { ch: 1, key: 64, velocity: 64, order: 2 },
+  { ch: 2, key: 48, velocity: 127, order: 3 },
+  { ch: 9, key: 84, velocity: 32, order: 4 }
+] } }
+
 export const EXTERNAL_FIXTURES = {
   // media: deterministic non-square host image (odd dimensions exercise the aspect/crop math),
   // uploaded on the compiled media pass's imageTex id (flipY:false — the video path) with the
   // imageSize uniform mirroring the UI's size reporting.
-  media_image: { media: { width: 161, height: 97 } },
+  media: MEDIA_INPUT,
+  media_image: MEDIA_INPUT,
   // text: output-sized deterministic overlay canvas (the shader samples textTex in normalized
   // output space; canvas defaults to the render size) uploaded with flipY:true.
-  text_glyphs: { text: {} },
+  text: TEXT_INPUT,
+  text_glyphs: TEXT_INPUT,
   // roll: the engine's own MidiState with deterministic note events + clock.
-  roll_midi: { midi: { clockCount: 96, notes: [
-    { ch: 1, key: 60, velocity: 100, order: 1 },
-    { ch: 1, key: 64, velocity: 64, order: 2 },
-    { ch: 2, key: 48, velocity: 127, order: 3 },
-    { ch: 9, key: 84, velocity: 32, order: 4 }
-  ] } },
+  roll: MIDI_INPUT,
+  roll_midi: MIDI_INPUT,
   // meshLoader: the deterministic OBJ above through the engine's own parser/pack/upload path.
   mesh_obj: { obj: EXTERNAL_FIXTURE_OBJ }
 }

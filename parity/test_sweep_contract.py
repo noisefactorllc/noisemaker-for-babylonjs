@@ -11,7 +11,9 @@ from pathlib import Path
 
 
 REPO = Path(__file__).resolve().parents[1]
-SKIPPED = {"media", "text", "roll"}
+# The sweep grades every roster program. media, text and roll grade on the real-input
+# fixture path (deterministic host fixtures) and no program is policy-skipped.
+GRADED = {"media", "text", "roll"}
 
 
 class SweepContractTests(unittest.TestCase):
@@ -19,7 +21,8 @@ class SweepContractTests(unittest.TestCase):
         self.tempdir = tempfile.TemporaryDirectory(prefix="nm-babylon-sweep-")
         self.root = Path(self.tempdir.name)
         (self.root / "parity" / "out").mkdir(parents=True)
-        (self.root / "parity" / "out" / "roll.golden.png").touch()
+        for n in sorted(GRADED):
+            (self.root / "parity" / "out" / f"{n}.golden.png").touch()
         (self.root / "parity" / ".venv" / "bin").mkdir(parents=True)
         (self.root / "bin").mkdir()
         shutil.copy2(REPO / "parity" / "sweep.sh", self.root / "parity" / "sweep.sh")
@@ -41,7 +44,7 @@ class SweepContractTests(unittest.TestCase):
         path.write_text("#!/usr/bin/env bash\n" + body)
         path.chmod(0o755)
 
-    def _run_roll(self, node_body, compare_body="exit 0\n", extra_env=None, explicit_ledger=True):
+    def _run(self, names, node_body, compare_body="exit 0\n", extra_env=None, explicit_ledger=True):
         self._write_executable(self.root / "bin" / "node", node_body)
         self._write_executable(
             self.root / "parity" / ".venv" / "bin" / "python", compare_body
@@ -54,19 +57,22 @@ class SweepContractTests(unittest.TestCase):
         if explicit_ledger:
             env.setdefault("LEDGER_PATH", "parity/ledger.test.json")
         return subprocess.run(
-            ["bash", str(self.root / "parity" / "sweep.sh"), "roll"],
+            ["bash", str(self.root / "parity" / "sweep.sh"), *names],
             cwd=self.root,
             env=env,
             capture_output=True,
             text=True,
         )
 
-    def test_missing_candidate_cannot_be_policy_skipped(self):
+    def _run_roll(self, node_body, compare_body="exit 0\n", extra_env=None, explicit_ledger=True):
+        return self._run(["roll"], node_body, compare_body, extra_env, explicit_ledger)
+
+    def test_missing_candidate_cannot_pass(self):
         result = self._run_roll("exit 1\n")
         self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("no candidate rendered", result.stdout)
 
-    def test_skip_case_must_pass_numeric_fallback_comparison(self):
+    def test_numeric_mismatch_fails_the_run(self):
         result = self._run_roll(
             "touch parity/out/roll.candidate.png\nexit 0\n",
             "echo '[FAIL] injected numeric mismatch'\nexit 1\n",
@@ -100,13 +106,18 @@ class SweepContractTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         ledger = json.loads(self.test_ledger.read_text())
-        self.assertEqual(ledger[0]["status"], "SKIP")
+        self.assertEqual(ledger[0]["program"], "roll")
+        self.assertEqual(ledger[0]["status"], "PASS")
+        self.assertFalse(ledger[0]["skipped"])
         self.assertEqual(ledger[0]["max_abs_diff"], 0)
 
-    def test_ledger_skip_flags_match_executable_policy(self):
+    def test_committed_ledger_rows_for_graded_programs_pass(self):
         ledger = json.loads((REPO / "parity" / "ledger.json").read_text())
-        actual = {row["program"] for row in ledger if row.get("skipped")}
-        self.assertEqual(actual, SKIPPED)
+        rows = {row["program"]: row for row in ledger}
+        for program in GRADED:
+            self.assertIn(program, rows)
+            self.assertTrue(rows[program]["passed"])
+            self.assertNotEqual(rows[program]["status"], "FAIL")
 
     def test_sweep_writes_current_policy_and_metrics_to_ledger(self):
         compare = (
@@ -128,13 +139,40 @@ class SweepContractTests(unittest.TestCase):
         self.assertEqual(len(ledger), 1)
         row = ledger[0]
         self.assertEqual(row["program"], "roll")
-        self.assertEqual(row["status"], "SKIP")
+        self.assertEqual(row["status"], "PASS")
         self.assertTrue(row["passed"])
-        self.assertTrue(row["skipped"])
+        self.assertFalse(row["skipped"])
         self.assertEqual(row["max_abs_diff"], 0)
         self.assertEqual(row["policy"]["tolerance"], 0)
         self.assertEqual(row["policy"]["ssim_min"], 0.999)
-        self.assertIn("external input", row["policy"]["reason"])
+        self.assertEqual(row["policy"]["reason"], "strict byte-exact comparison passed")
+
+    def test_sweep_grades_media_text_and_roll_without_a_skip_policy(self):
+        # The graded-PASS contract: every external-input program records PASS when its
+        # comparison passes. No skip policy intercepts the row.
+        compare = (
+            "name=''\n"
+            "report=''\n"
+            "while [ $# -gt 0 ]; do\n"
+            "  if [ \"$1\" = --name ]; then name=$2; fi\n"
+            "  if [ \"$1\" = --report ]; then report=$2; fi\n"
+            "  shift\n"
+            "done\n"
+            "printf '%s\\n' \"{\\\"name\\\":\\\"$name\\\",\\\"max_abs_diff\\\":0,\\\"mean_abs_diff\\\":0,\\\"ssim\\\":1,\\\"tolerance\\\":0,\\\"ssim_min\\\":0.999,\\\"passed\\\":true}\" > \"$report\"\n"
+            "echo \"[PASS] $name: exact\"\n"
+        )
+        result = self._run(
+            sorted(GRADED),
+            "for n in media text roll; do touch \"parity/out/$n.candidate.png\"; done\nexit 0\n",
+            compare,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        ledger = json.loads(self.test_ledger.read_text())
+        self.assertEqual({row["program"] for row in ledger}, GRADED)
+        for row in ledger:
+            self.assertEqual(row["status"], "PASS", row)
+            self.assertFalse(row["skipped"])
+            self.assertEqual(row["policy"]["reason"], "strict byte-exact comparison passed")
 
     def test_subset_sweep_cannot_overwrite_canonical_ledger(self):
         canonical = self.root / "parity" / "ledger.json"

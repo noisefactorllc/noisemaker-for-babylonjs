@@ -16,18 +16,6 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 
 tol_for() { echo "0 0.999"; }
-# Documented skips: external-input effects ONLY — they need a MIDI/media/glyph source the parity
-# harness doesn't supply, so their program only exercises the no-input fallback path. NOTE remap
-# is NOT skipped: its inputs are engine surfaces and it grades byte-identical via the std140 UBO
-# path (the only "external" part is the zone-polygon config, which fills uniforms). media/text/roll
-# DO numerically pass at max-abs-diff 0 on their fallback path (proving the base plumbing is
-# correct on both backends) but stay policy-skipped: a pass here is necessary, not sufficient,
-# evidence — it doesn't exercise the actual external-data upload (a real image/glyph atlas/MIDI
-# stream), which the headless harness can't supply deterministically. Everything else is graded,
-# including the continuous solvers AND the agent/points sims, all of which evolve to a
-# bit-identical state (the EVOLVE map in render-batch.mjs steps them the same frames; the additive
-# deposit blend is exact — raw blendFunc(ONE,ONE)).
-is_skip() { case "$1" in media|text|roll) return 0;; *) return 1;; esac; }
 
 PY="parity/.venv/bin/python"
 if [[ -n "${LEDGER_PATH+x}" ]]; then LEDGER_EXPLICIT=1; else LEDGER_EXPLICIT=0; fi
@@ -89,7 +77,7 @@ fi
 printf '%s\n' "$render_log" | grep -E "ERR|rendered" | sed 's/^/  /' || true
 
 # Grade.
-pass=0; fail=0; skip=0; failed=""
+pass=0; fail=0; failed=""
 for n in "${NAMES[@]}"; do
   if [[ ! -f "parity/out/$n.candidate.png" ]]; then
     echo "[FAIL] $n — no candidate rendered"
@@ -113,14 +101,8 @@ for n in "${NAMES[@]}"; do
     record_result "$n" FAIL "$tol" "$ssim" "numeric comparison failed strict byte-exact policy"
     fail=$((fail+1)); failed="$failed $n"; continue
   fi
-  if is_skip "$n"; then
-    echo "[SKIP] $n — numeric fallback PASS; external input is not supplied"
-    record_result "$n" SKIP "$tol" "$ssim" "numeric fallback passed; external input is not supplied"
-    skip=$((skip+1))
-  else
-    record_result "$n" PASS "$tol" "$ssim" "strict byte-exact comparison passed"
-    pass=$((pass+1))
-  fi
+  record_result "$n" PASS "$tol" "$ssim" "strict byte-exact comparison passed"
+  pass=$((pass+1))
 done
 
 if ! python3 parity/write-ledger.py --root "$PWD" --results "$RESULTS" --output "$LEDGER_PATH"; then
@@ -129,6 +111,6 @@ if ! python3 parity/write-ledger.py --root "$PWD" --results "$RESULTS" --output 
 fi
 
 echo ""
-echo "=== SWEEP: ${pass} / $((pass+fail)) PASS, ${skip} skipped ==="
+echo "=== SWEEP: ${pass} / $((pass+fail)) PASS ==="
 [[ -n "$failed" ]] && echo "    FAILED:$failed"
 [[ "$fail" -eq 0 ]]
