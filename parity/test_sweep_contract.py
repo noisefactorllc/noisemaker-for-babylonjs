@@ -6,6 +6,8 @@ import os
 import shutil
 import subprocess
 import tempfile
+import textwrap
+import sys
 import unittest
 from pathlib import Path
 
@@ -66,6 +68,28 @@ class SweepContractTests(unittest.TestCase):
 
     def _run_roll(self, node_body, compare_body="exit 0\n", extra_env=None, explicit_ledger=True):
         return self._run(["roll"], node_body, compare_body, extra_env, explicit_ledger)
+
+    def test_ci_merge_accepts_graded_roster_and_rejects_skips(self):
+        workflow = (REPO / ".github/workflows/ci.yml").read_text()
+        code = textwrap.dedent(workflow.split("<<'PY'\n", 1)[1].split("          PY", 1)[0])
+        roster = sorted(GRADED)
+        ledger = self.root / "ledger-shard-0.json"
+        for status in ("PASS", "SKIP"):
+            with self.subTest(status=status):
+                rows = [{"program": name, "status": "PASS"} for name in roster]
+                rows[0]["status"] = status
+                ledger.write_text(json.dumps(rows))
+                result = subprocess.run(
+                    [sys.executable, "-c", code, str(self.root), *roster],
+                    capture_output=True, text=True,
+                )
+                if status == "PASS":
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    merged = json.loads((self.root / "ledger-merged.json").read_text())
+                    self.assertEqual(merged["pass"], len(roster))
+                    self.assertEqual(merged["skip"], 0)
+                else:
+                    self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_missing_candidate_cannot_pass(self):
         result = self._run_roll("exit 1\n")

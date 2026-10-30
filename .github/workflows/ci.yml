@@ -273,7 +273,7 @@ jobs:
               assert not missing, f"missing from sweep ({len(missing)}): {missing[:10]}"
               assert not extra, f"not in roster: {extra[:10]}"
               assert not fails, f"non-passing grades: {dict(list(fails.items())[:10])}"
-              assert skips == ["media", "roll", "text"], f"unexpected skip set: {skips}"
+              assert not skips, f"unexpected skip set: {skips}"
               merged = [rows[p] for p in roster]
               json.dump({"programs": len(merged), "pass": len(merged) - len(skips),
                          "skip": len(skips), "rows": merged},
