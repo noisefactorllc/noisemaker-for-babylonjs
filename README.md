@@ -126,7 +126,8 @@ Two runnable demos (`node examples/build.mjs`, then open the HTML):
 
 ## What works today
 
-CI checks every effect against the reference on every push. The same vendored engine renders each
+The strict parity sweep runs weekly and on manual dispatch. Push CI runs execute the test suite
+and the examples workflow. The same vendored engine renders each
 parity program twice in one browser session, once through its own WebGL2 backend and once through
 `BabylonBackend`, and the two images must match byte for byte (max-abs-diff 0, SSIM ≥ 0.999).
 [`parity/coverage-map.json`](parity/coverage-map.json) (built by `node tools/coverage-map.mjs`,
