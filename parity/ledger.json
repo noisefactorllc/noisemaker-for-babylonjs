@@ -2777,16 +2777,16 @@
     "mode": "default",
     "golden": "parity/out/media.golden.png",
     "candidate": "parity/out/media.candidate.png",
-    "status": "SKIP",
+    "status": "PASS",
     "max_abs_diff": 0.0,
     "mean_abs_diff": 0.0,
     "ssim": 1.0,
     "passed": true,
-    "skipped": true,
+    "skipped": false,
     "policy": {
       "tolerance": 0.0,
       "ssim_min": 0.999,
-      "reason": "numeric fallback passed; external input is not supplied"
+      "reason": "strict byte-exact comparison passed"
     }
   },
   {
@@ -4091,16 +4091,16 @@
     "mode": "default",
     "golden": "parity/out/roll.golden.png",
     "candidate": "parity/out/roll.candidate.png",
-    "status": "SKIP",
+    "status": "PASS",
     "max_abs_diff": 0.0,
     "mean_abs_diff": 0.0,
     "ssim": 1.0,
     "passed": true,
-    "skipped": true,
+    "skipped": false,
     "policy": {
       "tolerance": 0.0,
       "ssim_min": 0.999,
-      "reason": "numeric fallback passed; external input is not supplied"
+      "reason": "strict byte-exact comparison passed"
     }
   },
   {
@@ -5189,16 +5189,16 @@
     "mode": "default",
     "golden": "parity/out/text.golden.png",
     "candidate": "parity/out/text.candidate.png",
-    "status": "SKIP",
+    "status": "PASS",
     "max_abs_diff": 0.0,
     "mean_abs_diff": 0.0,
     "ssim": 1.0,
     "passed": true,
-    "skipped": true,
+    "skipped": false,
     "policy": {
       "tolerance": 0.0,
       "ssim_min": 0.999,
-      "reason": "numeric fallback passed; external input is not supplied"
+      "reason": "strict byte-exact comparison passed"
     }
   },
   {

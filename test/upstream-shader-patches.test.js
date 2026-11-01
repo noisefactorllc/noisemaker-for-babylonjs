@@ -55,3 +55,11 @@ test('patched GLSL reaches compiled fat graphs (a1a3fa2a 8-bit quantize)', async
   assert.ok(crtSources.includes('effectColor8'),
     'compiled fat graph embeds the a1a3fa2a crt 8-bit quantize')
 })
+
+
+test('shape fat graphs use the upstream boolean PRNG sign fold', async () => {
+  const fat = await exportFatGraph('search synth\nshape().write(o0)\nrender(o0)')
+  const sources = Object.values(fat.programs).map(p => p.glsl || '').join('\n')
+  assert.ok(sources.includes('mix(-p * 2.0 + 1.0, p * 2.0, greaterThanEqual(p, vec3(0.0)))'))
+  assert.ok(!sources.includes('if (p.x >= 0.0)'))
+})

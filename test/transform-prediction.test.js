@@ -96,3 +96,20 @@ test('engine v1.0.187: replacement prediction — dimensions, manifest backend s
   assert.equal(valid.prediction.available, true)
   assert.equal(valid.prediction.issues.length, 0)
 })
+
+
+test('effect replacement preserves preceding let bindings through a DSL round trip', async () => {
+  await bootEngine()
+  const { compile, replaceEffect, unparse } = await import('../vendor/noisemaker/noisemaker-shaders-core.esm.js')
+  const source = 'search synth\nlet amount = 13\nnoise(scaleX: amount).write(o0)\n' +
+    'let amount = 97\nnoise(scaleX: amount).write(o1)\nrender(o1)'
+  const original = compile(source)
+  const before = unparse(original)
+  const replaced = replaceEffect(original, original.plans[1].chain[0].temp, 'synth.cell', { scale: 31 })
+  assert.equal(replaced.success, true)
+  const restored = compile(unparse(replaced.program))
+  assert.equal(restored.diagnostics.length, 0)
+  assert.equal(restored.plans[0].chain[0].args.scaleX.value, 13)
+  assert.equal(restored.plans[1].chain[0].args.scale, 31)
+  assert.equal(unparse(original), before)
+})

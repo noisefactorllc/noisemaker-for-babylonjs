@@ -148,7 +148,7 @@ re-checked by `test/coverage-map.test.js`) binds each effect to the programs tha
   deterministic host fixtures: `media` (host image upload), `text` (host overlay-canvas upload),
   `roll` (the engine's own `MidiState` fed through the MIDI note-grid path) and `meshLoader` (the
   engine's own OBJ parser and packer feeding the host-uploaded mesh surfaces). The no-input
-  fallback programs of `media`, `text` and `roll` are skipped by policy and counted as skips in
+  fallback programs of `media`, `text` and `roll` are also graded at the same strict bounds in
   [`parity/ledger.json`](parity/ledger.json).
 - **The live NoiseBLASTER! corpus**: `.github/workflows/corpus.yml` fetches the 20 most recent
   shared compositions once a week and grades each one, evolved 1800 frames, at the corpus
