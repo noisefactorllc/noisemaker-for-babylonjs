@@ -40,11 +40,24 @@ const tokensFor = (path) => {
   const base = path.split('/').pop()
   const tokens = new Set([base])
   const dot = base.lastIndexOf('.')
-  if (dot > 0) tokens.add(base.slice(0, dot))
+  const stem = dot > 0 ? base.slice(0, dot) : base
+  if (stem !== base) tokens.add(stem)
+  // A camelCase stem names its class-shaped exports with humps (the file
+  // babylonFrameExport.js backs a BabylonFrameExportAdapter). Add the suffix
+  // at every hump so the tests that name those exports select the file.
+  for (let i = 1; i < stem.length; i++) {
+    if (/[A-Z]/.test(stem[i])) tokens.add(stem.slice(i))
+  }
   return [...tokens]
 }
 
-const matchesToken = (body, token) => new RegExp(`\\b${token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(body)
+// A token matches as a whole word or at a camelCase hump: it may start a
+// compound name and it may follow a camelCase verb or prefix
+// (FrameExport selects FrameExportQueue and nmRunFrameExport). Requiring the
+// next character not to be lowercase keeps the match at a name boundary.
+// Compound names reference the same module, so these matches widen coverage
+// safely.
+const matchesToken = (body, token) => new RegExp(`(?:\\b|(?<=[a-z0-9]))${token.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}(?![a-z])`).test(body)
 
 const unmapped = []
 for (const path of changed) {

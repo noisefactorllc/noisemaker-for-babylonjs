@@ -36,8 +36,7 @@ void main() {
     } else if (u_alphaMode == 2) {
         color.rgb *= color.a;
     }
-    // Match synchronous float readback before normalized storage.
-    fragColor = floor(clamp(color, 0.0, 1.0) * 255.0 + 0.5) / 255.0;
+    fragColor = color;
 }
 `
 
