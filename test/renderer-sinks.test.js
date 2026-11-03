@@ -643,11 +643,12 @@ test('Babylon frame export rejects noncanonical descriptors before allocating GP
 })
 
 test('renderer rebuilds against the fresh device Babylon restores after a WebGPU device loss', async () => {
-  // Babylon's WebGPUEngine owns the device-loss contract (webgpuEngine device.lost
-  // handler): it notifies onContextLostObservable, re-initializes the engine with a
-  // NEW device (this._device = device in initAsync), then notifies
-  // onContextRestoredObservable. The renderer must recover against that new device —
-  // never the lost one. This test drives that exact sequence.
+  // Babylon's WebGPUEngine owns the device-loss contract (@babylonjs/core ^9.13.0,
+  // webgpuEngine device.lost handler): it notifies onContextLostObservable,
+  // re-initializes the engine with a NEW device (this._device = device in initAsync),
+  // then notifies onContextRestoredObservable. The renderer must recover against that
+  // new device — never the lost one. This test drives that exact sequence; the probe in
+  // the job evidence runs it against a real WebGPU device on physical hardware.
   const lost = new FakeObservable()
   const restored = new FakeObservable()
   const engine = new NullEngine()
@@ -693,4 +694,36 @@ test('renderer rebuilds against the fresh device Babylon restores after a WebGPU
     renderer.dispose()
     engine.dispose()
   }
+})
+
+test('a repeated or disposed-state WebGPU device-loss notification is handled once', async () => {
+  // A device lost after the renderer moved on (or after disposal) must not run the
+  // loss handling again: the engine-level observable can only notify a loss that is
+  // either current or already handled.
+  const lost = new FakeObservable()
+  const restored = new FakeObservable()
+  const engine = new NullEngine()
+  engine.onContextLostObservable = lost
+  engine.onContextRestoredObservable = restored
+  const callbacks = []
+  const renderer = new NoisemakerRenderer(engine, {
+    onContextLost: () => callbacks.push('lost')
+  })
+  renderer.pipeline = { dispose: (options) => callbacks.push(['pipeline.dispose', options]) }
+  renderer.backend = { destroy: (options) => callbacks.push(['backend.destroy', options]) }
+
+  lost.notify()
+  lost.notify()
+  assert.deepEqual(callbacks, [
+    ['pipeline.dispose', { backendLost: true }],
+    'lost'
+  ])
+
+  renderer.dispose()
+  assert.deepEqual(callbacks, [
+    ['pipeline.dispose', { backendLost: true }],
+    'lost',
+    ['backend.destroy', { abandonRawResources: true }]
+  ])
+  engine.dispose()
 })
