@@ -643,12 +643,11 @@ test('Babylon frame export rejects noncanonical descriptors before allocating GP
 })
 
 test('renderer rebuilds against the fresh device Babylon restores after a WebGPU device loss', async () => {
-  // Babylon's WebGPUEngine owns the device-loss contract (@babylonjs/core ^9.13.0,
-  // webgpuEngine device.lost handler): it notifies onContextLostObservable,
-  // re-initializes the engine with a NEW device (this._device = device in initAsync),
-  // then notifies onContextRestoredObservable. The renderer must recover against that
-  // new device — never the lost one. This test drives that exact sequence; the probe in
-  // the job evidence runs it against a real WebGPU device on physical hardware.
+  // Babylon's WebGPUEngine owns the device-loss contract (webgpuEngine device.lost
+  // handler): it notifies onContextLostObservable, re-initializes the engine with a
+  // NEW device (this._device = device in initAsync), then notifies
+  // onContextRestoredObservable. The renderer must recover against that new device —
+  // never the lost one. This test drives that exact sequence.
   const lost = new FakeObservable()
   const restored = new FakeObservable()
   const engine = new NullEngine()
@@ -696,10 +695,9 @@ test('renderer rebuilds against the fresh device Babylon restores after a WebGPU
   }
 })
 
-test('a repeated or disposed-state WebGPU device-loss notification is handled once', async () => {
-  // A device lost after the renderer moved on (or after disposal) must not run the
-  // loss handling again: the engine-level observable can only notify a loss that is
-  // either current or already handled.
+test('a repeated WebGPU device-loss notification is handled once', async () => {
+  // A repeated device-loss notification must not run the loss handling again:
+  // while a loss is already being handled, handling is idempotent.
   const lost = new FakeObservable()
   const restored = new FakeObservable()
   const engine = new NullEngine()
