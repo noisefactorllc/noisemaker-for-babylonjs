@@ -48,7 +48,6 @@ export class NoisemakerRenderer {
     this._onContextLost = options.onContextLost || null
     this._onContextRestored = options.onContextRestored || null
     this._onError = options.onError || null
-    this._lostDevices = new Set()
     this._contextLostObserver = this.engine?.onContextLostObservable?.add?.(() => this._handleContextLost()) ?? null
     this._contextRestoredObserver = this.engine?.onContextRestoredObservable?.add?.(() => {
       this._handleContextRestored().catch(error => this._reportError(error))
@@ -104,7 +103,6 @@ export class NoisemakerRenderer {
     this.backend = backend
     this.graph = graph
     this.pipeline = pipeline
-    this._watchDeviceLoss(pipeline)
     this._outputTexture = backend.textures.get(this._outId).thin
 
     if (previousPipeline && previousPipeline !== pipeline) {
@@ -165,36 +163,6 @@ export class NoisemakerRenderer {
     this._outputTexture = null
     try { deadPipeline?.dispose?.({ backendLost: true }) } catch (error) { this._reportError(error) }
     try { this._onContextLost?.() } catch (error) { this._reportError(error) }
-  }
-
-  /**
-   * @private Watch the WebGPU device of the newly current pipeline. A lost device
-   * (a GPU process exit, a driver reset, device.destroy()) is never restored, and
-   * the engine fires no context event for it: the pipeline kept rendering on the
-   * dead device and every read of the output came back empty. Route the loss
-   * through the same handling as a lost WebGL context, then rebuild the pipeline.
-   * A device lost after the renderer moved to another pipeline changes nothing.
-   * @param {object} pipeline - The pipeline just made current
-   */
-  _watchDeviceLoss (pipeline) {
-    const device = pipeline?.backend?.device
-    if (!device?.lost?.then || this._lostDevices.has(device)) return
-    device.lost.then((info) => {
-      // Remember the dead device: a rebuilt pipeline on the same engine would
-      // rewatch an already-lost device and recover in a loop. A fresh engine
-      // brings a fresh device object and is watched again.
-      this._lostDevices.add(device)
-      if (this._disposed || this.pipeline !== pipeline) return
-      this._handleDeviceLost(`WebGPU device lost: ${info?.message || info?.reason || 'unknown reason'}`)
-    })
-  }
-
-  /** @private Stop on a lost WebGPU device, notify the host and rebuild the pipeline
-   * (the device is never restored, so the renderer drives its own recovery). */
-  _handleDeviceLost (message) {
-    console.warn(`[NoisemakerRenderer] ${message}`)
-    this._handleContextLost()
-    this._handleContextRestored().catch(error => this._reportError(error))
   }
 
   /** @private Release Babylon-managed remnants, then rebuild against the restored context. */
