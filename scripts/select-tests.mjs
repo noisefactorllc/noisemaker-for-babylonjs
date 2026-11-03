@@ -62,12 +62,27 @@ const matchesToken = (body, token) => new RegExp(`(?:\\b|(?<=[a-z0-9]))${token.r
 const unmapped = []
 for (const path of changed) {
   if (infra.includes(path)) continue
-  const tokens = tokensFor(path)
   let hit = false
-  for (const f of tests) {
-    if (matchesToken(bodies.get(f), path) || tokens.some(t => matchesToken(bodies.get(f), t))) {
-      selected.add(`test/${f}`)
-      hit = true
+  if (path.startsWith('parity/out/')) {
+    // Rendered parity artifacts (goldens, candidates, reports) are outputs of the
+    // parity pipeline; no test names them. The suite's coverage binding for them is
+    // test/coverage-map.test.js, which re-derives the committed coverage map from the
+    // ledger these renders feed, plus test/render-candidate.test.js, which exercises
+    // the mint path's bundle-freshness contract. Map every parity/out path to those
+    // tests so a golden refresh cannot pass focused selection by omission.
+    for (const f of ['coverage-map.test.js', 'render-candidate.test.js']) {
+      if (tests.includes(f)) {
+        selected.add(`test/${f}`)
+        hit = true
+      }
+    }
+  } else {
+    const tokens = tokensFor(path)
+    for (const f of tests) {
+      if (matchesToken(bodies.get(f), path) || tokens.some(t => matchesToken(bodies.get(f), t))) {
+        selected.add(`test/${f}`)
+        hit = true
+      }
     }
   }
   if (!hit) unmapped.push(path)

@@ -1,7 +1,7 @@
 // upstream-shader-patches.mjs — port-owned GLSL patches for the vendored engine.
 //
-// This port consumes the PUBLISHED engine pinned in vendor/fetch.sh (currently 1.0.320,
-// build 06070900). The guards below retain the earlier 1.0.271 shader sources.
+// This port consumes the PUBLISHED engine pinned in vendor/fetch.sh (currently 1.0.321,
+// build 67d6e44c). The guards below retain the earlier 1.0.271 shader sources.
 // Upstream noisemaker 5976b7a6..a1a3fa2a changed the WebGL2 GLSL of the
 // effects listed below (commit map):
 //
@@ -53,6 +53,10 @@
 // ternaries in classicNoisedeck/noise — frames are unchanged, and upstream's noise GLSL
 // otherwise already equals this file's `to` target, so the noise guard's `to` now holds
 // the published 1.0.312 text and application stays a guarded no-op at this pin.
+// The 1.0.321 engine (build 67d6e44c) changes no guarded GLSL: its engine-side change stops
+// disposed canvas renderers from restarting after context loss — renderer lifecycle only — so
+// the guards stay no-ops at this pin (test/upstream-shader-patches.test.js re-checks every
+// guarded segment against the published bundle at boot).
 // Recognized older shader sources are patched before registration by vendor/engine.mjs.
 //
 // Tile sync d0727f90/6cb1a3c3: full-image sampling and zoom tap bounds in
