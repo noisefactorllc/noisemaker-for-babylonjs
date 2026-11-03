@@ -213,6 +213,14 @@ export class BabylonBackend {
 
   getName () { return 'Babylon' }
 
+  /**
+   * The underlying WebGPU device when the engine runs WebGPU (null otherwise).
+   * Mirrors the reference backends' `device`, whose `lost` promise the renderer
+   * watches: a GPU process exit or a driver reset resolves it and fires no
+   * context event on the canvas.
+   */
+  get device () { return this.engine?._device ?? null }
+
   // Record an unknown texture-format rgba8 fallback as a structured diagnostic.
   // The legacy silent fallback is unchanged; the record is deduplicated
   // per format string. An absent format is the default, not a fallback.

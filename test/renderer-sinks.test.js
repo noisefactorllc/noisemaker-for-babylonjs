@@ -641,3 +641,89 @@ test('Babylon frame export rejects noncanonical descriptors before allocating GP
     assert.equal(gl.calls.some(call => call[0] === 'createShader'), false)
   }
 })
+
+test('renderer routes a lost WebGPU device through context-loss handling and rebuilds', async () => {
+  let deviceLostResolve
+  const deviceLost = new Promise(resolve => { deviceLostResolve = resolve })
+  const engine = new NullEngine()
+  engine._device = { lost: deviceLost }
+  const callbacks = []
+  let finishRecovery
+  const recoveryFinished = new Promise(resolve => { finishRecovery = resolve })
+  class TrackingPipeline {
+    constructor (_graph, backend) { this.backend = backend }
+    async init () {}
+    dispose (options) { callbacks.push(['pipeline.dispose', options]) }
+  }
+  const renderer = new NoisemakerRenderer(engine, {
+    Pipeline: TrackingPipeline,
+    onContextLost: () => callbacks.push('lost'),
+    onContextRestored: () => { callbacks.push('restored'); finishRecovery() }
+  })
+
+  try {
+    await renderer.loadGraph({ textures: {} }, { size: 64 })
+    const deadPipeline = renderer.pipeline
+    deviceLostResolve({ reason: 'destroyed' })
+    await recoveryFinished
+
+    assert.notEqual(renderer.pipeline, deadPipeline)
+    assert.equal(renderer._isContextLost, false)
+    assert.deepEqual(callbacks, [
+      ['pipeline.dispose', { backendLost: true }],
+      'lost',
+      'restored'
+    ])
+  } finally {
+    renderer.dispose()
+    engine.dispose()
+  }
+})
+
+test('a device lost after the renderer moved to another pipeline changes nothing', async () => {
+  let deviceLostResolve
+  const deviceLost = new Promise(resolve => { deviceLostResolve = resolve })
+  const engine = new NullEngine()
+  const renderer = new NoisemakerRenderer(engine, {})
+  const staleBackend = {
+    device: { lost: deviceLost },
+    destroy: () => { throw new Error('must not destroy') }
+  }
+  const stalePipeline = {
+    backend: staleBackend,
+    dispose: () => { throw new Error('must not dispose') }
+  }
+  renderer.pipeline = stalePipeline
+  renderer._watchDeviceLoss(stalePipeline)
+  renderer.pipeline = { id: 'current' }
+
+  deviceLostResolve({ reason: 'destroyed' })
+  await new Promise(resolve => setTimeout(resolve, 0))
+
+  assert.equal(renderer.pipeline.id, 'current')
+  assert.equal(renderer._isContextLost, false)
+  renderer.dispose()
+  engine.dispose()
+})
+
+test('a device lost after renderer disposal changes nothing', async () => {
+  let deviceLostResolve
+  const deviceLost = new Promise(resolve => { deviceLostResolve = resolve })
+  const engine = new NullEngine()
+  const renderer = new NoisemakerRenderer(engine, {
+    onContextLost: () => { throw new Error('must not notify') }
+  })
+  renderer.pipeline = {
+    backend: { device: { lost: deviceLost } },
+    dispose: () => { throw new Error('must not dispose') }
+  }
+  renderer._watchDeviceLoss(renderer.pipeline)
+  renderer.dispose()
+
+  deviceLostResolve({ message: 'device lost' })
+  await new Promise(resolve => setTimeout(resolve, 0))
+
+  assert.equal(renderer._disposed, true)
+  assert.equal(renderer._isContextLost, false)
+  engine.dispose()
+})
