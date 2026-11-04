@@ -72,16 +72,6 @@
 // seed, nearest-texel fetch) so both upstream backends agree; that effect is not guarded and
 // the published bundle carries the new shaders. 1.0.329..1.0.335 change only the demo, the
 // test runner and the vendored harness. The guards stay no-ops at this pin.
-//
-// Upstream 8899f295..8e0e2b36 (the current sync range) reworks filter/feedback's hue
-// rotation so both upstream backends compute the shift in the same correctly rounded
-// steps (pin/productError/divRound helpers; the shift is computed on its own and added
-// before fract). No published engine release carries that commit — 1.0.337 (build
-// 8899f295) predates it — so the pin stays at 1.0.336, whose bundle still carries the
-// pre-sync hue map; this file patches it before registration, and
-// test/upstream-shader-patches.test.js re-checks the guarded segment at boot. The
-// range's other commit, 8899f295, edits only filter/scatter's help.md, which no
-// shipped artifact here carries.
 // Recognized older shader sources are patched before registration by vendor/engine.mjs.
 //
 // Tile sync d0727f90/6cb1a3c3: full-image sampling and zoom tap bounds in
