@@ -1,7 +1,7 @@
 // upstream-shader-patches.mjs — port-owned GLSL patches for the vendored engine.
 //
-// This port consumes the PUBLISHED engine pinned in vendor/fetch.sh (currently 1.0.323,
-// build 7153bec4). The guards below retain the earlier 1.0.271 shader sources.
+// This port consumes the PUBLISHED engine pinned in vendor/fetch.sh (currently 1.0.328,
+// build 71771987). The guards below retain the earlier 1.0.271 shader sources.
 // Upstream noisemaker 5976b7a6..a1a3fa2a changed the WebGL2 GLSL of the
 // effects listed below (commit map):
 //
@@ -58,6 +58,15 @@
 // rebuilds on a fresh canvas when the WebGPU device is lost — renderer lifecycle only — so
 // the guards stay no-ops at this pin (test/upstream-shader-patches.test.js re-checks every
 // guarded segment against the published bundle at boot).
+// The 1.0.324..1.0.328 engines (the 7153bec4..71771987 sync range) change no guarded GLSL
+// either. 1.0.325 fixes synth/polygon's zero-smoothing edge: the published GLSL and WGSL now
+// take the hard-edge limit of the smoothstep directly; that effect is not guarded, the
+// published bundle carries the new shaders, and their WebGL2 output is byte-identical to the
+// old smoothing path. 1.0.327/1.0.328 rework the canvas texture upload so the engine never
+// asks a source canvas for a context (the caller passes the 2D context it already holds) and
+// a canvas with no context uploads as transparent black — runtime only. The guards stay
+// no-ops at this pin (test/upstream-shader-patches.test.js re-checks every guarded segment
+// against the published bundle at boot).
 // Recognized older shader sources are patched before registration by vendor/engine.mjs.
 //
 // Tile sync d0727f90/6cb1a3c3: full-image sampling and zoom tap bounds in
