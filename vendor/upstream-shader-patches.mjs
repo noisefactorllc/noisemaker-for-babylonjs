@@ -1,7 +1,7 @@
 // upstream-shader-patches.mjs — port-owned GLSL patches for the vendored engine.
 //
-// This port consumes the PUBLISHED engine pinned in vendor/fetch.sh (currently 1.0.336,
-// build 7aa54b54). The guards below retain the earlier 1.0.271 shader sources.
+// This port consumes the PUBLISHED engine pinned in vendor/fetch.sh (currently 1.0.338,
+// build 8e0e2b36). The guards below retain the earlier 1.0.271 shader sources.
 // Upstream noisemaker 5976b7a6..a1a3fa2a changed the WebGL2 GLSL of the
 // effects listed below (commit map):
 //
@@ -72,6 +72,11 @@
 // seed, nearest-texel fetch) so both upstream backends agree; that effect is not guarded and
 // the published bundle carries the new shaders. 1.0.329..1.0.335 change only the demo, the
 // test runner and the vendored harness. The guards stay no-ops at this pin.
+//
+// The 1.0.337..1.0.338 engines (the 8899f295..8e0e2b36 sync range) end with 1.0.338
+// (build 8e0e2b36), which carries the filter/feedback hue-shift rework natively, so the
+// guard below is a guarded no-op at this pin. 1.0.337 (build 8899f295) predates the fix
+// and still matches the guard's `from` target.
 // Recognized older shader sources are patched before registration by vendor/engine.mjs.
 //
 // Tile sync d0727f90/6cb1a3c3: full-image sampling and zoom tap bounds in
