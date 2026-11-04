@@ -63,3 +63,16 @@ test('shape fat graphs use the upstream boolean PRNG sign fold', async () => {
   assert.ok(sources.includes('mix(-p * 2.0 + 1.0, p * 2.0, greaterThanEqual(p, vec3(0.0)))'))
   assert.ok(!sources.includes('if (p.x >= 0.0)'))
 })
+
+test('patched GLSL reaches compiled fat graphs (filter/feedback hue shift)', async () => {
+  // 8e0e2b36: the hue rotation's shift is computed on its own with a correctly
+  // rounded division (pin/productError/divRound), so ANGLE and Dawn add the same
+  // value to the hue and refraction no longer turns the 1-ulp difference into a
+  // different texel on later frames.
+  const fat = await exportFatGraph('search synth, filter, mixer\nnoise(seed: 1, scaleX: 50, scaleY: 50).feedback().write(o0)\nrender(o0)')
+  const sources = Object.values(fat.programs).map(p => `${p.glsl || ''}${p.fragment || ''}`).join('\n')
+  assert.ok(sources.includes('float hueShift = pin(-0.05 + divRound(pin(0.1 * (hueRotation + 180.0)), 360.0));'),
+    'compiled fat graph embeds the patched feedback hue shift')
+  assert.ok(!sources.includes('mod(hsv[0] + map(hueRotation, -180.0, 180.0, -0.05, 0.05), 1.0)'),
+    'compiled fat graph no longer embeds the pre-sync hue map')
+})
