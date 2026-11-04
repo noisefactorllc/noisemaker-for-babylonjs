@@ -8,7 +8,7 @@
 # a core ESM engine bundle + per-effect "mini-bundles" (production pre-fetches these).
 #
 # The default VERSION below is the DOCUMENTED engine revision this port is verified against
-# (build `1faed961`, v1.0.340). Bumping it
+# (build `8e0e2b36`, v1.0.338). Bumping it
 # is an authority change: re-run `NM_DUAL=1 bash parity/sweep.sh` and `node tools/coverage-map.mjs`,
 # and commit the ledger, goldens and coverage map with the new pin.
 #
