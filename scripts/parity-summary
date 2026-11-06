@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# scripts/parity-summary — render and grade parity cases, print a PARITY-SUMMARY line.
+#
+# With case ids as arguments, renders and counts only those; with no arguments, the whole
+# current-program roster (node parity/current-programs.mjs). Rendering and grading go
+# through parity/sweep.sh: one browser session, committed goldens reused (never re-minted),
+# byte-exact grading at tol 0. The ledger is always written to a temporary file, so the
+# canonical parity/ledger.json is never touched by this entrypoint.
+#
+# The last output line is:
+# PARITY-SUMMARY {"expected":N,"executed":N,"exact":N,"strict":N,"near":N,"defer":N,"skip":N,"fail":N,"missing":N}
+#
+# Under this port's graded policy every PASS is byte-identical, so exact counts the PASS
+# cases and strict and near are always 0; a FAIL is a fail; a requested case with no grade
+# line is missing. defer and skip are always 0: this gate has no deferral or skip path.
+# Exit 0 only when executed equals expected and fail and missing are 0.
+set -uo pipefail
+HERE="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$HERE"
+
+if [ "$#" -gt 0 ]; then
+  names=("$@")
+else
+  mapfile -t names < <(node parity/current-programs.mjs)
+fi
+expected=${#names[@]}
+if [ "$expected" -eq 0 ]; then
+  echo 'PARITY-SUMMARY {"expected":0,"executed":0,"exact":0,"strict":0,"near":0,"defer":0,"skip":0,"fail":0,"missing":0}'
+  exit 1
+fi
+
+tmpout="$(mktemp)"
+ledger="$(mktemp -u /tmp/parity-summary-ledger.XXXXXX).json"
+sweep_rc=0
+LEDGER_PATH="$ledger" bash parity/sweep.sh "${names[@]}" >"$tmpout" 2>&1 || sweep_rc=$?
+
+pass=$(grep -c '^\[PASS\]' "$tmpout" || true)
+fail=$(grep '^\[FAIL\]' "$tmpout" | grep -vc 'could not write sweep ledger' || true)
+executed=$((pass + fail))
+missing=$((expected - executed))
+cat "$tmpout"
+if [ "$sweep_rc" -ne 0 ]; then
+  echo "parity-summary: sweep exited $sweep_rc" >&2
+fi
+echo "PARITY-SUMMARY {\"expected\":$expected,\"executed\":$executed,\"exact\":$pass,\"strict\":0,\"near\":0,\"defer\":0,\"skip\":0,\"fail\":$fail,\"missing\":$missing}"
+rm -f "$tmpout" "$ledger"
+if [ "$sweep_rc" -ne 0 ] || [ "$fail" -ne 0 ] || [ "$missing" -ne 0 ]; then
+  exit 1
+fi
