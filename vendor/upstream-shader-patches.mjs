@@ -74,16 +74,6 @@
 // test runner and the vendored harness. The guards stay no-ops at this pin.
 // Recognized older shader sources are patched before registration by vendor/engine.mjs.
 //
-// The 1.0.344 (build 7e3c44eb) engine corrects filter/craquelure and filter/scatter help
-// text only. The 1.0.345 (build 6f98d26a) engine wraps the hsv2rgb last hue sector in 18
-// effects: the unreachable black branch becomes the sector color, so a hue that reaches
-// the conversion at exactly 1.0 renders red instead of black under Mesa's fract() folding.
-// classicNoisedeck/effects and classicNoisedeck/noise carry that GLSL natively at this pin;
-// their guards' `to` text now holds the published 1.0.345 source and application stays a
-// guarded no-op (test/upstream-shader-patches.test.js re-checks every guarded segment at
-// boot). The other 16 changed effects are not guarded; the published bundles carry the new
-// GLSL directly. Frames are byte-identical on ANGLE WebGL2, so no golden is re-minted.
-//
 // Tile sync d0727f90/6cb1a3c3: full-image sampling and zoom tap bounds in
 // classicNoisedeck/effects; glyphMap detects the origin tile from image dimensions.
 // The runtime now supplies invFullResolution and aspectInv directly.
