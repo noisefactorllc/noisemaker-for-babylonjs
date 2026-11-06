@@ -71,8 +71,8 @@ test('patched GLSL reaches compiled fat graphs (filter/feedback hue shift)', asy
     'compiled fat graph embeds the patched feedback hue shift')
   assert.ok(!sources.includes('mod(hsv[0] + map(hueRotation, -180.0, 180.0, -0.05, 0.05), 1.0)'),
     'compiled fat graph no longer embeds the pre-sync hue map')
-  // 8395d1da: hsv2rgb's last sector also takes h = 1.0 (what fract() returns for a
-  // hue just below a whole number), so the hue wraps instead of rendering black.
-  assert.ok(sources.includes('The last sector also takes h = 1.0'),
-    'compiled fat graph embeds the wrapped last hue sector')
+  assert.ok(sources.includes('rgb = vec3(c, 0.0, x)'),
+    'compiled fat graph embeds the wrapped last hue sector (8395d1da)')
+  assert.ok(!sources.includes('rgb = vec3(0.0, 0.0, 0.0)'),
+    'compiled fat graph no longer renders the unreachable black sector')
 })
