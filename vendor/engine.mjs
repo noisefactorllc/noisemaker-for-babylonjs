@@ -55,7 +55,7 @@ export async function bootEngine () {
 
   const core = await import(pathToFileURL(CORE).href)
   const {
-    compileGraph, Pipeline, WebGL2Backend, CanvasRenderer, Effect, getEffect,
+    compileGraph, Pipeline, WebGL2Backend, Backend, CanvasRenderer, Effect, getEffect,
     registerEffect, registerOp, registerStarterOps, mergeIntoEnums, stdEnums, sanitizeEnumName
   } = core
 
@@ -146,6 +146,6 @@ export async function bootEngine () {
 
   if (mergeIntoEnums && Object.keys(allChoices).length) await mergeIntoEnums(allChoices)
 
-  _booted = { compileGraph, Pipeline, WebGL2Backend, CanvasRenderer, Effect, getEffect }
+  _booted = { compileGraph, Pipeline, WebGL2Backend, Backend, CanvasRenderer, Effect, getEffect }
   return _booted
 }
