@@ -1,7 +1,7 @@
 // upstream-shader-patches.mjs — port-owned GLSL patches for the vendored engine.
 //
-// This port consumes the PUBLISHED engine pinned in vendor/fetch.sh (currently 1.0.350,
-// build db2173e3). The guards below retain the earlier 1.0.271 shader sources.
+// This port consumes the PUBLISHED engine pinned in vendor/fetch.sh.
+// The guards below retain the earlier 1.0.271 shader sources.
 // Upstream noisemaker 5976b7a6..a1a3fa2a changed the WebGL2 GLSL of the
 // effects listed below (commit map):
 //

@@ -7,8 +7,7 @@
 # checkout, no reference to anything in `..`. This is the same artifact noisedeck.app ships:
 # a core ESM engine bundle + per-effect "mini-bundles" (production pre-fetches these).
 #
-# The default VERSION below is the DOCUMENTED engine revision this port is verified against
-# (build `db2173e3`, v1.0.350). Bumping it
+# The default VERSION below is the DOCUMENTED engine revision this port is verified against. Bumping it
 # is an authority change: re-run `NM_DUAL=1 bash parity/sweep.sh` and `node tools/coverage-map.mjs`,
 # and commit the ledger, goldens and coverage map with the new pin.
 #
