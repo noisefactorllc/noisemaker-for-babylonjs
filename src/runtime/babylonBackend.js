@@ -714,6 +714,14 @@ export class BabylonBackend {
 
   // ---- programs --------------------------------------------------------------
 
+  /**
+   * Delete a compiled program that no graph renders with.
+   * @param {object} program - An entry of this.programs
+   */
+  releaseProgram (program) {
+    if (program?.wrapper) program.wrapper.dispose?.()
+  }
+
   async compileProgram (id, spec) {
     // The reference `blit` program samples a `v_texCoord` varying emitted by the reference
     // fullscreen vertex; Babylon's EffectRenderer uses its own vertex (vUV), so that varying
