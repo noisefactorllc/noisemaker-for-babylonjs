@@ -178,10 +178,9 @@ jobs:
       - name: Grade (tolerance 2.001, SSIM 0.98 — corpus/sweep.sh gates)
         if: steps.feed.outputs.status != 'SKIP'
         id: grade
-        # A FAIL is recorded with its cause (see the record step + merged
-        # ledger) instead of failing the job silently; the report job
-        # aggregates outcomes and fails only on missing/causeless rows.
-        continue-on-error: true
+        # A failing grade fails this job. The record step below still writes
+        # its outcome with its cause, and the report job fails the run on any
+        # FAIL or FAILED composition.
         run: |
           parity/.venv/bin/python parity/compare.py \
             "parity/out/${{ matrix.name }}.golden.png" \
@@ -310,6 +309,18 @@ jobs:
           d = json.load(open(p[0]))
           for r in d["rows"]:
               print(r["status"], r["program"], r.get("max_abs_diff"), r.get("ssim"), r.get("cause", ""))'
+      # Every fetched composition has an outcome (checked above). One that failed
+      # its grade fails the run; one the reference compiler rejects stays SKIP
+      # with its cause.
+      - name: Fail on any composition that failed its grade
+        run: |
+          python3 -c '
+          import json, glob, os, sys
+          p = glob.glob(os.path.join(os.environ["RUNNER_TEMP"], "**", "corpus-merged.json"), recursive=True)
+          failed = json.load(open(p[0]))["failed"]
+          for r in failed:
+              print("FAILED", r["program"] + ":", r.get("cause"))
+          sys.exit(1 if failed else 0)'
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
