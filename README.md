@@ -119,6 +119,43 @@ const { cubeTexture } = await nm.renderCubemap({ size: 512 })
 // wrap cubeTexture in a Babylon CubeTexture for scene.reflectionTexture / a skybox
 ```
 
+Connect a program's inputs through `nm.backend` and `nm.pipeline` once `loadGraph` resolves.
+`NoisemakerRenderer` has no input methods of its own:
+
+```js
+import { MidiState, AudioState } from './vendor/noisemaker/noisemaker-shaders-core.esm.js'
+
+// media(): an image, canvas, OffscreenCanvas, ImageBitmap, video or VideoFrame.
+// Upload each video frame again.
+const { width, height } = nm.backend.updateTextureFromSource('imageTex_step_0', video, { flipY: false })
+nm.setUniform('imageSize', [width, height])
+// text(): draw the overlay into an output-sized canvas yourself.
+nm.backend.updateTextureFromSource('textTex_step_1', overlayCanvas, { flipY: true })
+// roll() and midi(): feed the state with midi.handleMessage(bytes)
+// or midi.channels[ch].noteOn(key, velocity).
+const midi = new MidiState()
+nm.pipeline.setMidiState(midi)
+// audio(): feed the state with setBands(), setRaw() or updateFromAnalyser().
+nm.pipeline.setAudioState(new AudioState())
+// meshLoader(): RGBA Float32Arrays of width * height * 4, one texel per triangle-list vertex.
+nm.backend.uploadMeshData('mesh0', positions, normals, uvs, meshWidth, meshHeight, vertexCount)
+```
+
+- A texture id is `imageTex_step_<N>` or `textTex_step_<N>`, where N is the call's position among
+  all calls in the program, counted from 0 with `write` calls included. Find it in the fat graph's
+  `passes[].inputs.imageTex` or `inputs.textTex`.
+- In the mesh data, a position texel is xyz with w = 1, a normal is xyz and a uv is xy. Fill the
+  unused texels with zeros: every texel is drawn, whatever vertexCount says, and a triangle of zero
+  texels draws nothing.
+- `nm.backend.destroyTexture(id)` disconnects a `media` or `text` texture, and
+  `setMidiState(null)` or `setAudioState(null)` disconnects MIDI or audio.
+- Each `loadGraph`, and each WebGL context restore, makes a new backend and pipeline. Connect the
+  inputs again after each one; the `onContextRestored` option runs after a restore.
+- An input that is not connected reads a 1×1 transparent black texture (`media`, `text`), an empty
+  note grid (`roll`) or an empty mesh (`meshLoader`; `meshRender` then draws no triangles over its
+  background). `midi()` and `audio()` automation take the `min` of that call, scaled from 0 to 1
+  onto the parameter's range. Nothing warns.
+
 Two runnable demos (`node examples/build.mjs`, then open the HTML):
 
 - **`examples/index.html`** — a Noisemaker effect as a live texture on a spinning box.

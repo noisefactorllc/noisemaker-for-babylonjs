@@ -77,6 +77,14 @@ material.emissiveTexture = tex
 `index.html` takes the simplest route: it draws `nm.outputTexture` to the canvas with a Babylon
 `EffectRenderer` fullscreen quad, with no scene and no camera.
 
+`index.html` connects no inputs. In it, the image of `media` and the overlay of `text` read
+transparent black, `roll` reads an empty note grid, `meshRender` draws no triangles over its
+background, and a parameter automated with `midi()` or `audio()` takes the `min` of that call,
+scaled from 0 to 1 onto the parameter's range. In your own scene, connect them through `nm.backend`
+and `nm.pipeline` after `loadGraph` resolves, as the Noisemaker for Babylon.js
+[README](https://github.com/noisefactorllc/noisemaker-for-babylonjs#use-it-in-your-own-babylon-project)
+shows. Import `MidiState` and `AudioState` from `./vendor/noisemaker/noisemaker-shaders-core.esm.min.js`.
+
 The renderer is **square** — `size` is a single number — so the page keeps a 1:1 canvas rather than
 stretching the render across a wide window.
 
