@@ -96,7 +96,8 @@ sims + `reactionDiffusion`/`navierStokes` + the **full 3D-volume raymarch** (7 s
 polygon-zone router** (std140 UBO — see below). Because candidate and golden share the
 WebGL2/ANGLE/Metal driver, parity is exact — **zero effects need relaxed tolerances**, and the stateful/continuous/agent effects (including `reactionDiffusion`) converge
 to a bit-identical steady state when evolved 1800 frames (~30 s; the `EVOLVE` map in `render-batch.mjs`,
-which push CI runs at 120 frames and the weekly CI run at 1800). The 4
+which evolves 120 frames by default and in a manual CI run, and 1800 in the weekly run and a `deep`
+manual run; push CI runs no parity sweep). The 4
 external-input effects grade through deterministic host fixtures on their real input path:
 **media** (`media_image`, an uploaded image), **text** (`text_glyphs`, an overlay canvas), **roll**
 (`roll_midi`, the engine's `MidiState`) and **meshLoader** (`mesh_obj`, an OBJ the engine parses and

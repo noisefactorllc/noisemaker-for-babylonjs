@@ -139,17 +139,17 @@ re-checked by `test/coverage-map.test.js`) binds each effect to the programs tha
   across 19 effects ([`parity/mode-coverage.json`](parity/mode-coverage.json)). This is
   representative coverage, not every combination of parameters.
 - **Particle/agent sims and fluid (navier–stokes)** match frame for frame as they evolve (the
-  `EVOLVE` map in `parity/render-batch.mjs`: 120 frames on push, 1800 frames to a steady state in
-  the weekly run), including the perspective camera mode and
+  `EVOLVE` map in `parity/render-batch.mjs`: 120 frames by default and in a manual CI run, 1800 frames
+  to a steady state in the weekly run and a `deep` manual run), including the perspective camera mode and
   depth-sorted/defocus billboard rendering.
 - **3D-volume raymarch, landscape rendering, and cubemap bake** match, usable as Babylon skyboxes
   and PBR reflections.
 - **All four external-input effects** match through their real host-input path, with
   deterministic host fixtures: `media` (host image upload), `text` (host overlay-canvas upload),
   `roll` (the engine's own `MidiState` fed through the MIDI note-grid path) and `meshLoader` (the
-  engine's own OBJ parser and packer feeding the host-uploaded mesh surfaces). The no-input
-  fallback programs of `media`, `text` and `roll` are also graded at the same strict bounds in
-  [`parity/ledger.json`](parity/ledger.json).
+  engine's own OBJ parser and packer feeding the host-uploaded mesh surfaces). The plain
+  `media`, `text` and `roll` programs are graded too, fed the same host fixtures, at the same strict
+  bounds in [`parity/ledger.json`](parity/ledger.json).
 - **The live NoiseBLASTER! corpus**: `.github/workflows/corpus.yml` fetches the 20 most recent
   shared compositions once a week and grades each one, evolved 1800 frames, at the corpus
   gate (tolerance 2.001, SSIM 0.98).
