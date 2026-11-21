@@ -101,7 +101,7 @@ manual run; push CI runs no parity sweep). The 4
 external-input effects grade through deterministic host fixtures on their real input path:
 **media** (`media_image`, an uploaded image), **text** (`text_glyphs`, an overlay canvas), **roll**
 (`roll_midi`, the engine's `MidiState`) and **meshLoader** (`mesh_obj`, an OBJ the engine parses and
-packs). Their no-input fallback programs are skipped by policy and counted as skips in the ledger.
+packs). The plain `media`, `text` and `roll` programs are graded too, fed the same host fixtures.
 
 **Beyond defaults: every mode of every artistic filter.** 101 (effect, mode) fixtures across 19
 effects — every enum/define-selected mode of `texture` (15), `hatch` (6), `morphology`

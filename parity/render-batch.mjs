@@ -20,9 +20,10 @@ import { currentPrograms } from './current-programs.mjs'
 // Effects that need TIME EVOLUTION rather than a pinned frame: continuous solvers (Gray-Scott /
 // Navier-Stokes) and the agent/points sims, stepped at the demo's natural rate (1/600 normalized
 // per 60fps frame over a 10s loop). Golden and candidate evolve the same frames, so any count
-// grades byte-exact. The default 120 frames (2 s) keeps push CI and local sweeps short; the weekly
-// deep run sets NM_EVOLVE_FRAMES=1800 (30 s), by which the chaotic transient has washed out to a
-// deterministic steady state. Goldens for these MUST be minted at the same frame count.
+// grades byte-exact. The default 120 frames (2 s) keeps local sweeps and a manual ci.yml run
+// short; push CI runs no parity sweep. The weekly ci.yml run and a `deep` manual run set
+// NM_EVOLVE_FRAMES=1800 (30 s), by which the chaotic transient has washed out to a deterministic
+// steady state. Goldens for these MUST be minted at the same frame count.
 const _EVO = { frames: Number(process.env.NM_EVOLVE_FRAMES) || 120, timestep: 0.0016667 }
 const EVOLVE = {
   reactionDiffusion: _EVO,
