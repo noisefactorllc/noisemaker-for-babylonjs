@@ -76,3 +76,17 @@ test('patched GLSL reaches compiled fat graphs (filter/feedback hue shift)', asy
   assert.ok(!sources.includes('rgb = vec3(0.0, 0.0, 0.0)'),
     'compiled fat graph no longer renders the unreachable black sector')
 })
+
+test('patched GLSL reaches compiled fat graphs (renderLandscape3d edge-tie faces)', async () => {
+  // 7f3721e9: a voxel ray that crosses two cell boundaries at one distance shows the
+  // first of those faces that the neighbors leave exposed (exposedFace), instead of
+  // the first crossed axis in y, x, z order decided inside the march loop.
+  const fat = await exportFatGraph('search synth, synth3d, render\n\nnoise(scaleX: 90, scaleY: 90, colorMode: mono, speed: 0).write(o1)\ngradient(type: fourCorners, color1: #006e94, color2: #24e4ff, color3: #bcff46, color4: #efffff).write(o2)\nheightmap3d(heightTex: read(o1), tex: read(o2)).renderLandscape3d(panY: -0.18).write(o0)\nrender(o0)')
+  const sources = Object.values(fat.programs).map(p => `${p.glsl || ''}${p.fragment || ''}`).join('\n')
+  assert.ok(sources.includes('vec3 exposedFace(ivec3 cell, bvec3 crossed,'),
+    'compiled fat graph embeds the patched landscape edge-tie face rule')
+  assert.ok(sources.includes('bool voxelOccupied(ivec3 cell)'),
+    'compiled fat graph embeds the patched landscape occupancy helper')
+  assert.ok(!sources.includes('bvec3 crossed = lessThanEqual(nextT, vec3(distance));'),
+    'compiled fat graph no longer decides the face inside the march loop')
+})
