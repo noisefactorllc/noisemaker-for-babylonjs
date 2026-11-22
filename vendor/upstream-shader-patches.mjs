@@ -72,12 +72,6 @@
 // seed, nearest-texel fetch) so both upstream backends agree; that effect is not guarded and
 // the published bundle carries the new shaders. 1.0.329..1.0.335 change only the demo, the
 // test runner and the vendored harness. The guards stay no-ops at this pin.
-// Upstream 7f3721e9 (no published engine release through 1.0.354 carries it) changes
-// render/renderLandscape3d's voxel edge-face rule: a ray that crosses two cell boundaries
-// at one distance now shows the first of those faces that the neighboring voxels leave
-// exposed, instead of the first crossed axis in y, x, z order. The pin stays at 1.0.351
-// and the GLSL delta ships as the patch below (the WGSL twin is out of scope — this port
-// has no WebGPU backend).
 // Recognized older shader sources are patched before registration by vendor/engine.mjs.
 //
 // Tile sync d0727f90/6cb1a3c3: full-image sampling and zoom tap bounds in

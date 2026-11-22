@@ -104,6 +104,24 @@ async function nmApplyExternalInputs (pipeline, backend, engine, fat, external, 
     pipeline.setUniform('imageSize', [width, height])
     applied.media = { texId: pass.inputs.imageTex, width, height }
   }
+  if (external.height) {
+    // Height-image fixture (upstream's voxel edge-tie test): the host paints the heightmap's
+    // height image (black background, one white full-height rect) and uploads it on the
+    // compiled heightmap pass's `heightTex` input — the same host path a read() of an
+    // unwritten surface takes.
+    const pass = fat.passes.find(p => p.effectFunc === 'heightmap3d' && p.inputs && p.inputs.heightTex)
+    if (!pass) throw new Error('external.height: no compiled heightmap3d pass (heightTex input) in this fat graph')
+    const texSize = external.height.size
+    const canvas = document.createElement('canvas')
+    canvas.width = texSize
+    canvas.height = texSize
+    const ctx = canvas.getContext('2d')
+    ctx.fillStyle = 'black'; ctx.fillRect(0, 0, texSize, texSize)
+    ctx.fillStyle = 'white'; ctx.fillRect(...external.height.fill)
+    const res = backend.updateTextureFromSource(pass.inputs.heightTex, canvas, { flipY: false })
+    if (!res || res.width === 0) throw new Error('external.height: updateTextureFromSource rejected the fixture canvas')
+    applied.height = { texId: pass.inputs.heightTex, size: texSize, fill: external.height.fill }
+  }
   if (external.text) {
     const pass = fat.passes.find(p => p.effectFunc === 'text' && p.inputs && p.inputs.textTex)
     if (!pass) throw new Error('external.text: no compiled text pass (textTex input) in this fat graph')
