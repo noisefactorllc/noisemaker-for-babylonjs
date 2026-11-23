@@ -90,3 +90,18 @@ test('patched GLSL reaches compiled fat graphs (renderLandscape3d edge-tie faces
   assert.ok(!sources.includes('bvec3 crossed = lessThanEqual(nextT, vec3(distance));'),
     'compiled fat graph no longer decides the face inside the march loop')
 })
+
+test('patched GLSL reaches compiled fat graphs (heightmap3d terrain proportions)', async () => {
+  // 478f94ea: the terrain keeps the frame's proportions inside the volume's square
+  // footprint — terrainSpan/terrainColumn/inTerrain sample each image over a centered span
+  // of whole, even column counts from the engine's aspect and aspectInv, and columns
+  // outside the terrain are empty.
+  const fat = await exportFatGraph('search synth, synth3d, render\n\nnoise(scaleX: 90, scaleY: 90, colorMode: mono, speed: 0).write(o1)\ngradient(type: fourCorners, color1: #006e94, color2: #24e4ff, color3: #bcff46, color4: #efffff).write(o2)\nheightmap3d(heightTex: read(o1), tex: read(o2)).renderLandscape3d(panY: -0.18).write(o0)\nrender(o0)')
+  const sources = Object.values(fat.programs).map(p => `${p.glsl || ''}${p.fragment || ''}`).join('\n')
+  assert.ok(sources.includes('ivec2 terrainSpan() {'),
+    'compiled fat graph embeds the patched terrain span rule')
+  assert.ok(sources.includes('bool inTerrain(ivec2 column)'),
+    'compiled fat graph embeds the patched terrain occupancy helper')
+  assert.ok(!sources.includes('ivec2 image = ivec2(column.x, volumeSize - 1 - column.y);'),
+    'compiled fat graph no longer maps the image across the whole footprint')
+})
