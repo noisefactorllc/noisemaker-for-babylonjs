@@ -78,16 +78,6 @@
 // frame's proportions on a frame that is not square. The heightGrid guard's `to` now holds
 // that published text and application stays a guarded no-op at this pin (the square-frame
 // output is unchanged; the WGSL twin is out of scope — this port has no WebGPU backend).
-// The 1.0.356 engine (build 75027859) predates upstream 478f94ea, and no published release
-// carries it yet: 478f94ea gives synth3d/heightmap3d's precompute the frame's proportions.
-// The terrain now keeps the frame's shape inside the volume's square footprint —
-// terrainSpan/terrainColumn/inTerrain sample each image over a centered span of whole, even
-// column counts taken from the engine's aspect and aspectInv, and columns outside the
-// terrain are empty; a square frame is unchanged. The pin stays at 1.0.356 and the GLSL
-// delta ships as the fail-closed synth3d/heightmap3d precompute entry below. The WGSL twin
-// is out of scope: this port has no WebGPU backend. When a published engine release carries
-// 478f94ea, this entry's `to` becomes that release's published text and application returns
-// to a guarded no-op.
 // Recognized older shader sources are patched before registration by vendor/engine.mjs.
 //
 // Tile sync d0727f90/6cb1a3c3: full-image sampling and zoom tap bounds in
