@@ -147,7 +147,8 @@ async function nmApplyExternalInputs (pipeline, backend, engine, fat, external, 
 }
 
 window.nmRunFatGraph = async function (fat, opts = {}) {
-  const size = opts.size || 256
+  // size is a number (square frame) or [width, height] (a frame that is not square).
+  const [size, sizeH] = Array.isArray(opts.size) ? opts.size : [opts.size || 256, opts.size || 256]
   const time = (opts.time ?? 0.25)
   const frames = opts.frames || 8
 
@@ -155,7 +156,7 @@ window.nmRunFatGraph = async function (fat, opts = {}) {
   // programs in sequence; disposed at the end to free the context for the next program.
   const canvas = document.createElement('canvas')
   canvas.width = size
-  canvas.height = size
+  canvas.height = sizeH
   document.body.appendChild(canvas)
 
   const engine = new Engine(canvas, false, {
@@ -172,7 +173,7 @@ window.nmRunFatGraph = async function (fat, opts = {}) {
   const pipeline = new Pipeline(graph, backend)
 
   try {
-    await pipeline.init(size, size)
+    await pipeline.init(size, sizeH)
     if (opts.tileRegion) pipeline.setTileRegion(opts.tileRegion)
     // Deterministic external-input fixtures: feed the real host-input path (media canvas /
     // glyph canvas / MIDI state / OBJ mesh) when this run requests it. No-op by default.
@@ -479,13 +480,14 @@ window.nmRunRendererContextRestore = async function (fat, opts = {}) {
 // instead of `BabylonBackend`. This is the purest parity test — identical engine, only the
 // backend differs — and it lets the harness mint its own goldens with no sibling checkout.
 window.nmRunFatGraphWebGL2 = async function (fat, opts = {}) {
-  const size = opts.size || 256
+  // size is a number (square frame) or [width, height] (a frame that is not square).
+  const [size, sizeH] = Array.isArray(opts.size) ? opts.size : [opts.size || 256, opts.size || 256]
   const time = (opts.time ?? 0.25)
   const frames = opts.frames || 8
 
   const canvas = document.createElement('canvas')
   canvas.width = size
-  canvas.height = size
+  canvas.height = sizeH
   document.body.appendChild(canvas)
   const gl = canvas.getContext('webgl2', {
     preserveDrawingBuffer: true, premultipliedAlpha: false, alpha: false,
@@ -496,7 +498,7 @@ window.nmRunFatGraphWebGL2 = async function (fat, opts = {}) {
   const graph = reconstruct(fat)
   const pipeline = new Pipeline(graph, backend)
   try {
-    await pipeline.init(size, size)
+    await pipeline.init(size, sizeH)
     if (opts.tileRegion) pipeline.setTileRegion(opts.tileRegion)
     // Deterministic external-input fixtures: identical host sources on the reference
     // backend (see nmRunFatGraph above). No-op by default.
