@@ -58,6 +58,7 @@ export class NoisemakerRenderer {
   async loadGraph (fatGraph, opts = {}) {
     if (!this._Pipeline) throw new Error('NoisemakerRenderer requires options.Pipeline (the reference Pipeline class).')
     if (this._disposed) throw new Error('NoisemakerRenderer is disposed')
+    if (fatGraph._isScene || fatGraph.sceneIR) throw new Error('Babylon.js requires an effect graph.')
     const generation = this._advanceLifecycle()
     this._fatGraph = fatGraph
     this._loadOptions = { ...opts }

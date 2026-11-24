@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # vendor/fetch.sh — vendor the PUBLISHED Noisemaker shader engine from the production CDN.
 #
-# The port reuses the engine verbatim (it's the same JS/WebGL2 environment, so nothing is
-# translated — only `BabylonBackend` is new). We vendor the published distribution
+# The port reuses the JS/WebGL2 runtime and restricts its compiler to effect programs.
+# We vendor the published distribution
 # (https://shaders.noisedeck.app/<VERSION>) so the repo is self-contained — NO sibling
 # checkout, no reference to anything in `..`. This is the same artifact noisedeck.app ships:
 # a core ESM engine bundle + per-effect "mini-bundles" (production pre-fetches these).
@@ -15,7 +15,7 @@
 #   VERSION=1.0.187 bash vendor/fetch.sh  # deliberate authority bump (requires re-verification)
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
-VERSION="${VERSION:-1.0.356}"
+VERSION="${VERSION:-1.5.0}"
 BASE="https://shaders.noisedeck.app/${VERSION}"
 OUT="$HERE/noisemaker"
 EFFECTS="$OUT/effects"
@@ -23,9 +23,9 @@ EFFECTS="$OUT/effects"
 mkdir -p "$EFFECTS"
 echo "[vendor] engine $BASE -> $OUT"
 
-# 1. Engine core (exports Pipeline, compileGraph, WebGL2Backend, Effect, registerEffect, …).
-curl -fsSL --max-time 60 "$BASE/noisemaker-shaders-core.esm.js" -o "$OUT/noisemaker-shaders-core.esm.js"
-echo "[vendor]   core: $(wc -c < "$OUT/noisemaker-shaders-core.esm.js") bytes"
+# 1. Keep the unmodified release core as the source of the port's compiler bundle.
+curl -fsSL --max-time 60 "$BASE/noisemaker-shaders-core.esm.js" -o "$OUT/noisemaker-shaders-core.upstream.esm.js"
+echo "[vendor]   core: $(wc -c < "$OUT/noisemaker-shaders-core.upstream.esm.js") bytes"
 
 # 2. Manifest (210 effect descriptors).
 curl -fsSL --max-time 30 "$BASE/effects/manifest.json" -o "$EFFECTS/manifest.json"
@@ -44,16 +44,35 @@ if [[ $miss -ne 0 ]]; then
   exit 1
 fi
 
-# 4. Integrity record: exact version metadata + sha256 of every fetched artifact, so any
-#    installation can be compared byte-for-byte against the documented revision.
-core_build=$(sed -n 's/^ \* Build: //p' "$OUT/noisemaker-shaders-core.esm.js" | head -1)
+# 4. Prepare the same stable compiler for Node and browsers, then record its
+#    integrity alongside the original release and mini-bundles.
+core_build=$(sed -n 's/^ \* Build: //p' "$OUT/noisemaker-shaders-core.upstream.esm.js" | head -1)
 node - "$VERSION" "$OUT" "$core_build" <<'NODE'
 const { createHash } = require('node:crypto')
 const { readFileSync, writeFileSync, statSync } = require('node:fs')
 const { join } = require('node:path')
 const [version, out, coreBuild] = process.argv.slice(2)
 const sha256 = p => createHash('sha256').update(readFileSync(p)).digest('hex')
-const hashes = { 'noisemaker-shaders-core.esm.js': sha256(join(out, 'noisemaker-shaders-core.esm.js')) }
+const upstreamCore = 'noisemaker-shaders-core.upstream.esm.js'
+const portCore = 'noisemaker-shaders-core.esm.js'
+const upstreamHash = sha256(join(out, upstreamCore))
+let source = readFileSync(join(out, upstreamCore), 'utf8')
+if (!/^1\.0\.\d+$/.test(version)) {
+  if (version !== '1.5.0' || upstreamHash !== '6596d11a2b54de9c80bbc21826d4797d3499d79715e5fafb1edb4597f73e20e7') {
+    throw new Error('Verify the stable DSL grammar against the fetched Noisemaker core before using this version.')
+  }
+  // Retain the stable 1.x grammar, including mixed arguments for MIDI and audio.
+  source = source
+    .replace('const allowMixed = true;', 'const allowMixed = nameToken.lexeme === "midi" || nameToken.lexeme === "audio";')
+    .replace('    "LBRACKET",\n    "LBRACE",\n    "TRUE",', '    "LBRACKET",\n    "TRUE",')
+    .replace(/^      case "LBRACE": \{[\s\S]*?^      }\n(?=      default:)/m, '')
+    .replace('const sceneIR = compileScene(compilationResult);', `if (compilationResult.plans?.some(plan => plan.chain?.some(step => step.op === "_scene.scene"))) {
+    throw new Error("Babylon.js requires an effect graph.");
+  }
+  const sceneIR = null;`)
+}
+writeFileSync(join(out, portCore), source)
+const hashes = { [portCore]: sha256(join(out, portCore)), [upstreamCore]: upstreamHash }
 // Hash exactly what this fetch delivered (the manifest and its mini-bundles), so a bundle left in
 // the folder by an older fetch can never enter the integrity record.
 hashes['effects/manifest.json'] = sha256(join(out, 'effects/manifest.json'))
@@ -62,8 +81,8 @@ for (const id of Object.keys(JSON.parse(readFileSync(join(out, 'effects/manifest
 }
 const sortedHashes = Object.fromEntries(Object.entries(hashes).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0))
 writeFileSync(join(out, 'engine-meta.json'), JSON.stringify({
-  version, coreBuild, coreBytes: statSync(join(out, 'noisemaker-shaders-core.esm.js')).size,
-  effectCount: Object.keys(sortedHashes).length - 2, manifestBytes: statSync(join(out, 'effects/manifest.json')).size, fetchedFrom: `https://shaders.noisedeck.app/${version}`
+  version, coreBuild, coreBytes: statSync(join(out, portCore)).size,
+  effectCount: Object.keys(sortedHashes).length - 3, manifestBytes: statSync(join(out, 'effects/manifest.json')).size, fetchedFrom: `https://shaders.noisedeck.app/${version}`
 }, null, 2) + '\n')
 writeFileSync(join(out, 'engine-hashes.json'), JSON.stringify(sortedHashes, null, 2) + '\n')
 NODE

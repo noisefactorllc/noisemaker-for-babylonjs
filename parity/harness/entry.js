@@ -9,7 +9,7 @@ import '@babylonjs/core/Shaders/postprocess.vertex.js' // register EffectRendere
 // The fat graph already embeds GLSL, so the runtime only needs `Pipeline` from the vendored
 // published engine (vendor/noisemaker — the same artifact noisedeck.app ships). In a browser the
 // core ESM evaluates directly (HTMLElement exists); no sibling checkout, nothing in `..`.
-import { Pipeline, WebGL2Backend, MidiState, CanvasRenderer } from '../../vendor/noisemaker/noisemaker-shaders-core.esm.js'
+import { Pipeline, WebGL2Backend, MidiState, CanvasRenderer, compileGraph } from '../../vendor/noisemaker/noisemaker-shaders-core.esm.js'
 import { BabylonBackend } from '../../src/runtime/babylonBackend.js'
 import { NoisemakerRenderer } from '../../src/runtime/renderer.js'
 
@@ -397,6 +397,34 @@ window.nmRunFrameExportAlphaModes = async function () {
   }
 }
 
+window.nmRunSingleChannelReadback = async function () {
+  const canvas = document.createElement('canvas')
+  const engine = new Engine(canvas, false, { antialias: false }, false)
+  const backend = new BabylonBackend(engine)
+  try {
+    await backend.init()
+    const gl = backend.gl
+    const results = []
+    for (const format of ['r8', 'r16f', 'r32f']) {
+      const texture = backend.createTexture(format, { width: 3, height: 2, format, usage: ['render', 'sample'] })
+      engine.bindFramebuffer(texture.rtw)
+      gl.enable(gl.SCISSOR_TEST)
+      for (const [row, value] of [[0, 0.25], [1, 0.75]]) {
+        gl.scissor(0, row, 3, 1)
+        gl.clearBufferfv(gl.COLOR, 0, [value, 0, 0, 1])
+      }
+      gl.disable(gl.SCISSOR_TEST)
+      engine.unBindFramebuffer(texture.rtw)
+      const { data } = await backend.readPixels(format)
+      results.push({ format, pixels: Array.from(data), error: gl.getError(), packAlignment: gl.getParameter(gl.PACK_ALIGNMENT) })
+    }
+    return results
+  } finally {
+    backend.destroy()
+    engine.dispose()
+  }
+}
+
 // Prove the public renderer abandons raw resources on loss and rebuilds only after Babylon has
 // restored its managed resources. Chromium's WEBGL_lose_context extension exercises the real path.
 window.nmRunRendererContextRestore = async function (fat, opts = {}) {
@@ -663,6 +691,7 @@ window.nmRunVideoFrameUpload = async function () {
   }
 }
 
+window.nmCompileEffectGraph = compileGraph
 window.nmReady = true
 
 window.nmRunPersistentMemory = async function ({ reference = false, persistent = false, readFirst = false, storageOnly = false } = {}) {

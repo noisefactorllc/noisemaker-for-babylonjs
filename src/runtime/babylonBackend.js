@@ -1367,20 +1367,67 @@ export class BabylonBackend {
     // A no-op here keeps the reference Pipeline's present step harmless.
   }
 
+  _readGrayscale (rec, out, type) {
+    const gl = this.gl
+    const { width, height } = rec
+    const previousFramebuffer = gl.getParameter(gl.READ_FRAMEBUFFER_BINDING)
+    const previousBuffer = gl.getParameter(gl.PIXEL_PACK_BUFFER_BINDING)
+    const packSettings = [[gl.PACK_ALIGNMENT, 1], [gl.PACK_ROW_LENGTH, 0], [gl.PACK_SKIP_ROWS, 0], [gl.PACK_SKIP_PIXELS, 0]]
+    const previousPackSettings = packSettings.map(([setting]) => gl.getParameter(setting))
+    const framebuffer = gl.createFramebuffer()
+    if (!framebuffer) throw new Error('Unable to allocate a readback framebuffer')
+
+    try {
+      gl.bindFramebuffer(gl.READ_FRAMEBUFFER, framebuffer)
+      gl.framebufferTexture2D(gl.READ_FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this._glTexOf(rec), 0)
+      if (gl.checkFramebufferStatus(gl.READ_FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
+        throw new Error('Single-channel readback framebuffer is incomplete')
+      }
+      gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null)
+      for (const [setting, value] of packSettings) gl.pixelStorei(setting, value)
+
+      // Use the driver's native RED read when it supports the numeric type.
+      // An RGBA transfer still carries the sole attachment channel in red.
+      const isFloat = type !== Constants.TEXTURETYPE_UNSIGNED_BYTE
+      const readType = isFloat ? gl.FLOAT : gl.UNSIGNED_BYTE
+      const readRed = gl.getParameter(gl.IMPLEMENTATION_COLOR_READ_FORMAT) === gl.RED &&
+        gl.getParameter(gl.IMPLEMENTATION_COLOR_READ_TYPE) === readType
+      const stride = readRed ? 1 : 4
+      const length = width * height * stride
+      const raw = isFloat ? new Float32Array(length) : new Uint8Array(length)
+      gl.readPixels(0, 0, width, height, readRed ? gl.RED : gl.RGBA, readType, raw)
+      for (let i = 0, j = 0; i < raw.length; i += stride, j += 4) {
+        const gray = isFloat ? Math.max(0, Math.min(255, Math.round(raw[i] * 255))) : raw[i]
+        out[j] = out[j + 1] = out[j + 2] = gray
+        out[j + 3] = 255
+      }
+    } finally {
+      for (const [index, [setting]] of packSettings.entries()) gl.pixelStorei(setting, previousPackSettings[index])
+      gl.bindBuffer(gl.PIXEL_PACK_BUFFER, previousBuffer)
+      gl.bindFramebuffer(gl.READ_FRAMEBUFFER, previousFramebuffer)
+      gl.deleteFramebuffer(framebuffer)
+    }
+  }
+
   // Mirrors webgl2.readPixels: returns top-down RGBA8 (0..255). Half-float values are
   // quantized with round(v*255), exactly like the reference golden readback.
   async readPixels (textureId) {
     const rec = this.textures.get(textureId)
     if (!rec) throw new Error(`Texture ${textureId} not found`)
     const { internal, width, height } = rec
-    const raw = await this.engine._readTexturePixels(internal, width, height, -1, 0, null, true, false, 0, 0)
     const out = new Uint8Array(width * height * 4)
-    if (raw instanceof Float32Array) {
-      for (let i = 0; i < out.length; i++) {
-        out[i] = Math.max(0, Math.min(255, Math.round(raw[i] * 255)))
-      }
+    const { format, type } = resolveFormat(rec.format)
+    if (format === Constants.TEXTUREFORMAT_R) {
+      this._readGrayscale(rec, out, type)
     } else {
-      out.set(raw.subarray(0, out.length))
+      const raw = await this.engine._readTexturePixels(internal, width, height, -1, 0, null, true, false, 0, 0)
+      if (raw instanceof Float32Array) {
+        for (let i = 0; i < out.length; i++) {
+          out[i] = Math.max(0, Math.min(255, Math.round(raw[i] * 255)))
+        }
+      } else {
+        out.set(raw.subarray(0, out.length))
+      }
     }
     // WebGL2 readback is bottom-up; flip rows to top-down to match the golden orientation.
     const flipped = new Uint8Array(width * height * 4)

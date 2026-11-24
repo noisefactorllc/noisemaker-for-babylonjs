@@ -45,6 +45,38 @@ test('Babylon frame export matches synchronous top-down pixels in a real WebGL2 
   }
 })
 
+test('Babylon readback expands odd-width single-channel textures to opaque top-down grayscale', async () => {
+  await ensureBundle(false)
+  const browser = await chromium.launch({ headless: true, args: LAUNCH_ARGS })
+  try {
+    const page = await browser.newPage()
+    await page.goto(pathToFileURL(INDEX_HTML).href)
+    await page.waitForFunction(() => window.nmReady === true, { timeout: 30000 })
+    const results = await page.evaluate(() => window.nmRunSingleChannelReadback())
+    const expected = [191, 191, 191, 64, 64, 64].flatMap(value => [value, value, value, 255])
+    assert.deepEqual(results, ['r8', 'r16f', 'r32f'].map(format => ({ format, pixels: expected, error: 0, packAlignment: 4 })))
+  } finally {
+    await browser.close()
+  }
+})
+
+test('the browser compiler keeps the effect program grammar', async () => {
+  await ensureBundle(false)
+  const browser = await chromium.launch({ headless: true, args: LAUNCH_ARGS })
+  try {
+    const page = await browser.newPage()
+    await page.goto(pathToFileURL(INDEX_HTML).href)
+    await page.waitForFunction(() => window.nmReady === true, { timeout: 30000 })
+    const compile = source => page.evaluate(dsl => window.nmCompileEffectGraph(dsl).renderSurface, source)
+    assert.equal(await compile('search synth\nread(o0).write(o1)\nrender(o1)'), 'o1')
+    await assert.rejects(compile('search synth\nread(o0, tex: o1).write(o2)\nrender(o2)'), /Cannot mix positional and keyword arguments/)
+    await assert.rejects(compile('search synth\nlet x = {value: 1}\nread(o0).write(o1)\nrender(o1)'), /Expected expression after '='/)
+    await assert.rejects(compile('search synth\nscene(camera()).write(o0)\nrender(o0)'), /Babylon.js requires an effect graph/)
+  } finally {
+    await browser.close()
+  }
+})
+
 test('NoisemakerRenderer replaces lost GPU state and resumes rendering after context restoration', async () => {
   await ensureBundle(false)
   const fat = await exportFatGraph(readFileSync(join(ROOT, 'parity/programs/noise.dsl'), 'utf8'))

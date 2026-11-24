@@ -106,13 +106,14 @@ let many = foo.o99`)
   )
 })
 
-test('mutation introspection excludes builtin pipeline steps', async () => {
+test('mutation introspection labels builtin pipeline steps and rejects replacement', async () => {
   const { bootEngine } = await import('../vendor/engine.mjs')
   await bootEngine()
   const { compile, listSteps, replaceEffect, getCompatibleReplacements } = await import('../vendor/noisemaker/noisemaker-shaders-core.esm.js')
 
   const compiled = compile('search synth, filter\nnoise(10).bloom(0.5).write(o0)')
-  const steps = listSteps(compiled)
+  const listed = listSteps(compiled)
+  const steps = listed.filter(step => step.kind === 'effect')
 
   assert.equal(steps.length, 2, 'Should have 2 editable effect steps')
   assert.equal(steps[0].effectName, 'synth.noise')
@@ -122,6 +123,12 @@ test('mutation introspection excludes builtin pipeline steps', async () => {
 
   const builtinStep = compiled.plans[0].chain.find(step => step.builtin)
   assert.ok(builtinStep, 'Compiled plan should contain a builtin blit/write step')
+  const structural = listed.filter(step => step.kind === 'builtin')
+  assert.equal(structural.length, 1)
+  assert.equal(structural[0].effectName, '_write')
+  assert.equal(structural[0].stepIndex, builtinStep.temp)
+  assert.equal(structural[0].canReplaceWithStarter, false)
+  assert.equal(structural[0].canReplaceWithNonStarter, false)
 
   const replaceResult = replaceEffect(compiled, builtinStep.temp, 'blur')
   assert.equal(replaceResult.success, false)
@@ -684,12 +691,15 @@ test('subchain argument validation contract exposes P008, P009, P010 diagnostics
   }
 })
 
-test('number coercion diagnostics represent unavailable locations explicitly', async () => {
+test('number coercion diagnostics report call locations and mark unavailable locations', async () => {
   const { bootEngine } = await import('../vendor/engine.mjs')
   await bootEngine()
   const { compile, lex, parse } = await import('../vendor/noisemaker/noisemaker-shaders-core.esm.js')
 
-  for (const source of ['search synth\nlet x = 1 + o0', 'search synth\nlet x = diagProbe() + 1']) {
+  for (const [source, location] of [
+    ['search synth\nlet x = 1 + o0', null],
+    ['search synth\nlet x = diagProbe() + 1', { line: 2, column: 9 }],
+  ]) {
     for (const entryPoint of [source => parse(lex(source)), compile]) {
       assert.throws(
         () => entryPoint(source),
@@ -701,7 +711,7 @@ test('number coercion diagnostics represent unavailable locations explicitly', a
             stage: 'parser',
             severity: 'error',
             message: 'Expected number',
-            location: null,
+            location,
             span: null,
           })
           assert.equal(err.propertyIsEnumerable('diagnostic'), false)
@@ -723,6 +733,7 @@ test('valid call forms retain from-override namespaces and mixed automation argu
     type: 'Call',
     name: 'probe',
     args: [],
+    loc: { line: 2, col: 21 },
     namespace: {
       name: 'synth',
       path: ['synth'],
@@ -735,6 +746,15 @@ test('valid call forms retain from-override namespaces and mixed automation argu
   })
   const mixed = parse(lex('search synth\nlet a = midi(1, channel: 2)'))
   assert.equal(mixed.vars[0].expr.channel.value, 2)
+})
+
+test('the port compiler keeps the effect program grammar', async () => {
+  await assert.rejects(exportFatGraph('search synth\nnoise(1, speed: 2).write(o0)\nrender(o0)'),
+    { name: 'SyntaxError', message: 'Cannot mix positional and keyword arguments at line 2 col 10' })
+  await assert.rejects(exportFatGraph('search synth\nlet x = {value: 1}\nnoise().write(o0)\nrender(o0)'),
+    { name: 'SyntaxError', message: "Expected expression after '=' at line 2 col 9" })
+  await assert.rejects(exportFatGraph('search synth\nscene(camera()).write(o0)\nrender(o0)'),
+    { message: 'Babylon.js requires an effect graph.' })
 })
 
 test('compiler exportFatGraph handles subchains with scoped filters', async () => {

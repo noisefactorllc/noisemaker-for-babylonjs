@@ -25,7 +25,7 @@ test('engine v1.0.187: replacement prediction — dimensions, manifest backend s
     'v1.0.187 exports predictReplacement on the published surface')
 
   const compiled = compile('search synth, filter\nnoise(10).bloom(0.5).write(o0)')
-  const steps = listSteps(compiled)
+  const steps = listSteps(compiled).filter(step => step.kind === 'effect')
   assert.equal(steps.length, 2)
   const bloomStep = steps[1]
   assert.equal(bloomStep.effectName, 'filter.bloom')
