@@ -38,7 +38,7 @@ on:
       - '!.github/FUNDING.yml'
       - '!.github/dependabot.yml'
       - '!.editorconfig'
-    branches: [main]
+    branches: [main, 2.x]
   workflow_dispatch:
     inputs:
       deep:
