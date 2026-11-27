@@ -868,7 +868,7 @@ export class BabylonBackend {
     const outputId = this._resolveOutputId(effectivePass.outputs?.color ?? Object.values(effectivePass.outputs || {})[0], state)
     const outRec = this.textures.get(outputId)
     if (!outRec) { console.warn(`[BabylonBackend] output texture not found: ${outputId} (pass ${effectivePass.id})`); this._recordMissingRenderTarget('fbo', outputId, effectivePass.id); return }
-    this.engine.setAlphaMode(this._resolveAlphaMode(effectivePass.blend))
+    this._setBlend(effectivePass.blend)
     this._bindPass = effectivePass
     this._bindState = state
     if (outRec.mipmaps) {
@@ -953,7 +953,7 @@ export class BabylonBackend {
     // authored/resolved viewports are inert for texture passes (viewport overrides removed —
     // they rendered the ca3d volume simulate pass inset and broke pixel parity).
     gl.viewport(0, 0, viewportRec.width, viewportRec.height)
-    this.engine.setAlphaMode(this._resolveAlphaMode(pass.blend))
+    this._setBlend(pass.blend)
     this._drawFullscreenInto(prog, pass, state)
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
     this.engine.setAlphaMode(Constants.ALPHA_DISABLE)
@@ -1089,20 +1089,21 @@ export class BabylonBackend {
     gl.bindRenderbuffer(gl.RENDERBUFFER, null)
   }
 
-  // Mesh vertex count: number, or 'input'/'auto' → texel count of the mesh position texture
+  // Mesh vertex count: number, or 'input'/'auto'/'screen' → texel count of the mesh position texture
   // (one vertex per texel). countUniform reads the live count from a uniform. Mirrors webgl2.js.
   _triCount (pass, state) {
-    let count = pass.count ?? 3
+    let count = pass.count || 3
     if (pass.countUniform) {
-      const v = (pass.uniforms && pass.uniforms[pass.countUniform]) ?? state?.globalUniforms?.[pass.countUniform]
-      if (v != null) return Math.max(0, v | 0)
+      let v = pass.uniforms?.[pass.countUniform]
+      if (v === undefined) v = state?.globalUniforms?.[pass.countUniform]
+      if (typeof v === 'number' && v > 0) count = v
     }
-    if (count === 'input' || count === 'auto') {
+    if (count === 'input' || count === 'auto' || count === 'screen') {
       const meshId = pass.inputs?.meshPositions || pass.inputs?.inputTex
       // Same scoped→unscoped chain fallback as input binding (webgl2.js:1220).
       const rec = (meshId && this.textures.get(meshId)) ||
         (meshId && this.textures.get(String(meshId).replace(/_chain_\d+$/, ''))) ||
-        this.textures.get(this._resolveOutputId(meshId, state))
+        state?.surfaces?.[parseGlobalName(meshId)]
       const w = rec?.width; const h = rec?.height
       count = (w && h) ? w * h : 3
     }
@@ -1129,7 +1130,7 @@ export class BabylonBackend {
       renderPass.outputs = {}
       for (const [k, texId] of Object.entries(pass.storageTextures)) renderPass.outputs[k] = texId
     }
-    if (pass.outputs) {
+    if (pass.outputs && Object.keys(pass.outputs).length > 0) {
       renderPass.outputs = {}
       for (const [k, texId] of Object.entries(pass.outputs)) {
         renderPass.outputs[k === 'outputBuffer' ? 'color' : k] = texId
@@ -1344,17 +1345,15 @@ export class BabylonBackend {
     return this._packedBytes.subarray(0, bufferSize)
   }
 
-  _resolveAlphaMode (blend) {
-    if (!blend) return Constants.ALPHA_DISABLE
-    if (Array.isArray(blend)) {
-      const [s, d] = blend
-      const add = (x) => String(x).toLowerCase()
-      if (add(s) === 'one' && add(d) === 'one') return Constants.ALPHA_ADD
-      if (add(s) === 'src-alpha' && add(d) === 'one-minus-src-alpha') return Constants.ALPHA_COMBINE
-      // Best-effort: most reference blends are additive deposits.
-      return Constants.ALPHA_ADD
-    }
-    return Constants.ALPHA_ADD
+  _setBlend (blend) {
+    this.engine.setAlphaMode(blend ? Constants.ALPHA_ONEONE_ONEONE : Constants.ALPHA_DISABLE)
+    if (!blend) return
+    const [src, dst] = Array.isArray(blend)
+      ? blend.map(factor => this._blendFactorGL(factor)) : [this.gl.ONE, this.gl.ONE]
+    // Babylon applies its cached state when drawing. Set both colour and alpha
+    // factors there so EffectRenderer preserves the upstream blendFunc contract.
+    this.engine.alphaState.setAlphaBlendFunctionParameters(src, dst, src, dst)
+    this.engine.alphaState.setAlphaEquationParameters(this.gl.FUNC_ADD, this.gl.FUNC_ADD)
   }
 
   // ---- frame lifecycle / present / readback ----------------------------------

@@ -196,7 +196,7 @@ test('executePass renders mipmapped outputs through the raw path and plain outpu
   const routed = []
   backend.programs = new Map([['prog', { wrapper: {}, uniformTypes: {}, samplerSet: new Set(), hasCustomVertex: false }]])
   backend.engine = { setAlphaMode: () => {}, wipeCaches: () => {} }
-  backend._resolveAlphaMode = () => 0
+  backend._setBlend = () => {}
   const mkRec = (mipmaps) => ({ thin: {}, rtw: {}, width: 32, height: 32, mipmaps })
   backend.textures.set('plain', mkRec(false))
   backend.textures.set('mipped', mkRec(true))

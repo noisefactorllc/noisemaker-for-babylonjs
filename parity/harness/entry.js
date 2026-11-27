@@ -694,6 +694,50 @@ window.nmRunVideoFrameUpload = async function () {
 window.nmCompileEffectGraph = compileGraph
 window.nmReady = true
 
+window.nmRunStableBackend = async function ({ reference = false, mode, blend }) {
+  const canvas = document.createElement('canvas')
+  canvas.width = canvas.height = 8
+  document.body.appendChild(canvas)
+  const engine = reference ? null : new Engine(canvas, false, {
+    preserveDrawingBuffer: true, premultipliedAlpha: false, antialias: false
+  }, false)
+  const gl = engine ? engine._gl : canvas.getContext('webgl2')
+  const backend = reference ? new WebGL2Backend(gl, canvas) : new BabylonBackend(engine)
+  const outputs = mode === 'mrt' ? { color: 'result', other: 'other' } : { color: 'result' }
+  const shader = value => `#version 300 es
+precision highp float;
+layout(location=0) out vec4 color;
+${mode === 'mrt' ? 'layout(location=1) out vec4 other;' : ''}
+void main(){color=vec4(${value});${mode === 'mrt' ? 'other=color;' : ''}}`
+  const target = mode === 'storage' ? { outputs: {}, storageTextures: outputs } : { outputs }
+  const graph = {
+    passes: [
+      { id: 'background', program: 'background', inputs: {}, outputs },
+      { id: 'foreground', program: 'foreground', inputs: {}, ...target, blend }
+    ],
+    textures: new Map(Object.values(outputs).map(id => [id, {
+      width: 8, height: 8, format: 'rgba16f', usage: ['render', 'sample'], mipmaps: mode === 'mip'
+    }])),
+    programs: {
+      background: { source: shader('0.125,0.25,0.5,0.75') },
+      foreground: { source: shader('0.5,0.25,0.125,0.5') }
+    }
+  }
+  const pipeline = new Pipeline(graph, backend)
+  try {
+    await pipeline.init(8, 8)
+    pipeline.render(0)
+    const pixels = []
+    for (const id of Object.values(outputs)) pixels.push(Array.from((await backend.readPixels(id)).data.slice(0, 4)))
+    return { pixels, glError: gl.getError() }
+  } finally {
+    pipeline.dispose()
+    engine?.dispose()
+    if (reference) gl.getExtension('WEBGL_lose_context')?.loseContext()
+    canvas.remove()
+  }
+}
+
 window.nmRunPersistentMemory = async function ({ reference = false, persistent = false, readFirst = false, storageOnly = false } = {}) {
   const canvas = document.createElement('canvas')
   canvas.width = canvas.height = 8
