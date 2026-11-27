@@ -15,7 +15,7 @@
 #   VERSION=1.0.187 bash vendor/fetch.sh  # deliberate authority bump (requires re-verification)
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
-VERSION="${VERSION:-1.5.17}"
+VERSION="${VERSION:-1.5.25}"
 BASE="https://shaders.noisedeck.app/${VERSION}"
 OUT="$HERE/noisemaker"
 EFFECTS="$OUT/effects"
@@ -58,7 +58,7 @@ const portCore = 'noisemaker-shaders-core.esm.js'
 const upstreamHash = sha256(join(out, upstreamCore))
 let source = readFileSync(join(out, upstreamCore), 'utf8')
 if (!/^1\.0\.\d+$/.test(version)) {
-  if (version !== '1.5.17' || upstreamHash !== 'c7206401ddd1eecb9b750b075f2ad5aa49c1ec268df33fa6fd7733b080094ceb') {
+  if (version !== '1.5.25' || upstreamHash !== '2de56deff4c531c795bafd1874fd68b820ecf681b82184e9ce1d0859e5c65ae0') {
     throw new Error('Verify the stable DSL grammar against the fetched Noisemaker core before using this version.')
   }
   // Retain the stable 1.x grammar, including mixed arguments for MIDI and audio.
