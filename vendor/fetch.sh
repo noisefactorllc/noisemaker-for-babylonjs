@@ -64,6 +64,7 @@ if (!/^1\.0\.\d+$/.test(version)) {
   // Retain the stable 1.x grammar, including mixed arguments for MIDI and audio.
   source = source
     .replace('const allowMixed = true;', 'const allowMixed = nameToken.lexeme === "midi" || nameToken.lexeme === "audio";')
+    .replace('      if (keywords[lexeme]) {', '      if (Object.hasOwn(keywords, lexeme)) {')
     .replace('    "LBRACKET",\n    "LBRACE",\n    "TRUE",', '    "LBRACKET",\n    "TRUE",')
     .replace(/^      case "LBRACE": \{[\s\S]*?^      }\n(?=      default:)/m, '')
     .replace('const sceneIR = compileScene(compilationResult);', `if (compilationResult.plans?.some(plan => plan.chain?.some(step => step.op === "_scene.scene"))) {

@@ -3,7 +3,7 @@ import test from 'node:test'
 import { bootEngine } from '../vendor/engine.mjs'
 
 await bootEngine()
-const { compile, unparse, getEffect, registerOp, Pipeline, Backend, Effect, CanvasRenderer, compileGraph } =
+const { compile, unparse, getEffect, registerOp, Pipeline, Backend, Effect, CanvasRenderer, compileGraph, lex } =
   await import('../vendor/noisemaker/noisemaker-shaders-core.esm.js')
 
 registerOp('user.syncRgbProbe', { name: 'syncRgbProbe', args:
@@ -67,6 +67,32 @@ test('time zero and loop wrap use the actual normalized interval', async () => {
       assert.equal(pipeline.globalUniforms.deltaTime, 0.25)
     } finally { pipeline.dispose() }
   }
+})
+
+test('prototype property names lex as identifiers and bind effect arguments', () => {
+  for (const name of ['toString', 'valueOf', 'constructor', 'hasOwnProperty', '__proto__']) {
+    assert.equal(lex(name)[0].type, 'IDENT')
+    const compiled = compile(`search synth\nlet ${name} = 2\nnoise(scaleX: ${name}).write(o0)\nrender(o0)`)
+    assert.deepEqual(compiled.diagnostics, [])
+    const args = compiled.plans[0].chain.find(step => step.op === 'synth.noise').args
+    assert.deepEqual(args.scaleX, { _varRef: name, value: 2 })
+  }
+})
+
+test('a prototype property name lexes as a member segment and reaches condition validation', () => {
+  assert.deepEqual(lex('oscKind.toString').map(token => token.type), ['IDENT', 'DOT', 'IDENT', 'EOF'])
+  const compiled = compile('search synth\nnoise().write(o0)\nif (oscKind.toString) { noise().write(o1) }\nrender(o0)')
+  assert.deepEqual(compiled.diagnostics.map(({ code, message }) => ({ code, message })), [
+    { code: 'S001', message: "Unknown enum path: 'oscKind.toString'" }
+  ])
+})
+
+test('reserved words still lex as keywords', () => {
+  const source = 'let render write write3d true false if elif else break continue return search subchain'
+  assert.deepEqual(lex(source).map(token => token.type), [
+    'LET', 'RENDER', 'WRITE', 'WRITE3D', 'TRUE', 'FALSE', 'IF', 'ELIF',
+    'ELSE', 'BREAK', 'CONTINUE', 'RETURN', 'SEARCH', 'SUBCHAIN', 'EOF'
+  ])
 })
 
 test('portable effects preserve named output contracts and reject empty names', async () => {

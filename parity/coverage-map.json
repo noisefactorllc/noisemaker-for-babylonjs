@@ -3,7 +3,7 @@
   "engine": {
     "version": "1.5.26",
     "build": "f4a1382a",
-    "coreBytes": 1294527,
+    "coreBytes": 1294542,
     "effectCount": 210
   },
   "effects": [
@@ -6441,7 +6441,7 @@
     "engine": {
       "version": "1.5.26",
       "build": "f4a1382a",
-      "coreBytes": 1294527,
+      "coreBytes": 1294542,
       "effectCount": 210
     }
   }
